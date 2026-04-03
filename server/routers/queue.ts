@@ -3,6 +3,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { posts, drafts } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
+import { processScheduledPosts } from "../_core/webhook";
 
 /**
  * Smart scheduling queue management
@@ -303,6 +304,77 @@ export const queueRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
+      // Get the post to publish
+      const postResult = await db
+        .select()
+        .from(posts)
+        .where(eq(posts.id, input.postId));
+
+      if (!postResult || postResult.length === 0) {
+        throw new Error("Post not found");
+      }
+
+      const post = postResult[0];
+
+      // Get draft details
+      const draftResult = await db
+        .select()
+        .from(drafts)
+        .where(eq(drafts.id, post.draftId));
+
+      if (!draftResult || draftResult.length === 0) {
+        throw new Error("Draft not found");
+      }
+
+      const draft = draftResult[0];
+
+      // Publish to social media based on platform
+      try {
+        switch (post.platform) {
+          case "instagram": {
+            const { postImageToInstagram } = await import("../_core/instagram");
+            const { contentAssets } = await import("../../drizzle/schema");
+            
+            const assetResults = await db
+              .select()
+              .from(contentAssets)
+              .where(eq(contentAssets.id, draft.assetId));
+
+            if (!assetResults || assetResults.length === 0 || !assetResults[0].s3Url) {
+              throw new Error("Asset image not found");
+            }
+
+            await postImageToInstagram({
+              imageUrl: assetResults[0].s3Url,
+              caption: draft.content,
+              accountId: process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || "",
+              accessToken: process.env.INSTAGRAM_ACCESS_TOKEN || "",
+            });
+            break;
+          }
+          case "x": {
+            const { postToX } = await import("../_core/x-api");
+            await postToX({
+              text: draft.content,
+              bearerToken: process.env.X_BEARER_TOKEN || "",
+            });
+            break;
+          }
+          case "facebook":
+            // Facebook integration would go here
+            console.log("Facebook publishing not yet implemented");
+            break;
+          case "website":
+            // Website posting would go here
+            console.log("Website publishing not yet implemented");
+            break;
+        }
+      } catch (error: any) {
+        console.error(`Failed to publish to ${post.platform}:`, error);
+        throw error;
+      }
+
+      // Mark as published
       const now = new Date();
       await db
         .update(posts)
