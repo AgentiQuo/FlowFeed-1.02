@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Calendar, Clock, Trash2, Send, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -27,41 +27,50 @@ export default function QueuePage() {
   const { brandId } = useParams<{ brandId: string }>();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState<string | null>(null);
-  const [assetImages, setAssetImages] = useState<Record<string, string>>({});
   const [filterBrandId, setFilterBrandId] = useState<string | undefined>(undefined);
+
+  // Memoize query inputs to prevent unstable references
+  const queueInput = useMemo(() => ({ brandId: filterBrandId }), [filterBrandId]);
+  const assetsInput = useMemo(() => ({ brandId: "" }), []);
 
   // Fetch all brands for filter dropdown
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
 
   // Fetch all scheduled posts (optionally filtered by brand)
   const { data: queuePosts = [], isLoading: isLoadingQueue, refetch: refetchQueue } = trpc.queue.getAllScheduledPosts.useQuery(
-    { brandId: filterBrandId }
+    queueInput
   );
 
   // Fetch all assets from all brands for thumbnails
   const { data: allAssets = [] } = trpc.ingestion.listAssets.useQuery(
-    { brandId: "" }
+    assetsInput
   );
 
-  // Build asset image map from all assets
-  useEffect(() => {
+  // Derive asset images from allAssets (no setState needed)
+  const assetImages = useMemo(() => {
     const images: Record<string, string> = {};
     allAssets.forEach((asset) => {
       if (asset.s3Url) {
         images[asset.id] = asset.s3Url;
       }
     });
-    setAssetImages(images);
+    return images;
   }, [allAssets]);
+
+  // Memoize analytics input
+  const analyticsInput = useMemo(() => ({ brandId: filterBrandId || "" }), [filterBrandId]);
 
   // Analytics and suggested times only available when viewing single brand
   const { data: analytics } = trpc.queue.getQueueAnalytics.useQuery(
-    { brandId: filterBrandId || "" },
+    analyticsInput,
     { enabled: !!filterBrandId }
   );
 
+  // Memoize suggested times input
+  const suggestedTimesInput = useMemo(() => ({ brandId: filterBrandId || "", count: 5 }), [filterBrandId]);
+
   const { data: suggestedTimes = [] } = trpc.queue.getSuggestedTimes.useQuery(
-    { brandId: filterBrandId || "", count: 5 },
+    suggestedTimesInput,
     { enabled: !!filterBrandId }
   );
 
