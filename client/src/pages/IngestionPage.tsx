@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useParams } from "wouter";
 import { useState, useRef } from "react";
-import { Upload, Link2, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, Link2, Loader2, CheckCircle, AlertCircle, Trash2, Eye } from "lucide-react";
+import { toast } from "sonner";
 
 export default function IngestionPage() {
   const { brandId } = useParams<{ brandId: string }>();
@@ -39,7 +40,7 @@ export default function IngestionPage() {
         </TabsContent>
 
         <TabsContent value="assets" className="space-y-4">
-          <AssetsListSection assets={assets} />
+          <AssetsListSection assets={assets} brandId={brandId!} onDelete={refetch} />
         </TabsContent>
       </Tabs>
     </div>
@@ -58,7 +59,10 @@ function ImageUploadSection({
   const [dragActive, setDragActive] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadMutation = trpc.ingestion.uploadImage.useMutation();
+  const utils = trpc.useUtils();
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -75,25 +79,95 @@ function ImageUploadSection({
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0] && selectedCategory) {
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      if (!selectedCategory) {
+        toast.error("Please select a category first");
+        return;
+      }
       handleFiles(e.dataTransfer.files);
     }
   };
 
   const handleFiles = async (files: FileList) => {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const fileId = `${file.name}-${Date.now()}`;
-
-      // In a real implementation, you would:
-      // 1. Read the file as a buffer
-      // 2. Call trpc.ingestion.uploadImage with the buffer
-      // 3. Update progress as the upload completes
-
-      setUploadProgress((prev) => ({ ...prev, [fileId]: 100 }));
+    if (!selectedCategory) {
+      toast.error("Please select a category");
+      return;
     }
 
+    const validFiles = Array.from(files).filter((file) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`${file.name} is not an image file`);
+        return false;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 10MB)`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    setUploading(true);
+
+    for (const file of validFiles) {
+      try {
+        const fileId = `${file.name}-${Date.now()}`;
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 10 }));
+
+        // Read file as buffer
+        const buffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(buffer);
+
+        // Simulate progress
+        const progressInterval = setInterval(() => {
+          setUploadProgress((prev) => {
+            const current = prev[fileId] || 10;
+            if (current >= 90) {
+              clearInterval(progressInterval);
+              return prev;
+            }
+            return { ...prev, [fileId]: current + Math.random() * 40 };
+          });
+        }, 300);
+
+        // Upload to server
+        await uploadMutation.mutateAsync({
+          brandId,
+          categoryId: selectedCategory,
+          fileName: file.name,
+          fileBuffer: uint8Array as any,
+          mimeType: file.type,
+        });
+
+        clearInterval(progressInterval);
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 100 }));
+
+        toast.success(`${file.name} uploaded successfully`);
+
+        // Clear progress after 2 seconds
+        setTimeout(() => {
+          setUploadProgress((prev) => {
+            const newProgress = { ...prev };
+            delete newProgress[fileId];
+            return newProgress;
+          });
+        }, 2000);
+      } catch (error) {
+        console.error(`Failed to upload ${file.name}:`, error);
+        toast.error(`Failed to upload ${file.name}`);
+        setUploadProgress((prev) => {
+          const newProgress = { ...prev };
+          delete newProgress[`${file.name}-${Date.now()}`];
+          return newProgress;
+        });
+      }
+    }
+
+    // Refresh assets list
+    await utils.ingestion.listAssets.invalidate({ brandId });
     onSuccess();
+    setUploading(false);
   };
 
   return (
@@ -109,6 +183,7 @@ function ImageUploadSection({
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="w-full mt-1 px-3 py-2 border border-input rounded-md"
+            disabled={uploading}
           >
             <option value="">Choose a category...</option>
             {categories?.map((cat) => (
@@ -117,6 +192,11 @@ function ImageUploadSection({
               </option>
             ))}
           </select>
+          {categories && categories.length === 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              No categories found. Create one in Brand settings first.
+            </p>
+          )}
         </div>
 
         <div
@@ -126,7 +206,7 @@ function ImageUploadSection({
           onDrop={handleDrop}
           className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
             dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25"
-          }`}
+          } ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           <input
             ref={fileInputRef}
@@ -135,35 +215,44 @@ function ImageUploadSection({
             accept="image/*"
             onChange={(e) => e.target.files && handleFiles(e.target.files)}
             className="hidden"
+            disabled={uploading}
           />
           <div className="space-y-2">
             <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
             <p className="font-medium">Drag images here or click to browse</p>
-            <p className="text-sm text-muted-foreground">Supports JPG, PNG, WebP</p>
+            <p className="text-sm text-muted-foreground">Supports JPG, PNG, WebP (max 10MB each)</p>
           </div>
           <Button
             type="button"
             variant="outline"
             className="mt-4"
             onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
           >
-            Select Files
+            {uploading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              "Select Files"
+            )}
           </Button>
         </div>
 
         {Object.entries(uploadProgress).length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-3 bg-muted p-4 rounded-lg">
             <h3 className="text-sm font-medium">Upload Progress</h3>
             {Object.entries(uploadProgress).map(([fileId, progress]) => (
               <div key={fileId} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span>{fileId.split("-")[0]}</span>
-                  <span>{progress}%</span>
+                  <span className="truncate">{fileId.split("-")[0]}</span>
+                  <span className="text-muted-foreground">{Math.round(progress)}%</span>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
+                <div className="w-full bg-background rounded-full h-2">
                   <div
                     className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${progress}%` }}
+                    style={{ width: `${Math.min(progress, 100)}%` }}
                   />
                 </div>
               </div>
@@ -186,15 +275,17 @@ function URLIngestionSection({
 }) {
   const [url, setUrl] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
   const createAssetMutation = trpc.ingestion.createAssetFromUrl.useMutation();
   const scrapeMutation = trpc.ingestion.scrapeListingMetadata.useMutation();
+  const utils = trpc.useUtils();
 
   const handleAddUrl = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url || !selectedCategory) return;
+    if (!url || !selectedCategory) {
+      toast.error("Please fill in all fields");
+      return;
+    }
 
-    setIsProcessing(true);
     try {
       // Create asset record
       await createAssetMutation.mutateAsync({
@@ -207,11 +298,13 @@ function URLIngestionSection({
       scrapeMutation.mutate({ url });
 
       setUrl("");
+      setSelectedCategory("");
+      await utils.ingestion.listAssets.invalidate({ brandId });
       onSuccess();
+      toast.success("URL asset created successfully");
     } catch (error) {
       console.error("Failed to add URL:", error);
-    } finally {
-      setIsProcessing(false);
+      toast.error("Failed to add URL asset");
     }
   };
 
@@ -229,6 +322,7 @@ function URLIngestionSection({
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="w-full mt-1 px-3 py-2 border border-input rounded-md"
+              disabled={createAssetMutation.isPending}
             >
               <option value="">Choose a category...</option>
               {categories?.map((cat) => (
@@ -247,15 +341,16 @@ function URLIngestionSection({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               className="w-full mt-1 px-3 py-2 border border-input rounded-md"
+              disabled={createAssetMutation.isPending}
               required
             />
           </div>
 
-          <Button type="submit" disabled={isProcessing || !url || !selectedCategory}>
-            {isProcessing ? (
+          <Button type="submit" disabled={createAssetMutation.isPending || !url || !selectedCategory}>
+            {createAssetMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
+                Adding...
               </>
             ) : (
               <>
@@ -279,11 +374,36 @@ function URLIngestionSection({
   );
 }
 
-function AssetsListSection({ assets }: { assets?: any[] }) {
+function AssetsListSection({
+  assets,
+  brandId,
+  onDelete,
+}: {
+  assets?: any[];
+  brandId: string;
+  onDelete: () => void;
+}) {
+  const deleteMutation = trpc.ingestion.deleteAsset.useMutation();
+  const utils = trpc.useUtils();
+
+  const handleDelete = async (assetId: string, fileName: string) => {
+    if (!confirm(`Delete "${fileName}"?`)) return;
+
+    try {
+      await deleteMutation.mutateAsync({ assetId });
+      await utils.ingestion.listAssets.invalidate({ brandId });
+      onDelete();
+      toast.success("Asset deleted");
+    } catch (error) {
+      console.error("Failed to delete asset:", error);
+      toast.error("Failed to delete asset");
+    }
+  };
+
   if (!assets || assets.length === 0) {
     return (
       <Card>
-        <CardContent className="pt-12 text-center">
+        <CardContent className="pt-12 pb-12 text-center">
           <p className="text-muted-foreground">No assets yet. Upload images or add URLs to get started.</p>
         </CardContent>
       </Card>
@@ -291,32 +411,63 @@ function AssetsListSection({ assets }: { assets?: any[] }) {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {assets.map((asset) => (
-        <Card key={asset.id}>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-lg">{asset.fileName}</CardTitle>
-                <CardDescription>{asset.mimeType}</CardDescription>
-              </div>
-              <StatusBadge status={asset.status} />
+        <Card key={asset.id} className="overflow-hidden flex flex-col">
+          {asset.mimeType?.startsWith("image/") && (
+            <div className="aspect-video bg-muted overflow-hidden">
+              <img
+                src={asset.s3Url}
+                alt={asset.fileName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50' y='50' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage%3C/text%3E%3C/svg%3E";
+                }}
+              />
             </div>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            {asset.extractedMetadata && (
-              <div className="bg-muted p-3 rounded-md space-y-1">
-                <p className="font-medium">Extracted Metadata:</p>
-                {Object.entries(asset.extractedMetadata).map(([key, value]: [string, any]) => (
-                  <p key={key} className="text-muted-foreground">
-                    <span className="font-medium">{key}:</span> {String(value)}
-                  </p>
-                ))}
+          )}
+          <CardContent className="pt-4 flex-1 flex flex-col space-y-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium truncate">{asset.fileName}</p>
+              <p className="text-xs text-muted-foreground">
+                {asset.fileSize ? `${(asset.fileSize / 1024 / 1024).toFixed(2)} MB` : "URL asset"}
+              </p>
+              <div className="mt-2">
+                <StatusBadge status={asset.status} />
+              </div>
+            </div>
+
+            {asset.extractedMetadata && Object.keys(asset.extractedMetadata).length > 0 && (
+              <div className="text-xs space-y-1 bg-muted p-2 rounded">
+                {Object.entries(asset.extractedMetadata)
+                  .slice(0, 2)
+                  .map(([key, value]) => (
+                    <p key={key} className="text-muted-foreground">
+                      <span className="font-medium">{key}:</span> {String(value).substring(0, 20)}...
+                    </p>
+                  ))}
               </div>
             )}
-            <p className="text-muted-foreground">
-              Created {new Date(asset.createdAt).toLocaleDateString()}
-            </p>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(asset.s3Url, "_blank")}
+                className="flex-1"
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                View
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete(asset.id, asset.fileName)}
+                disabled={deleteMutation.isPending}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}
