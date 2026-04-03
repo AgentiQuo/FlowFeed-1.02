@@ -119,3 +119,17 @@
 - [x] Add visual indicator badge to approved drafts
 - [x] Show queue status with scheduled time
 - [x] Test indicator with queued and non-queued drafts (4 tests passing)
+
+
+## UI/UX Improvements (Partial)
+- [x] Rename "AI Copywriter" tab to "CREATE" for consistency
+- [x] Add platform-specific guidelines documentation (text length, hashtags, image ratios)
+- [ ] Create platform guidelines table in database
+- [x] Build realistic draft preview with image above text
+- [ ] Add carousel preview for multi-image posts
+- [x] Add "Edit" button for manual tweaks to generated content
+- [x] Add "Improve" button with AI rewrite instructions
+- [ ] Implement AI feedback loop to learn user preferences
+- [x] Add X.com (Twitter) as a platform option
+- [x] Add "ALL" button to generate for all platforms at once
+- [x] Reorganize platform selection as buttons in the generate section

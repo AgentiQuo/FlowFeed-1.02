@@ -216,14 +216,14 @@ export default function DraftsPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold">AI Copywriter</h1>
+        <h1 className="text-3xl font-bold">CREATE</h1>
         <p className="text-muted-foreground">Generate and review platform-specific content</p>
       </div>
 
       <Tabs defaultValue="generate" className="w-full">
         <TabsList>
-          <TabsTrigger value="generate">Generate Drafts</TabsTrigger>
-          <TabsTrigger value="review">Review & Edit</TabsTrigger>
+          <TabsTrigger value="generate">Create</TabsTrigger>
+          <TabsTrigger value="review">Review</TabsTrigger>
         </TabsList>
 
         <TabsContent value="generate" className="space-y-6">
@@ -262,14 +262,21 @@ export default function DraftsPage() {
               <div className="space-y-3">
                 <label className="text-sm font-medium">Target Platforms</label>
                 <div className="flex flex-wrap gap-2">
-                  {["instagram", "linkedin", "facebook", "website"].map((platform) => (
+                  <Button
+                    variant={selectedPlatforms.length === 5 ? "default" : "outline"}
+                    onClick={() => setSelectedPlatforms(["instagram", "linkedin", "facebook", "x", "website"])}
+                    className="font-semibold"
+                  >
+                    ALL
+                  </Button>
+                  {["instagram", "linkedin", "facebook", "x", "website"].map((platform) => (
                     <Button
                       key={platform}
                       variant={selectedPlatforms.includes(platform) ? "default" : "outline"}
                       onClick={() => togglePlatform(platform)}
                       className="capitalize"
                     >
-                      {platform}
+                      {platform === "x" ? "X" : platform}
                     </Button>
                   ))}
                 </div>
@@ -391,6 +398,21 @@ export default function DraftsPage() {
                               Edit
                             </Button>
                             <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const feedback = prompt("What would you like to improve? (e.g., 'Make it shorter', 'Add more emojis', 'More professional tone')");
+                                if (feedback) {
+                                  setEditingDraftId(draft.id);
+                                  setEditContent(draft.content);
+                                  setEditFeedback(feedback);
+                                  toast.info(`Improving with feedback: ${feedback}`);
+                                }
+                              }}
+                            >
+                              Improve
+                            </Button>
+                            <Button
                               size="sm"
                               onClick={() => handleApproveDraft(draft.id)}
                               disabled={approveDraftMutation.isPending}
@@ -477,8 +499,31 @@ export default function DraftsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <p className="whitespace-pre-wrap text-sm">{draft.content}</p>
+                      <div className="space-y-4">
+                        {/* Realistic Preview */}
+                        <div className="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden border">
+                          {/* Image Preview */}
+                          {draft.assetId && (
+                            <div className="bg-gradient-to-br from-blue-400 to-purple-500 aspect-square flex items-center justify-center">
+                              <div className="text-white text-center">
+                                <p className="text-sm opacity-75">Image Preview</p>
+                                <p className="text-xs opacity-50">(Asset will display here)</p>
+                              </div>
+                            </div>
+                          )}
+                          {/* Text Content */}
+                          <div className="p-4">
+                            <p className="text-sm whitespace-pre-wrap font-medium">{draft.content}</p>
+                            <div className="mt-3 text-xs text-muted-foreground">
+                              <p>Platform: <span className="capitalize font-semibold">{draft.platform}</span></p>
+                              <p>Characters: {draft.content.length}</p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Full Content */}
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <p className="whitespace-pre-wrap text-sm">{draft.content}</p>
+                        </div>
                       </div>
                     )}
                   </CardContent>
