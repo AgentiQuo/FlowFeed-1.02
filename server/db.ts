@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, brands, categories, partners, agents, contentAssets, drafts, posts, leads, feedbackLogs } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,102 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Brand queries
+export async function getUserBrands(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(brands).where(eq(brands.userId, userId));
+}
+
+export async function getBrandById(brandId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(brands).where(eq(brands.id, brandId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Category queries
+export async function getBrandCategories(brandId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(categories).where(eq(categories.brandId, brandId));
+}
+
+// Partner queries
+export async function getBrandPartners(brandId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(partners).where(eq(partners.brandId, brandId));
+}
+
+// Agent queries
+export async function getBrandAgents(brandId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(agents).where(eq(agents.brandId, brandId));
+}
+
+// Content Asset queries
+export async function getBrandAssets(brandId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(contentAssets).where(eq(contentAssets.brandId, brandId));
+}
+
+export async function getAssetById(assetId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(contentAssets).where(eq(contentAssets.id, assetId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Draft queries
+export async function getBrandDrafts(brandId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(drafts).where(eq(drafts.brandId, brandId));
+}
+
+export async function getDraftById(draftId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(drafts).where(eq(drafts.id, draftId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Post queries
+export async function getBrandPosts(brandId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(posts).where(eq(posts.brandId, brandId));
+}
+
+export async function getQueuedPosts(brandId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(posts).where(
+    and(eq(posts.brandId, brandId), eq(posts.status, 'queued'))
+  );
+}
+
+// Lead queries
+export async function getBrandLeads(brandId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(leads).where(eq(leads.brandId, brandId));
+}
+
+export async function getPostLeads(postId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(leads).where(eq(leads.postId, postId));
+}
+
+// Feedback queries
+export async function getBrandFeedback(brandId: string, categoryId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(feedbackLogs).where(
+    and(eq(feedbackLogs.brandId, brandId), eq(feedbackLogs.categoryId, categoryId))
+  );
+}

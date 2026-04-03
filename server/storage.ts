@@ -100,3 +100,63 @@ export async function storageGet(relKey: string): Promise<{ key: string; url: st
     url: await buildDownloadUrl(baseUrl, key, apiKey),
   };
 }
+
+/**
+ * Generate a structured S3 key for brand assets
+ * Pattern: [brand-id]/[category-id]/[asset-type]/[filename]
+ */
+export function generateAssetKey(
+  brandId: string,
+  categoryId: string,
+  assetType: string,
+  fileName: string
+): string {
+  const timestamp = Date.now();
+  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '-');
+  return `${brandId}/${categoryId}/${assetType}/${timestamp}-${sanitizedFileName}`;
+}
+
+/**
+ * Generate a structured S3 key for voice bibles
+ * Pattern: [brand-id]/voice-bible/[filename]
+ */
+export function generateVoiceBibleKey(brandId: string, fileName: string): string {
+  const timestamp = Date.now();
+  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '-');
+  return `${brandId}/voice-bible/${timestamp}-${sanitizedFileName}`;
+}
+
+/**
+ * Upload an asset to S3 with structured naming
+ */
+export async function uploadAsset(
+  brandId: string,
+  categoryId: string,
+  assetType: string,
+  fileName: string,
+  fileBuffer: Buffer | Uint8Array | string,
+  mimeType: string
+) {
+  const key = generateAssetKey(brandId, categoryId, assetType, fileName);
+  return await storagePut(key, fileBuffer, mimeType);
+}
+
+/**
+ * Upload a voice bible document to S3
+ */
+export async function uploadVoiceBible(
+  brandId: string,
+  fileName: string,
+  fileBuffer: Buffer | Uint8Array | string,
+  mimeType: string
+) {
+  const key = generateVoiceBibleKey(brandId, fileName);
+  return await storagePut(key, fileBuffer, mimeType);
+}
+
+/**
+ * Get a presigned URL for downloading an asset
+ */
+export async function getAssetUrl(s3Key: string, expiresIn?: number) {
+  return await storageGet(s3Key);
+}
