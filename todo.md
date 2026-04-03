@@ -100,3 +100,7 @@
 - [x] Add download/copy functionality
 - [x] Test WordPress import compatibility
 - [x] Write and pass comprehensive vitest tests for all export formats
+
+
+## Bug Fixes
+- [x] Queue button grayed out after draft approval - FIXED: Updated brandId extraction regex to work from any dashboard page, not just /dashboard/brands/[brandId]

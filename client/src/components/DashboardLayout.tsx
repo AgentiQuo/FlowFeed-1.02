@@ -187,7 +187,8 @@ function DashboardLayoutContent({
                 let itemPath = item.path;
                 let isDisabled = false;
                 if ((item as any).requiresBrandId) {
-                  const brandIdMatch = location.match(/\/dashboard\/brands\/([^/]+)/);
+                  // Match brandId from any dashboard page: /dashboard/[page]/[brandId]
+                  const brandIdMatch = location.match(/\/dashboard\/[^/]+\/([^/]+)/);
                   if (brandIdMatch) {
                     const brandId = brandIdMatch[1];
                     // Append brandId to the path
