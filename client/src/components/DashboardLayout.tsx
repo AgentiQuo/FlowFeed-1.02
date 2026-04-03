@@ -30,6 +30,8 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Brands", path: "/dashboard/brands" },
   { icon: Users, label: "Ingestion", path: "/dashboard/ingestion", requiresBrandId: true },
+  { icon: Users, label: "Drafts", path: "/dashboard/drafts", requiresBrandId: true },
+  { icon: Users, label: "Queue", path: "/dashboard/queue", requiresBrandId: true },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -183,13 +185,16 @@ function DashboardLayoutContent({
               {menuItems.map(item => {
                 // Extract brandId from current location if needed
                 let itemPath = item.path;
+                let isDisabled = false;
                 if ((item as any).requiresBrandId) {
                   const brandIdMatch = location.match(/\/dashboard\/brands\/([^/]+)/);
                   if (brandIdMatch) {
-                    itemPath = `/dashboard/ingestion/${brandIdMatch[1]}`;
+                    const brandId = brandIdMatch[1];
+                    // Append brandId to the path
+                    itemPath = `${item.path}/${brandId}`;
                   } else {
-                    // If no brand is selected, disable the item
-                    return null;
+                    // If no brand is selected, disable the item but still show it
+                    isDisabled = true;
                   }
                 }
                 const isActive = location === itemPath || location.startsWith(itemPath);
@@ -197,9 +202,10 @@ function DashboardLayoutContent({
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      onClick={() => setLocation(itemPath)}
+                      onClick={() => !isDisabled && setLocation(itemPath)}
                       tooltip={item.label}
-                      className={`h-10 transition-all font-normal`}
+                      disabled={isDisabled}
+                      className={`h-10 transition-all font-normal ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <item.icon
                         className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}

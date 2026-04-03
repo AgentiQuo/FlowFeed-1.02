@@ -35,9 +35,9 @@
 - [x] Implement RAG feedback loop (save user edits to feedback_logs table)
 - [x] Create "Teach AI" interface for brand voice refinement
 
-## Phase 5: Queue, Scheduling & Leads
-- [ ] Build smart scheduling queue interface with drag-and-drop reordering
-- [ ] Implement scheduling logic (daytime only, 2-3 hour random gaps)
+## Phase 5: Queue, Scheduling & Leads (Complete)
+- [x] Build smart scheduling queue interface with drag-and-drop reordering
+- [x] Implement scheduling logic (daytime only, 2-3 hour random gaps)
 - [ ] Create lead capture system with inquiry forms
 - [ ] Build agent notification system for new leads
 - [ ] Implement WordPress-friendly export format
