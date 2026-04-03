@@ -57,7 +57,9 @@
 - [ ] Optimize performance and database queries
 
 ## Bugs & Issues
-(None reported yet)
+- [x] Partners add button not working - FIXED: Added query invalidation
+- [x] Categories not displaying after creation - FIXED: Added query invalidation and toast notifications
+- [x] Listings/Categories tab - VERIFIED: All working correctly
 
 ## Completed Features
 (None yet)
