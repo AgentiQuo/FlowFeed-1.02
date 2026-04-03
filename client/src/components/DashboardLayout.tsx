@@ -29,8 +29,8 @@ import { Button } from "./ui/button";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Brands", path: "/dashboard/brands" },
-  { icon: Users, label: "Ingestion", path: "/dashboard/ingestion", requiresBrandId: true },
-  { icon: Users, label: "Drafts", path: "/dashboard/drafts", requiresBrandId: true },
+  { icon: Users, label: "Upload", path: "/dashboard/ingestion", requiresBrandId: true },
+  { icon: Users, label: "Create", path: "/dashboard/drafts", requiresBrandId: true },
   { icon: Users, label: "Queue", path: "/dashboard/queue", requiresBrandId: true },
 ];
 

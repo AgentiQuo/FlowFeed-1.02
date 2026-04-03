@@ -143,6 +143,10 @@ export const posts = mysqlTable("posts", {
   scheduledFor: timestamp("scheduledFor"),
   publishedAt: timestamp("publishedAt"),
   queuePosition: int("queuePosition"),
+  impressions: int("impressions").default(0),
+  engagements: int("engagements").default(0),
+  clicks: int("clicks").default(0),
+  conversions: int("conversions").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
