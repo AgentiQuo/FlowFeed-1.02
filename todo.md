@@ -112,3 +112,10 @@
 - [x] Implement automatic scheduling when moving to queue
 - [x] Add success toast notification
 - [x] Test end-to-end workflow with comprehensive vitest tests (5 tests passing)
+
+
+## Already Queued Indicator Feature (Complete)
+- [x] Create checkDraftQueued query in queue router
+- [x] Add visual indicator badge to approved drafts
+- [x] Show queue status with scheduled time
+- [x] Test indicator with queued and non-queued drafts (4 tests passing)

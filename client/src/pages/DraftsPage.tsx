@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export default function DraftsPage() {
   const [exportFormat, setExportFormat] = useState<"html" | "json" | "xml">("html");
   const [exportingDraftId, setExportingDraftId] = useState<string | null>(null);
   const [movingToQueueDraftId, setMovingToQueueDraftId] = useState<string | null>(null);
+  const [queuedDrafts, setQueuedDrafts] = useState<Record<string, any>>({});
 
   if (!brandId) return <div>Invalid brand</div>;
 
@@ -182,6 +183,36 @@ export default function DraftsPage() {
     });
   };
 
+  // Check queue status for approved drafts when they load
+  useEffect(() => {
+    if (!drafts) return;
+
+    const checkQueueStatus = async () => {
+      const newQueuedDrafts: Record<string, any> = {};
+      const approvedDrafts = drafts.filter((d: any) => d.status === "reviewed");
+
+      for (const draft of approvedDrafts) {
+        try {
+          const result = await fetch(
+            `/api/trpc/queue.checkDraftQueued?input=${encodeURIComponent(JSON.stringify({ draftId: draft.id }))}`
+          )
+            .then((r) => r.json())
+            .catch(() => null);
+
+          if (result?.result?.data?.isQueued) {
+            newQueuedDrafts[draft.id] = result.result.data;
+          }
+        } catch (error) {
+          console.error("Error checking queue status:", error);
+        }
+      }
+
+      setQueuedDrafts(newQueuedDrafts);
+    };
+
+    checkQueueStatus();
+  }, [drafts]);
+
   return (
     <div className="space-y-6 p-6">
       <div>
@@ -336,6 +367,12 @@ export default function DraftsPage() {
                           <Badge variant={draft.status === "draft" ? "secondary" : "default"}>
                             {draft.status}
                           </Badge>
+                          {queuedDrafts[draft.id] && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              <CheckCircle className="mr-1 h-3 w-3" />
+                              Queued
+                            </Badge>
+                          )}
                         </div>
                         <CardDescription>Created {new Date(draft.createdAt).toLocaleDateString()}</CardDescription>
                       </div>

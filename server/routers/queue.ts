@@ -10,6 +10,44 @@ import { eq, and } from "drizzle-orm";
  */
 export const queueRouter = router({
   /**
+   * Check if a draft is already queued
+   * Returns queued post info if found, null otherwise
+   */
+  checkDraftQueued: protectedProcedure
+    .input(
+      z.object({
+        draftId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return null;
+
+      const queuedPost = await db
+        .select()
+        .from(posts)
+        .where(
+          and(
+            eq(posts.draftId, input.draftId),
+            eq(posts.status, "scheduled" as any)
+          )
+        )
+        .limit(1);
+
+      if (!queuedPost || queuedPost.length === 0) {
+        return null;
+      }
+
+      const post = queuedPost[0];
+      return {
+        isQueued: true,
+        scheduledFor: post.scheduledFor,
+        platform: post.platform,
+        queuePosition: post.queuePosition,
+      };
+    }),
+
+  /**
    * Get all queued posts for a brand
    * Returns posts ordered by scheduled time
    */
