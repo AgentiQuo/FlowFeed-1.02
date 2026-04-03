@@ -53,6 +53,24 @@ export default function DraftsPage() {
     fetchAssetImages();
   }, [assets]);
 
+  // Handle keyboard navigation for carousel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!assets || assets.length === 0) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setCarouselIndex((prev) => (prev - 1 + assets.length) % assets.length);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setCarouselIndex((prev) => (prev + 1) % assets.length);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [assets]);
+
   // Get drafts for selected asset
   const { data: drafts, isLoading: draftsLoading, refetch: refetchDrafts } = trpc.content.getDrafts.useQuery(
     {
@@ -316,13 +334,47 @@ export default function DraftsPage() {
                       </div>
                     </div>
 
+                    {/* Thumbnail Strip */}
+                    {assets.length > 1 && (
+                      <div className="flex gap-2 overflow-x-auto pb-2">
+                        {assets.map((asset: any, index: number) => (
+                          <button
+                            key={asset.id}
+                            onClick={() => {
+                              setCarouselIndex(index);
+                              setSelectedAssetId(asset.id);
+                              // Platforms remain selected from previous selections
+                            }}
+                            className={`flex-shrink-0 w-20 h-20 rounded border-2 transition overflow-hidden ${
+                              carouselIndex === index
+                                ? "border-blue-500 ring-2 ring-blue-300"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
+                          >
+                            {assetImages[asset.id] ? (
+                              <img
+                                src={assetImages[asset.id]}
+                                alt={asset.fileName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                                {index + 1}
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Asset Info and Platform Selection */}
                     <div className="space-y-3">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Selected: {assets[carouselIndex]?.fileName}</p>
+                        <p className="text-xs text-muted-foreground mt-1">💡 Use arrow keys to navigate carousel</p>
                       </div>
 
-                      {/* Platform Selection under image */}
+                      {/* Platform Selection under image - Persistent across carousel */}
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Generate for these platforms:</label>
                         <div className="flex flex-wrap gap-2">
@@ -352,6 +404,11 @@ export default function DraftsPage() {
                             </Button>
                           ))}
                         </div>
+                      </div>
+                      <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-2">
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          ✓ Selected platforms will apply to all images you process. Use arrow keys or click thumbnails to browse.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -405,7 +462,7 @@ export default function DraftsPage() {
                 size="lg"
               >
                 {generateDraftsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create
+                Create for {selectedPlatforms.length} Platform{selectedPlatforms.length !== 1 ? "s" : ""}
               </Button>
             </CardContent>
           </Card>

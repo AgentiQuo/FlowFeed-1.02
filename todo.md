@@ -156,3 +156,17 @@
 - [x] Display platform selection buttons under each image
 - [x] Rename "Generate" button to "Create"
 - [x] Test carousel navigation and platform selection
+
+
+## Carousel Enhancement - Keyboard & Thumbnails (Complete)
+- [x] Add keyboard event listener for arrow keys
+- [x] Implement left/right arrow key navigation
+- [x] Build thumbnail strip component below carousel
+- [x] Add click-to-jump functionality for thumbnails
+- [x] Test keyboard navigation and thumbnail selection (13 tests passing)
+- [x] Maintain platform selections across carousel navigation
+- [x] Show platform count in Create button
+- [x] Add helpful UI feedback about persistent selections
+
+
+
