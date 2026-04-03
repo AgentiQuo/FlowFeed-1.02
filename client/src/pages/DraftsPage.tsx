@@ -25,6 +25,7 @@ export default function DraftsPage() {
   const [assetImages, setAssetImages] = useState<Record<string, string>>({});
   const [loadingAssetImages, setLoadingAssetImages] = useState<Record<string, boolean>>({});
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [draftPlatformFilter, setDraftPlatformFilter] = useState<string | null>(null);
 
   if (!brandId) return <div>Invalid brand</div>;
 
@@ -428,8 +429,32 @@ export default function DraftsPage() {
                       </CardContent>
                     </Card>
                   ) : (
-                    <div className="space-y-3">
-                      {drafts.map((draft: any) => {
+                    <div className="space-y-4">
+                      {/* Platform Filter Buttons */}
+                      <div className="flex gap-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          variant={draftPlatformFilter === null ? "default" : "outline"}
+                          onClick={() => setDraftPlatformFilter(null)}
+                        >
+                          All ({drafts.length})
+                        </Button>
+                        {Array.from(new Set(drafts.map((d: any) => d.platform))).map((platform: any) => (
+                          <Button
+                            key={platform}
+                            size="sm"
+                            variant={draftPlatformFilter === platform ? "default" : "outline"}
+                            onClick={() => setDraftPlatformFilter(platform)}
+                            className="capitalize"
+                          >
+                            {platform} ({drafts.filter((d: any) => d.platform === platform).length})
+                          </Button>
+                        ))}
+                      </div>
+
+                      {/* Filtered Drafts */}
+                      <div className="space-y-3">
+                        {drafts.filter((d: any) => draftPlatformFilter === null || d.platform === draftPlatformFilter).map((draft: any) => {
                         const assetImage = getAssetImageUrl(draft.assetId);
                         return (
                         <Card key={draft.id} className="overflow-hidden">
@@ -573,7 +598,8 @@ export default function DraftsPage() {
                           </CardContent>
                         </Card>
                       );
-                      })}
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
