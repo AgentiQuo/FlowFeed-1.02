@@ -37,13 +37,17 @@ export default function DraftsPage() {
     brandId,
   });
 
-  // Fetch asset image URLs when assets load
+  // Auto-select first asset and fetch images when assets load
   useEffect(() => {
     if (!assets || assets.length === 0) return;
 
+    // Auto-select first asset if none selected
+    if (!selectedAssetId) {
+      setSelectedAssetId(assets[0].id);
+    }
+
     const fetchAssetImages = async () => {
       const images: Record<string, string> = {};
-      const loading: Record<string, boolean> = {};
 
       for (const asset of assets) {
         if (asset.s3Url) {
@@ -55,7 +59,7 @@ export default function DraftsPage() {
     };
 
     fetchAssetImages();
-  }, [assets]);
+  }, [assets, selectedAssetId]);
 
   // Handle keyboard navigation for carousel
   useEffect(() => {
@@ -425,14 +429,28 @@ export default function DraftsPage() {
                     </Card>
                   ) : (
                     <div className="space-y-3">
-                      {drafts.map((draft: any) => (
+                      {drafts.map((draft: any) => {
+                        const assetImage = getAssetImageUrl(draft.assetId);
+                        return (
                         <Card key={draft.id} className="overflow-hidden">
                           <CardContent className="pt-6">
                             <div className="space-y-3">
-                              {/* Draft Header with Platform and Status */}
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Badge className="capitalize">{draft.platform}</Badge>
+                              {/* Asset Thumbnail and Draft Header */}
+                              <div className="flex gap-4">
+                                {assetImage && (
+                                  <div className="flex-shrink-0">
+                                    <img
+                                      src={assetImage}
+                                      alt="Asset"
+                                      className="w-20 h-20 object-cover rounded border border-border"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1">
+                                  {/* Draft Header with Platform and Status */}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Badge className="capitalize">{draft.platform}</Badge>
                                   <Badge variant={draft.status === "reviewed" ? "default" : "secondary"}>
                                     {draft.status === "draft" && "Draft"}
                                     {draft.status === "reviewed" && "Approved"}
@@ -446,8 +464,8 @@ export default function DraftsPage() {
                                 </div>
                               </div>
 
-                              {/* Draft Content */}
-                              {editingDraftId === draft.id ? (
+                                  {/* Draft Content */}
+                                  {editingDraftId === draft.id ? (
                                 <div className="space-y-2">
                                   <Textarea
                                     value={editContent}
@@ -478,14 +496,16 @@ export default function DraftsPage() {
                                     </Button>
                                   </div>
                                 </div>
-                              ) : (
-                                <div>
-                                  <p className="text-sm text-foreground whitespace-pre-wrap">{draft.content}</p>
-                                  {draft.feedback && (
-                                    <p className="text-xs text-muted-foreground mt-2 italic">Feedback: {draft.feedback}</p>
+                                  ) : (
+                                    <div>
+                                      <p className="text-sm text-foreground whitespace-pre-wrap">{draft.content}</p>
+                                      {draft.feedback && (
+                                        <p className="text-xs text-muted-foreground mt-2 italic">Feedback: {draft.feedback}</p>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
-                              )}
+                              </div>
 
                               {/* Action Buttons */}
                               <div className="flex flex-wrap gap-2 pt-2">
@@ -552,7 +572,8 @@ export default function DraftsPage() {
                             </div>
                           </CardContent>
                         </Card>
-                      ))}
+                      );
+                      })}
                     </div>
                   )}
                 </div>

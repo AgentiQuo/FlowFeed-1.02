@@ -19,12 +19,30 @@ export default function QueuePage() {
   const { brandId } = useParams<{ brandId: string }>();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState<string | null>(null);
+  const [assetImages, setAssetImages] = useState<Record<string, string>>({});
 
   // Fetch queue data
   const { data: queuePosts = [], isLoading: isLoadingQueue, refetch: refetchQueue } = trpc.queue.getQueue.useQuery(
     { brandId: brandId || "" },
     { enabled: !!brandId }
   );
+
+  // Fetch assets to get thumbnails for queued posts
+  const { data: assets = [] } = trpc.ingestion.listAssets.useQuery(
+    { brandId: brandId || "" },
+    { enabled: !!brandId }
+  );
+
+  // Build asset image map
+  useEffect(() => {
+    const images: Record<string, string> = {};
+    assets.forEach((asset) => {
+      if (asset.s3Url) {
+        images[asset.id] = asset.s3Url;
+      }
+    });
+    setAssetImages(images);
+  }, [assets]);
 
   const { data: analytics } = trpc.queue.getQueueAnalytics.useQuery(
     { brandId: brandId || "" },
@@ -247,6 +265,15 @@ export default function QueuePage() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
+                    {(post as any).assetId && assetImages[(post as any).assetId] && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={assetImages[(post as any).assetId]}
+                          alt="Asset"
+                          className="w-16 h-16 object-cover rounded border border-border"
+                        />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-semibold text-muted-foreground">

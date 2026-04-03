@@ -68,7 +68,32 @@ export const queueRouter = router({
         )
         .orderBy(posts.scheduledFor);
 
-      return queuedPosts || [];
+      // Enrich posts with asset ID from drafts for thumbnail display
+      const enrichedPosts = await Promise.all(
+        (queuedPosts || []).map(async (post) => {
+          if (!post.draftId) return post;
+          
+          try {
+            const draft = await db
+              .select()
+              .from(drafts)
+              .where(eq(drafts.id, post.draftId))
+              .limit(1);
+            
+            if (draft && draft[0] && (draft[0] as any).assetId) {
+              return {
+                ...post,
+                assetId: (draft[0] as any).assetId,
+              };
+            }
+          } catch (error) {
+            console.error("Error enriching post with asset:", error);
+          }
+          return post;
+        })
+      );
+
+      return enrichedPosts || [];
     }),
 
   /**
