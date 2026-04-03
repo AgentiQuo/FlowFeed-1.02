@@ -26,7 +26,10 @@ export const ingestionRouter = router({
         brandId: z.string(),
         categoryId: z.string(),
         fileName: z.string(),
-        fileBuffer: z.instanceof(Buffer),
+        fileBuffer: z.union([
+          z.instanceof(Buffer),
+          z.instanceof(Uint8Array),
+        ]),
         mimeType: z.string(),
       })
     )
@@ -35,13 +38,18 @@ export const ingestionRouter = router({
       if (!db) throw new Error("Database not available");
 
       try {
+        // Convert Uint8Array to Buffer if needed
+        const fileBuffer = Buffer.isBuffer(input.fileBuffer)
+          ? input.fileBuffer
+          : Buffer.from(input.fileBuffer);
+
         // Upload to S3
         const { url: s3Url, key: s3Key } = await uploadAsset(
           input.brandId,
           input.categoryId,
           "images",
           input.fileName,
-          input.fileBuffer,
+          fileBuffer,
           input.mimeType
         );
 

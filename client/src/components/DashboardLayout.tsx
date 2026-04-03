@@ -29,7 +29,7 @@ import { Button } from "./ui/button";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Brands", path: "/dashboard/brands" },
-  { icon: Users, label: "Ingestion", path: "/dashboard/ingestion" },
+  { icon: Users, label: "Ingestion", path: "/dashboard/ingestion", requiresBrandId: true },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -181,12 +181,23 @@ function DashboardLayoutContent({
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
               {menuItems.map(item => {
-                const isActive = location === item.path;
+                // Extract brandId from current location if needed
+                let itemPath = item.path;
+                if ((item as any).requiresBrandId) {
+                  const brandIdMatch = location.match(/\/dashboard\/brands\/([^/]+)/);
+                  if (brandIdMatch) {
+                    itemPath = `/dashboard/ingestion/${brandIdMatch[1]}`;
+                  } else {
+                    // If no brand is selected, disable the item
+                    return null;
+                  }
+                }
+                const isActive = location === itemPath || location.startsWith(itemPath);
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      onClick={() => setLocation(item.path)}
+                      onClick={() => setLocation(itemPath)}
                       tooltip={item.label}
                       className={`h-10 transition-all font-normal`}
                     >
