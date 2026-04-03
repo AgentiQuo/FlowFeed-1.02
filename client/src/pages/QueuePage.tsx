@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 
 export default function QueuePage() {
@@ -317,7 +318,9 @@ export default function QueuePage() {
                               <p className="text-sm">{post.content}</p>
                             </div>
                             <div className="flex gap-2 justify-end">
-                              <Button variant="outline">Cancel</Button>
+                              <DialogClose asChild>
+                                <Button variant="outline">Cancel</Button>
+                              </DialogClose>
                               <Button
                                 onClick={() => handlePublish(post.id)}
                                 disabled={isPublishing === post.id}
