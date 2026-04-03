@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle, Download, Copy, Send, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { DraftPreview } from "@/components/DraftPreview";
 
 export default function DraftsPage() {
   const { brandId } = useParams();
@@ -16,7 +17,7 @@ export default function DraftsPage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["instagram"]);
 
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState("");
+  const [editContent, setEditContent] = useState<string>("");
   const [editFeedback, setEditFeedback] = useState("");
   const [exportFormat, setExportFormat] = useState<"html" | "json" | "xml">("html");
   const [exportingDraftId, setExportingDraftId] = useState<string | null>(null);
@@ -187,7 +188,7 @@ export default function DraftsPage() {
   const handleUpdateDraft = (draftId: string) => {
     updateDraftMutation.mutate({
       draftId,
-      content: editContent,
+      content: editContent || "",
       feedback: editFeedback,
     });
   };
@@ -457,146 +458,28 @@ export default function DraftsPage() {
                         {drafts.filter((d: any) => draftPlatformFilter === null || d.platform === draftPlatformFilter).map((draft: any) => {
                         const assetImage = getAssetImageUrl(draft.assetId);
                         return (
-                        <Card key={draft.id} className="overflow-hidden">
-                          <CardContent className="pt-6">
-                            <div className="space-y-3">
-                              {/* Asset Thumbnail and Draft Header */}
-                              <div className="flex gap-4">
-                                {assetImage && (
-                                  <div className="flex-shrink-0">
-                                    <img
-                                      src={assetImage}
-                                      alt="Asset"
-                                      className="w-20 h-20 object-cover rounded border border-border"
-                                    />
-                                  </div>
-                                )}
-                                <div className="flex-1">
-                                  {/* Draft Header with Platform and Status */}
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <Badge className="capitalize">{draft.platform}</Badge>
-                                  <Badge variant={draft.status === "reviewed" ? "default" : "secondary"}>
-                                    {draft.status === "draft" && "Draft"}
-                                    {draft.status === "reviewed" && "Approved"}
-                                    {draft.status === "published" && "Published"}
-                                  </Badge>
-                                  {queuedDrafts[draft.id] && (
-                                    <Badge variant="outline" className="text-green-600 border-green-200">
-                                      ✓ Queued
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-
-                                  {/* Draft Content */}
-                                  {editingDraftId === draft.id ? (
-                                <div className="space-y-2">
-                                  <Textarea
-                                    value={editContent}
-                                    onChange={(e) => setEditContent(e.target.value)}
-                                    placeholder="Edit draft content"
-                                    rows={4}
-                                  />
-                                  <Textarea
-                                    value={editFeedback}
-                                    onChange={(e) => setEditFeedback(e.target.value)}
-                                    placeholder="Add feedback (optional)"
-                                    rows={2}
-                                  />
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleUpdateDraft(draft.id)}
-                                      disabled={updateDraftMutation.isPending}
-                                    >
-                                      Save Changes
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => setEditingDraftId(null)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                                  ) : (
-                                    <div>
-                                      <p className="text-sm text-foreground whitespace-pre-wrap">{draft.content}</p>
-                                      {draft.feedback && (
-                                        <p className="text-xs text-muted-foreground mt-2 italic">Feedback: {draft.feedback}</p>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Action Buttons */}
-                              <div className="flex flex-wrap gap-2 pt-2">
-                                {editingDraftId !== draft.id && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                        setEditingDraftId(draft.id);
-                                        setEditContent(draft.content);
-                                        setEditFeedback(draft.feedback || "");
-                                      }}
-                                    >
-                                      Edit
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleCopyToClipboard(draft.id)}
-                                    >
-                                      <Copy className="h-4 w-4 mr-1" />
-                                      Copy
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleExportDraft(draft.id)}
-                                      disabled={exportingDraftId === draft.id}
-                                    >
-                                      {exportingDraftId === draft.id ? (
-                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                      ) : (
-                                        <Download className="h-4 w-4 mr-1" />
-                                      )}
-                                      Export
-                                    </Button>
-                                    {!queuedDrafts[draft.id] && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => handleMoveToQueue(draft.id)}
-                                        disabled={movingToQueueDraftId === draft.id}
-                                        className="ml-auto"
-                                      >
-                                        {movingToQueueDraftId === draft.id ? (
-                                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                        ) : (
-                                          <Send className="h-4 w-4 mr-1" />
-                                        )}
-                                        Queue
-                                      </Button>
-                                    )}
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      onClick={() => handleDeleteDraft(draft.id)}
-                                      disabled={deleteDraftMutation.isPending}
-                                    >
-                                      Delete
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+<DraftPreview
+                          key={draft.id}
+                          draft={draft}
+                          assetImage={assetImage}
+                          isQueued={!!queuedDrafts[draft.id]}
+                          isEditing={editingDraftId === draft.id}
+                          editContent={editContent}
+                          onEditChange={setEditContent}
+                          onSaveEdit={() => handleUpdateDraft(draft.id)}
+                          onCancelEdit={() => setEditingDraftId(null)}
+                          onStartEdit={() => {
+                            setEditingDraftId(draft.id);
+                            setEditContent(draft.content);
+                            setEditFeedback(draft.feedback || "");
+                          }}
+                          onCopy={() => handleCopyToClipboard(draft.id)}
+                          onExport={() => handleExportDraft(draft.id)}
+                          onQueue={() => handleMoveToQueue(draft.id)}
+                          onRemove={() => handleDeleteDraft(draft.id)}
+                          isMovingToQueue={movingToQueueDraftId === draft.id}
+                          isRemoving={deleteDraftMutation.isPending}
+                        />
                       );
                         })}
                       </div>
@@ -769,7 +652,7 @@ export default function DraftsPage() {
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Content</label>
                           <Textarea
-                            value={editContent}
+                            value={editContent || ""}
                             onChange={(e) => setEditContent(e.target.value)}
                             className="min-h-[150px]"
                           />

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 interface DraftPreviewProps {
   draft: any;
-  assetImage?: string;
+  assetImage?: string | null;
   isQueued?: boolean;
   isEditing?: boolean;
   editContent?: string;
@@ -111,7 +111,7 @@ export function DraftPreview({
           {isEditing ? (
             <div className="space-y-2">
               <Textarea
-                value={editContent}
+                value={editContent || ""}
                 onChange={(e) => onEditChange?.(e.target.value)}
                 placeholder="Edit draft content"
                 className="min-h-24"
