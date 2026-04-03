@@ -171,7 +171,7 @@ export default function QueuePage() {
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">Filter by Brand:</label>
-          <Select value={filterBrandId || "all"} onValueChange={(value) => setFilterBrandId(value === "all" ? undefined : value)}>
+          <Select value={filterBrandId ? filterBrandId : "all"} onValueChange={(value) => setFilterBrandId(value === "all" ? undefined : value)}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="All Brands" />
             </SelectTrigger>
