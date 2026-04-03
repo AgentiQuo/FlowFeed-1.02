@@ -16,17 +16,38 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
-      <Route path={"/dashboard/*"}>
+      <Route path={"/dashboard/brands"}>
         {() => (
           <DashboardLayout>
-            <Switch>
-              <Route path={"/brands"} component={BrandsPage} />
-              <Route path={"/brands/:brandId"} component={BrandDetailPage} />
-              <Route path={"/ingestion/:brandId"} component={IngestionPage} />
-              <Route path={"/drafts/:brandId"} component={DraftsPage} />
-              <Route path={"/queue/:brandId"} component={QueuePage} />
-              <Route component={NotFound} />
-            </Switch>
+            <BrandsPage />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path={"/dashboard/brands/:brandId"}>
+        {() => (
+          <DashboardLayout>
+            <BrandDetailPage />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path={"/dashboard/ingestion/:brandId"}>
+        {() => (
+          <DashboardLayout>
+            <IngestionPage />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path={"/dashboard/drafts/:brandId"}>
+        {() => (
+          <DashboardLayout>
+            <DraftsPage />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path={"/dashboard/queue/:brandId"}>
+        {() => (
+          <DashboardLayout>
+            <QueuePage />
           </DashboardLayout>
         )}
       </Route>
