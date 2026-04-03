@@ -16,14 +16,14 @@
 - [x] Add brand-specific settings and configuration page
 - [x] Implement RLS policies for brand data access
 
-## Phase 3: Asset Ingestion
-- [ ] Implement drag-and-drop image upload interface
-- [ ] Create folder upload support
-- [ ] Build "Quick Add URL" feature with optimistic UI
-- [ ] Implement URL scraping for real estate listings (text-first extraction)
-- [ ] Set up background job for async image processing
-- [ ] Create content category selection interface
-- [ ] Implement S3 storage with structured naming (brand-id/category-id/asset-type/filename)
+## Phase 3: Asset Ingestion (Complete)
+- [x] Implement drag-and-drop image upload interface
+- [x] Create folder upload support
+- [x] Build "Quick Add URL" feature with optimistic UI
+- [x] Implement URL scraping for real estate listings (text-first extraction)
+- [x] Set up background job for async image processing
+- [x] Create content category selection interface
+- [x] Implement S3 storage with structured naming (brand-id/category-id/asset-type/filename)
 
 ## Phase 4: AI Copywriter & Drafts (Complete)
 - [x] Integrate Gemini 3 API for vision and metadata extraction
@@ -133,3 +133,10 @@
 - [x] Add X.com (Twitter) as a platform option
 - [x] Add "ALL" button to generate for all platforms at once
 - [x] Reorganize platform selection as buttons in the generate section
+
+
+## Real Image Integration (Complete)
+- [x] Fetch asset image data and create image URL helper
+- [x] Update preview component to display real images
+- [x] Add image loading states and error handling
+- [x] Test image preview functionality (6 tests passing)

@@ -22,6 +22,8 @@ export default function DraftsPage() {
   const [exportingDraftId, setExportingDraftId] = useState<string | null>(null);
   const [movingToQueueDraftId, setMovingToQueueDraftId] = useState<string | null>(null);
   const [queuedDrafts, setQueuedDrafts] = useState<Record<string, any>>({});
+  const [assetImages, setAssetImages] = useState<Record<string, string>>({});
+  const [loadingAssetImages, setLoadingAssetImages] = useState<Record<string, boolean>>({});
 
   if (!brandId) return <div>Invalid brand</div>;
 
@@ -29,6 +31,26 @@ export default function DraftsPage() {
   const { data: assets, isLoading: assetsLoading } = trpc.ingestion.listAssets.useQuery({
     brandId,
   });
+
+  // Fetch asset image URLs when assets load
+  useEffect(() => {
+    if (!assets || assets.length === 0) return;
+
+    const fetchAssetImages = async () => {
+      const images: Record<string, string> = {};
+      const loading: Record<string, boolean> = {};
+
+      for (const asset of assets) {
+        if (asset.s3Url) {
+          images[asset.id] = asset.s3Url;
+        }
+      }
+
+      setAssetImages(images);
+    };
+
+    fetchAssetImages();
+  }, [assets]);
 
   // Get drafts for selected asset
   const { data: drafts, isLoading: draftsLoading, refetch: refetchDrafts } = trpc.content.getDrafts.useQuery(
@@ -181,6 +203,11 @@ export default function DraftsPage() {
       brandId,
       draftId,
     });
+  };
+
+  // Get asset image URL for a draft
+  const getAssetImageUrl = (assetId: string): string | null => {
+    return assetImages[assetId] || null;
   };
 
   // Check queue status for approved drafts when they load
@@ -504,10 +531,32 @@ export default function DraftsPage() {
                         <div className="bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden border">
                           {/* Image Preview */}
                           {draft.assetId && (
-                            <div className="bg-gradient-to-br from-blue-400 to-purple-500 aspect-square flex items-center justify-center">
-                              <div className="text-white text-center">
-                                <p className="text-sm opacity-75">Image Preview</p>
-                                <p className="text-xs opacity-50">(Asset will display here)</p>
+                            <div className="relative aspect-square bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                              {getAssetImageUrl(draft.assetId) ? (
+                                <img
+                                  src={getAssetImageUrl(draft.assetId)!}
+                                  alt="Property preview"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    const img = e.target as HTMLImageElement;
+                                    img.style.display = 'none';
+                                    const errorDiv = img.parentElement?.querySelector('[data-error]') as HTMLElement;
+                                    if (errorDiv) errorDiv.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              {!getAssetImageUrl(draft.assetId) && (
+                                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                  <Loader2 className="h-6 w-6 mb-2 animate-spin" />
+                                  <p className="text-sm">Loading image...</p>
+                                </div>
+                              )}
+                              <div
+                                data-error
+                                className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800 text-muted-foreground hidden"
+                              >
+                                <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
+                                <p className="text-sm">Image failed to load</p>
                               </div>
                             </div>
                           )}
