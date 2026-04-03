@@ -76,3 +76,13 @@
 - [x] Add image preview functionality
 - [x] Implement delete functionality with confirmation
 - [x] Test all upload features and verify S3 integration
+
+
+## Gemini Vision Integration (Complete)
+- [x] Create analyzePropertyImage tRPC procedure
+- [x] Implement Gemini 3 vision API call with structured JSON response
+- [x] Extract property details (bedrooms, bathrooms, square footage, style, condition)
+- [x] Integrate analysis into upload workflow (automatic background processing)
+- [x] Display extracted metadata in asset listing with full details
+- [ ] Add manual metadata editing capability
+- [ ] Test with sample property images

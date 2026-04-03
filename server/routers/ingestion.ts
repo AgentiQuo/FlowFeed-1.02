@@ -5,6 +5,7 @@ import { contentAssets, InsertContentAsset } from "../../drizzle/schema";
 import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
 import { uploadAsset } from "../storage";
+import { invokeLLM } from "../_core/llm";
 
 export const ingestionRouter = router({
   listAssets: protectedProcedure
@@ -44,7 +45,7 @@ export const ingestionRouter = router({
           input.mimeType
         );
 
-        // Create asset record
+        // Create asset record with pending status for vision analysis
         const assetId = nanoid();
         const newAsset: InsertContentAsset = {
           id: assetId,
@@ -55,10 +56,16 @@ export const ingestionRouter = router({
           s3Url,
           mimeType: input.mimeType,
           fileSize: input.fileBuffer.length,
-          status: "completed",
+          status: "processing", // Start as processing for vision analysis
         };
 
         await db.insert(contentAssets).values(newAsset);
+
+        // Trigger Gemini vision analysis in background
+        analyzeImageInBackground(assetId, s3Url).catch((error) => {
+          console.error(`Failed to analyze image ${assetId}:`, error);
+        });
+
         return newAsset;
       } catch (error) {
         console.error("Failed to upload asset:", error);
@@ -128,6 +135,104 @@ export const ingestionRouter = router({
       return { success: true };
     }),
 
+  // Analyze property image with Gemini vision
+  analyzePropertyImage: protectedProcedure
+    .input(
+      z.object({
+        imageUrl: z.string().url(),
+        assetId: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `You are a real estate property analysis expert. Analyze the provided property image and extract detailed information about the property. Focus on visual elements like: bedrooms, bathrooms, architectural style, condition, amenities, outdoor features, and overall property characteristics. Return a JSON object with the extracted information.`,
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "Please analyze this property image and extract all relevant details. Return a JSON object with keys like: bedrooms, bathrooms, squareFeet, propertyType, architecturalStyle, condition, roofType, exteriorMaterial, hasGarage, hasPool, hasPatioOrDeck, lotSize, yearBuilt, and any other notable features.",
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: input.imageUrl,
+                    detail: "high",
+                  },
+                },
+              ],
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "property_analysis",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  bedrooms: { type: ["number", "null"], description: "Number of bedrooms" },
+                  bathrooms: { type: ["number", "null"], description: "Number of bathrooms" },
+                  squareFeet: { type: ["number", "null"], description: "Square footage of the property" },
+                  propertyType: { type: ["string", "null"], description: "Type of property (house, condo, apartment, etc.)" },
+                  architecturalStyle: { type: ["string", "null"], description: "Architectural style (modern, colonial, ranch, etc.)" },
+                  condition: { type: ["string", "null"], description: "Overall condition (excellent, good, fair, needs work)" },
+                  roofType: { type: ["string", "null"], description: "Type of roof" },
+                  exteriorMaterial: { type: ["string", "null"], description: "Exterior material (brick, siding, stone, etc.)" },
+                  hasGarage: { type: ["boolean", "null"], description: "Whether property has a garage" },
+                  hasPool: { type: ["boolean", "null"], description: "Whether property has a pool" },
+                  hasPatioOrDeck: { type: ["boolean", "null"], description: "Whether property has patio or deck" },
+                  lotSize: { type: ["string", "null"], description: "Lot size" },
+                  yearBuilt: { type: ["number", "null"], description: "Year the property was built" },
+                  notableFeatures: { type: ["array", "null"], items: { type: "string" }, description: "List of notable features" },
+                  confidence: { type: "string", description: "Confidence level of analysis (high, medium, low)" },
+                },
+                required: ["confidence"],
+              },
+            },
+          },
+        });
+
+        // Parse the response
+        const content = response.choices[0]?.message.content;
+        if (typeof content !== "string") {
+          throw new Error("Invalid response format from Gemini");
+        }
+
+        const metadata = JSON.parse(content);
+
+        // Update asset metadata if assetId provided
+        if (input.assetId) {
+          const db = await getDb();
+          if (db) {
+            await db
+              .update(contentAssets)
+              .set({
+                extractedMetadata: metadata,
+                status: "completed",
+              })
+              .where(eq(contentAssets.id, input.assetId));
+          }
+        }
+
+        return {
+          success: true,
+          metadata,
+        };
+      } catch (error) {
+        console.error("Failed to analyze property image:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        } as const;
+      }
+    }),
+
   // URL scraping for real estate listings (text-first extraction)
   scrapeListingMetadata: protectedProcedure
     .input(
@@ -137,7 +242,7 @@ export const ingestionRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
-      const response = await fetch(input.url, {
+        const response = await fetch(input.url, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         },
@@ -166,6 +271,96 @@ export const ingestionRouter = router({
       }
     }),
 });
+
+/**
+ * Analyze image in background using Gemini vision
+ */
+async function analyzeImageInBackground(assetId: string, s3Url: string) {
+  try {
+    const response = await invokeLLM({
+      messages: [
+        {
+          role: "system",
+          content: `You are a real estate property analysis expert. Analyze the provided property image and extract detailed information about the property. Focus on visual elements like: bedrooms, bathrooms, architectural style, condition, amenities, outdoor features, and overall property characteristics.`,
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Please analyze this property image and extract all relevant details. Return a JSON object with keys like: bedrooms, bathrooms, squareFeet, propertyType, architecturalStyle, condition, roofType, exteriorMaterial, hasGarage, hasPool, hasPatioOrDeck, lotSize, yearBuilt, and any other notable features.",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: s3Url,
+                detail: "high",
+              },
+            },
+          ],
+        },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "property_analysis",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              bedrooms: { type: ["number", "null"], description: "Number of bedrooms" },
+              bathrooms: { type: ["number", "null"], description: "Number of bathrooms" },
+              squareFeet: { type: ["number", "null"], description: "Square footage of the property" },
+              propertyType: { type: ["string", "null"], description: "Type of property (house, condo, apartment, etc.)" },
+              architecturalStyle: { type: ["string", "null"], description: "Architectural style (modern, colonial, ranch, etc.)" },
+              condition: { type: ["string", "null"], description: "Overall condition (excellent, good, fair, needs work)" },
+              roofType: { type: ["string", "null"], description: "Type of roof" },
+              exteriorMaterial: { type: ["string", "null"], description: "Exterior material (brick, siding, stone, etc.)" },
+              hasGarage: { type: ["boolean", "null"], description: "Whether property has a garage" },
+              hasPool: { type: ["boolean", "null"], description: "Whether property has a pool" },
+              hasPatioOrDeck: { type: ["boolean", "null"], description: "Whether property has patio or deck" },
+              lotSize: { type: ["string", "null"], description: "Lot size" },
+              yearBuilt: { type: ["number", "null"], description: "Year the property was built" },
+              notableFeatures: { type: ["array", "null"], items: { type: "string" }, description: "List of notable features" },
+              confidence: { type: "string", description: "Confidence level of analysis (high, medium, low)" },
+            },
+            required: ["confidence"],
+          },
+        },
+      },
+    });
+
+    // Parse the response
+    const content = response.choices[0]?.message.content;
+    if (typeof content !== "string") {
+      throw new Error("Invalid response format from Gemini");
+    }
+
+    const metadata = JSON.parse(content);
+
+    // Update asset with metadata
+    const db = await getDb();
+    if (db) {
+      await db
+        .update(contentAssets)
+        .set({
+          extractedMetadata: metadata,
+          status: "completed",
+        })
+        .where(eq(contentAssets.id, assetId));
+    }
+  } catch (error) {
+    console.error(`Failed to analyze image ${assetId}:`, error);
+    // Update status to failed
+    const db = await getDb();
+    if (db) {
+      await db
+        .update(contentAssets)
+        .set({ status: "failed" })
+        .where(eq(contentAssets.id, assetId));
+    }
+  }
+}
 
 /**
  * Extract real estate listing metadata from HTML

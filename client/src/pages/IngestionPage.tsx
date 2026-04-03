@@ -438,14 +438,33 @@ function AssetsListSection({
             </div>
 
             {asset.extractedMetadata && Object.keys(asset.extractedMetadata).length > 0 && (
-              <div className="text-xs space-y-1 bg-muted p-2 rounded">
-                {Object.entries(asset.extractedMetadata)
-                  .slice(0, 2)
-                  .map(([key, value]) => (
-                    <p key={key} className="text-muted-foreground">
-                      <span className="font-medium">{key}:</span> {String(value).substring(0, 20)}...
-                    </p>
-                  ))}
+              <div className="text-xs space-y-2 bg-muted p-3 rounded">
+                <p className="font-semibold text-foreground">Extracted Details:</p>
+                <div className="space-y-1">
+                  {asset.extractedMetadata.bedrooms !== null && asset.extractedMetadata.bedrooms !== undefined && (
+                    <p><span className="font-medium">Bedrooms:</span> {asset.extractedMetadata.bedrooms}</p>
+                  )}
+                  {asset.extractedMetadata.bathrooms !== null && asset.extractedMetadata.bathrooms !== undefined && (
+                    <p><span className="font-medium">Bathrooms:</span> {asset.extractedMetadata.bathrooms}</p>
+                  )}
+                  {asset.extractedMetadata.squareFeet && (
+                    <p><span className="font-medium">Sq Ft:</span> {asset.extractedMetadata.squareFeet}</p>
+                  )}
+                  {asset.extractedMetadata.propertyType && (
+                    <p><span className="font-medium">Type:</span> {asset.extractedMetadata.propertyType}</p>
+                  )}
+                  {asset.extractedMetadata.architecturalStyle && (
+                    <p><span className="font-medium">Style:</span> {asset.extractedMetadata.architecturalStyle}</p>
+                  )}
+                  {asset.extractedMetadata.condition && (
+                    <p><span className="font-medium">Condition:</span> {asset.extractedMetadata.condition}</p>
+                  )}
+                </div>
+                {asset.extractedMetadata.confidence && (
+                  <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                    Confidence: <span className="font-medium">{asset.extractedMetadata.confidence}</span>
+                  </p>
+                )}
               </div>
             )}
 
