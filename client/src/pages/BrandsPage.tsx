@@ -58,8 +58,8 @@ export default function BrandsPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {brand.websiteUrl && (
-                  <div className="text-sm text-muted-foreground">
-                    <a href={brand.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <div className="text-sm text-primary hover:underline">
+                    <a href={brand.websiteUrl} target="_blank" rel="noopener noreferrer">
                       {brand.websiteUrl}
                     </a>
                   </div>

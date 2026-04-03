@@ -11,14 +11,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { trpc } from "@/lib/trpc";
-import { useParams, useRouter } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useState } from "react";
 import { Plus, Trash2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BrandDetailPage() {
   const { brandId } = useParams<{ brandId: string }>();
-  const [, navigate] = useRouter() as any;
+  const [, setLocation] = useLocation();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { data: brand, isLoading } = trpc.brands.getById.useQuery({ brandId: brandId! });
   const { data: categories } = trpc.brands.listCategories.useQuery({ brandId: brandId! });
@@ -34,7 +34,7 @@ export default function BrandDetailPage() {
       await utils.brands.list.invalidate();
       toast.success("Brand deleted successfully");
       // Navigate back to brands page
-      navigate("/dashboard/brands");
+      setLocation("/dashboard/brands");
     } catch (error) {
       console.error("Failed to delete brand:", error);
       toast.error("Failed to delete brand");

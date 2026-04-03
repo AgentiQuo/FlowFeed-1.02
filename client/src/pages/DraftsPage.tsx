@@ -402,6 +402,161 @@ export default function DraftsPage() {
                 {generateDraftsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create for {selectedPlatforms.length} Platform{selectedPlatforms.length !== 1 ? "s" : ""}
               </Button>
+
+              {/* Drafts List - Show generated drafts for review and queueing */}
+              {selectedAssetId && (
+                <div className="space-y-4 pt-4 border-t">
+                  <div>
+                    <h3 className="text-lg font-semibold">Generated Drafts</h3>
+                    <p className="text-sm text-muted-foreground">Review and queue your drafts below</p>
+                  </div>
+
+                  {draftsLoading ? (
+                    <Card>
+                      <CardContent className="pt-6 flex justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      </CardContent>
+                    </Card>
+                  ) : !drafts || drafts.length === 0 ? (
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-center text-muted-foreground">No drafts yet. Click "Create" above to generate content.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {drafts.map((draft: any) => (
+                        <Card key={draft.id} className="overflow-hidden">
+                          <CardContent className="pt-6">
+                            <div className="space-y-3">
+                              {/* Draft Header with Platform and Status */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Badge className="capitalize">{draft.platform}</Badge>
+                                  <Badge variant={draft.status === "reviewed" ? "default" : "secondary"}>
+                                    {draft.status === "draft" && "Draft"}
+                                    {draft.status === "reviewed" && "Approved"}
+                                    {draft.status === "published" && "Published"}
+                                  </Badge>
+                                  {queuedDrafts[draft.id] && (
+                                    <Badge variant="outline" className="text-green-600 border-green-200">
+                                      ✓ Queued
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Draft Content */}
+                              {editingDraftId === draft.id ? (
+                                <div className="space-y-2">
+                                  <Textarea
+                                    value={editContent}
+                                    onChange={(e) => setEditContent(e.target.value)}
+                                    placeholder="Edit draft content"
+                                    rows={4}
+                                  />
+                                  <Textarea
+                                    value={editFeedback}
+                                    onChange={(e) => setEditFeedback(e.target.value)}
+                                    placeholder="Add feedback (optional)"
+                                    rows={2}
+                                  />
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleUpdateDraft(draft.id)}
+                                      disabled={updateDraftMutation.isPending}
+                                    >
+                                      Save Changes
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setEditingDraftId(null)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <p className="text-sm text-foreground whitespace-pre-wrap">{draft.content}</p>
+                                  {draft.feedback && (
+                                    <p className="text-xs text-muted-foreground mt-2 italic">Feedback: {draft.feedback}</p>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Action Buttons */}
+                              <div className="flex flex-wrap gap-2 pt-2">
+                                {editingDraftId !== draft.id && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setEditingDraftId(draft.id);
+                                        setEditContent(draft.content);
+                                        setEditFeedback(draft.feedback || "");
+                                      }}
+                                    >
+                                      Edit
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleCopyToClipboard(draft.id)}
+                                    >
+                                      <Copy className="h-4 w-4 mr-1" />
+                                      Copy
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleExportDraft(draft.id)}
+                                      disabled={exportingDraftId === draft.id}
+                                    >
+                                      {exportingDraftId === draft.id ? (
+                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                      ) : (
+                                        <Download className="h-4 w-4 mr-1" />
+                                      )}
+                                      Export
+                                    </Button>
+                                    {!queuedDrafts[draft.id] && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleMoveToQueue(draft.id)}
+                                        disabled={movingToQueueDraftId === draft.id}
+                                        className="ml-auto"
+                                      >
+                                        {movingToQueueDraftId === draft.id ? (
+                                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                        ) : (
+                                          <Send className="h-4 w-4 mr-1" />
+                                        )}
+                                        Queue
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => handleDeleteDraft(draft.id)}
+                                      disabled={deleteDraftMutation.isPending}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
