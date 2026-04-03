@@ -15,44 +15,54 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function QueuePage() {
   const { brandId } = useParams<{ brandId: string }>();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState<string | null>(null);
   const [assetImages, setAssetImages] = useState<Record<string, string>>({});
+  const [filterBrandId, setFilterBrandId] = useState<string | undefined>(undefined);
 
-  // Fetch queue data
-  const { data: queuePosts = [], isLoading: isLoadingQueue, refetch: refetchQueue } = trpc.queue.getQueue.useQuery(
-    { brandId: brandId || "" },
-    { enabled: !!brandId }
+  // Fetch all brands for filter dropdown
+  const { data: allBrands = [] } = trpc.brands.list.useQuery();
+
+  // Fetch all scheduled posts (optionally filtered by brand)
+  const { data: queuePosts = [], isLoading: isLoadingQueue, refetch: refetchQueue } = trpc.queue.getAllScheduledPosts.useQuery(
+    { brandId: filterBrandId }
   );
 
-  // Fetch assets to get thumbnails for queued posts
-  const { data: assets = [] } = trpc.ingestion.listAssets.useQuery(
-    { brandId: brandId || "" },
-    { enabled: !!brandId }
+  // Fetch all assets from all brands for thumbnails
+  const { data: allAssets = [] } = trpc.ingestion.listAssets.useQuery(
+    { brandId: "" }
   );
 
-  // Build asset image map
+  // Build asset image map from all assets
   useEffect(() => {
     const images: Record<string, string> = {};
-    assets.forEach((asset) => {
+    allAssets.forEach((asset) => {
       if (asset.s3Url) {
         images[asset.id] = asset.s3Url;
       }
     });
     setAssetImages(images);
-  }, [assets]);
+  }, [allAssets]);
 
+  // Analytics and suggested times only available when viewing single brand
   const { data: analytics } = trpc.queue.getQueueAnalytics.useQuery(
-    { brandId: brandId || "" },
-    { enabled: !!brandId }
+    { brandId: filterBrandId || "" },
+    { enabled: !!filterBrandId }
   );
 
   const { data: suggestedTimes = [] } = trpc.queue.getSuggestedTimes.useQuery(
-    { brandId: brandId || "", count: 5 },
-    { enabled: !!brandId }
+    { brandId: filterBrandId || "", count: 5 },
+    { enabled: !!filterBrandId }
   );
 
   // Mutations
@@ -147,34 +157,34 @@ export default function QueuePage() {
     return colors[platform] || "bg-gray-100 text-gray-800";
   };
 
-  if (!brandId) {
-    return (
-      <div className="p-6">
-        <Card className="border-amber-200 bg-amber-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              No Brand Selected
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-amber-900">
-              Please select a brand from the Brands page to manage the scheduling queue.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Scheduling Queue</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage and schedule your content posts across platforms
-        </p>
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Scheduling Queue</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage and schedule your content posts across platforms
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Filter by Brand:</label>
+          <Select value={filterBrandId || "all"} onValueChange={(value) => setFilterBrandId(value === "all" ? undefined : value)}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All Brands" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {allBrands.map((brand) => (
+                <SelectItem key={brand.id} value={brand.id}>
+                  {brand.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Analytics Cards */}

@@ -47,6 +47,65 @@ export const queueRouter = router({
       };
     }),
 
+
+  /**
+   * Get all scheduled posts across all brands
+   * Returns posts ordered by scheduled time, optionally filtered by brand
+   */
+  getAllScheduledPosts: protectedProcedure
+    .input(z.object({ brandId: z.string().optional() }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      let query = db
+        .select()
+        .from(posts)
+        .where(eq(posts.status, "scheduled" as any));
+
+      // Filter by brand if provided
+      if (input.brandId) {
+        query = db
+          .select()
+          .from(posts)
+          .where(
+            and(
+              eq(posts.brandId, input.brandId),
+              eq(posts.status, "scheduled" as any)
+            )
+          );
+      }
+
+      const queuedPosts = await query.orderBy(posts.scheduledFor);
+
+      // Enrich posts with asset ID from drafts for thumbnail display
+      const enrichedPosts = await Promise.all(
+        (queuedPosts || []).map(async (post) => {
+          if (!post.draftId) return post;
+          
+          try {
+            const draft = await db
+              .select()
+              .from(drafts)
+              .where(eq(drafts.id, post.draftId))
+              .limit(1);
+            
+            if (draft && draft[0] && (draft[0] as any).assetId) {
+              return {
+                ...post,
+                assetId: (draft[0] as any).assetId,
+              };
+            }
+          } catch (error) {
+            console.error("Error enriching post with asset:", error);
+          }
+          return post;
+        })
+      );
+
+      return enrichedPosts || [];
+    }),
+
   /**
    * Get all queued posts for a brand
    * Returns posts ordered by scheduled time
