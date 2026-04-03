@@ -14,7 +14,7 @@ export default function DraftsPage() {
   const { brandId } = useParams();
   const [selectedAssetId, setSelectedAssetId] = useState<string>("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["instagram"]);
-  const [tone, setTone] = useState<"professional" | "casual" | "luxury">("professional");
+
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
@@ -27,6 +27,10 @@ export default function DraftsPage() {
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   if (!brandId) return <div>Invalid brand</div>;
+
+  // Get brand details
+  const { data: brand } = trpc.brands.getById.useQuery({ brandId });
+
 
   // Get brand assets
   const { data: assets, isLoading: assetsLoading } = trpc.ingestion.listAssets.useQuery({
@@ -172,7 +176,6 @@ export default function DraftsPage() {
       brandId,
       assetId: selectedAssetId,
       platforms: selectedPlatforms as any,
-      tone,
     });
   };
 
@@ -294,6 +297,13 @@ export default function DraftsPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {/* Brand Name Above Carousel */}
+                    {brand && (
+                      <div className="text-sm font-semibold text-muted-foreground">
+                        {brand.name}
+                      </div>
+                    )}
+
                     {/* Carousel */}
                     <div className="relative bg-muted rounded-lg overflow-hidden">
                       <div className="aspect-video flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
@@ -333,39 +343,6 @@ export default function DraftsPage() {
                         {carouselIndex + 1} / {assets.length}
                       </div>
                     </div>
-
-                    {/* Thumbnail Strip */}
-                    {assets.length > 1 && (
-                      <div className="flex gap-2 overflow-x-auto pb-2">
-                        {assets.map((asset: any, index: number) => (
-                          <button
-                            key={asset.id}
-                            onClick={() => {
-                              setCarouselIndex(index);
-                              setSelectedAssetId(asset.id);
-                              // Platforms remain selected from previous selections
-                            }}
-                            className={`flex-shrink-0 w-20 h-20 rounded border-2 transition overflow-hidden ${
-                              carouselIndex === index
-                                ? "border-blue-500 ring-2 ring-blue-300"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
-                          >
-                            {assetImages[asset.id] ? (
-                              <img
-                                src={assetImages[asset.id]}
-                                alt={asset.fileName}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
-                                {index + 1}
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
 
                     {/* Asset Info and Platform Selection */}
                     <div className="space-y-3">
@@ -413,45 +390,6 @@ export default function DraftsPage() {
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Platform Selection */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Target Platforms</label>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={selectedPlatforms.length === 5 ? "default" : "outline"}
-                    onClick={() => setSelectedPlatforms(["instagram", "linkedin", "facebook", "x", "website"])}
-                    className="font-semibold"
-                  >
-                    ALL
-                  </Button>
-                  {["instagram", "linkedin", "facebook", "x", "website"].map((platform) => (
-                    <Button
-                      key={platform}
-                      variant={selectedPlatforms.includes(platform) ? "default" : "outline"}
-                      onClick={() => togglePlatform(platform)}
-                      className="capitalize"
-                    >
-                      {platform === "x" ? "X" : platform}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tone Selection */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Brand Tone</label>
-                <Select value={tone} onValueChange={(value) => setTone(value as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="casual">Casual</SelectItem>
-                    <SelectItem value="luxury">Luxury</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               {/* Create Button */}

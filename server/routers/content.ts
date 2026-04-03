@@ -18,7 +18,7 @@ export const contentRouter = router({
         brandId: z.string(),
         assetId: z.string(),
         platforms: z.array(
-          z.enum(["instagram", "linkedin", "facebook", "website"])
+          z.enum(["instagram", "linkedin", "facebook", "x", "website"])
         ),
         tone: z.enum(["professional", "casual", "luxury"]).optional(),
       })
@@ -244,7 +244,7 @@ export const contentRouter = router({
 async function generateContentForPlatform(
   asset: any,
   brand: any,
-  platform: "instagram" | "linkedin" | "facebook" | "website",
+  platform: "instagram" | "linkedin" | "facebook" | "x" | "website",
   tone: string
 ) {
   const metadata = asset.extractedMetadata || {};
@@ -344,6 +344,15 @@ function getPlatformPrompt(
       - Include key property features
       - Add relevant hashtags
       - Include link or contact information`;
+
+    case "x":
+      return `${basePrompt}.
+      Requirements:
+      - Maximum 280 characters (X/Twitter limit)
+      - Concise and impactful
+      - Include 1-2 relevant hashtags
+      - Use engaging language
+      - Include link or call-to-action if space allows`;
 
     case "website":
       return `${basePrompt}.

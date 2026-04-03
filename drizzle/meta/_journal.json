@@ -15,6 +15,13 @@
       "when": 1775213793666,
       "tag": "0001_striped_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1775223137952,
+      "tag": "0002_furry_mindworm",
+      "breakpoints": true
     }
   ]
 }
