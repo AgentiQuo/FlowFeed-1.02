@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, AlertCircle, Download, Copy, Send } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, Download, Copy, Send, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DraftsPage() {
@@ -24,6 +24,7 @@ export default function DraftsPage() {
   const [queuedDrafts, setQueuedDrafts] = useState<Record<string, any>>({});
   const [assetImages, setAssetImages] = useState<Record<string, string>>({});
   const [loadingAssetImages, setLoadingAssetImages] = useState<Record<string, boolean>>({});
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   if (!brandId) return <div>Invalid brand</div>;
 
@@ -262,27 +263,99 @@ export default function DraftsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Asset Selection */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Select Asset</label>
-                <Select value={selectedAssetId} onValueChange={setSelectedAssetId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a property image..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assetsLoading ? (
-                      <div className="p-2 text-sm text-muted-foreground">Loading assets...</div>
-                    ) : !assets || assets.length === 0 ? (
-                      <div className="p-2 text-sm text-muted-foreground">No assets found</div>
-                    ) : (
-                      assets.map((asset: any) => (
-                        <SelectItem key={asset.id} value={asset.id}>
-                          {asset.fileName}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+              {/* Asset Carousel */}
+              <div className="space-y-4">
+                <label className="text-sm font-medium">Browse Assets</label>
+                {assetsLoading ? (
+                  <div className="h-96 flex items-center justify-center bg-muted rounded-lg">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : !assets || assets.length === 0 ? (
+                  <div className="h-96 flex items-center justify-center bg-muted rounded-lg text-muted-foreground">
+                    No assets found. Upload images in the Ingestion tab first.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Carousel */}
+                    <div className="relative bg-muted rounded-lg overflow-hidden">
+                      <div className="aspect-video flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800">
+                        {assetImages[assets[carouselIndex]?.id] ? (
+                          <img
+                            src={assetImages[assets[carouselIndex]?.id]}
+                            alt={assets[carouselIndex]?.fileName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-center text-muted-foreground">
+                            <div className="text-sm">Image loading...</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Navigation Arrows */}
+                      {assets.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => setCarouselIndex((prev) => (prev - 1 + assets.length) % assets.length)}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => setCarouselIndex((prev) => (prev + 1) % assets.length)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
+
+                      {/* Carousel Counter */}
+                      <div className="absolute bottom-2 left-2 bg-black/50 text-white px-3 py-1 rounded text-sm">
+                        {carouselIndex + 1} / {assets.length}
+                      </div>
+                    </div>
+
+                    {/* Asset Info and Platform Selection */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Selected: {assets[carouselIndex]?.fileName}</p>
+                      </div>
+
+                      {/* Platform Selection under image */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Generate for these platforms:</label>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant={selectedPlatforms.length === 5 ? "default" : "outline"}
+                            onClick={() => {
+                              setSelectedAssetId(assets[carouselIndex]?.id);
+                              setSelectedPlatforms(["instagram", "linkedin", "facebook", "x", "website"]);
+                            }}
+                            size="sm"
+                            className="font-semibold"
+                          >
+                            ALL
+                          </Button>
+                          {["instagram", "linkedin", "facebook", "x", "website"].map((platform) => (
+                            <Button
+                              key={platform}
+                              variant={selectedPlatforms.includes(platform) ? "default" : "outline"}
+                              onClick={() => {
+                                setSelectedAssetId(assets[carouselIndex]?.id);
+                                togglePlatform(platform);
+                              }}
+                              size="sm"
+                              className="capitalize"
+                            >
+                              {platform === "x" ? "X" : platform}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Platform Selection */}
@@ -324,14 +397,15 @@ export default function DraftsPage() {
                 </Select>
               </div>
 
-              {/* Generate Button */}
+              {/* Create Button */}
               <Button
                 onClick={handleGenerateDrafts}
                 disabled={!selectedAssetId || generateDraftsMutation.isPending}
                 className="w-full"
+                size="lg"
               >
                 {generateDraftsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Generate Drafts
+                Create
               </Button>
             </CardContent>
           </Card>

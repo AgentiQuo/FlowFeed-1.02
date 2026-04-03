@@ -148,3 +148,11 @@
 - [x] Create deleteBrand tRPC procedure (already existed)
 - [x] Add cascade delete for related data (categories, assets, drafts)
 - [x] Test delete functionality end-to-end (8 tests passing)
+
+
+## Image Carousel Redesign (Complete)
+- [x] Build carousel component showing unprocessed assets
+- [x] Add left/right navigation arrows
+- [x] Display platform selection buttons under each image
+- [x] Rename "Generate" button to "Create"
+- [x] Test carousel navigation and platform selection
