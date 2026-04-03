@@ -274,6 +274,76 @@ export const queueRouter = router({
         failed: failed.length,
       };
     }),
+
+  /**
+   * Move an approved draft directly to the queue
+   * Automatically selects all platforms from the draft and schedules it
+   */
+  moveToQueue: protectedProcedure
+    .input(
+      z.object({
+        brandId: z.string(),
+        draftId: z.string(),
+        platforms: z.array(z.enum(["instagram", "linkedin", "facebook", "website"])).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get the draft
+      const draftResult = await db
+        .select()
+        .from(drafts)
+        .where(eq(drafts.id, input.draftId))
+        .limit(1);
+
+      if (!draftResult || draftResult.length === 0) {
+        throw new Error("Draft not found");
+      }
+
+      const draft = draftResult[0];
+
+      // If no platforms specified, use the draft's platform
+      const platforms = input.platforms || [draft.platform];
+
+      // Calculate optimal scheduling time
+      const now = new Date();
+      let scheduledTime = new Date(now);
+      scheduledTime.setHours(9, 0, 0, 0);
+
+      // If current time is past 9 AM, start from current time
+      if (now.getHours() >= 9) {
+        scheduledTime.setTime(now.getTime());
+      }
+
+      // Create post entry for each platform
+      const newPosts = platforms.map((platform, index) => ({
+        id: `post-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        brandId: input.brandId,
+        draftId: input.draftId,
+        platform: platform as "instagram" | "linkedin" | "facebook" | "website",
+        content: draft.content || "",
+        status: "scheduled" as const,
+        scheduledFor: new Date(scheduledTime.getTime() + index * 3 * 60 * 60 * 1000),
+        publishedAt: null,
+        queuePosition: index,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+
+      // Insert posts into database
+      for (const post of newPosts) {
+        await db.insert(posts).values(post as any);
+      }
+
+      return {
+        success: true,
+        scheduledAt: scheduledTime,
+        count: newPosts.length,
+        platforms: platforms,
+      };
+    }),
 });
 
 /**

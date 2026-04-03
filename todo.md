@@ -104,3 +104,11 @@
 
 ## Bug Fixes
 - [x] Queue button grayed out after draft approval - FIXED: Updated brandId extraction regex to work from any dashboard page, not just /dashboard/brands/[brandId]
+
+
+## Move to Queue Feature (Complete)
+- [x] Create moveToQueue tRPC procedure in queue router
+- [x] Add Move to Queue button to approved drafts in DraftsPage
+- [x] Implement automatic scheduling when moving to queue
+- [x] Add success toast notification
+- [x] Test end-to-end workflow with comprehensive vitest tests (5 tests passing)

@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, AlertCircle, Download, Copy } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, Download, Copy, Send } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DraftsPage() {
@@ -20,6 +20,7 @@ export default function DraftsPage() {
   const [editFeedback, setEditFeedback] = useState("");
   const [exportFormat, setExportFormat] = useState<"html" | "json" | "xml">("html");
   const [exportingDraftId, setExportingDraftId] = useState<string | null>(null);
+  const [movingToQueueDraftId, setMovingToQueueDraftId] = useState<string | null>(null);
 
   if (!brandId) return <div>Invalid brand</div>;
 
@@ -106,6 +107,19 @@ export default function DraftsPage() {
     },
   });
 
+  // Move to queue mutation
+  const moveToQueueMutation = trpc.queue.moveToQueue.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Draft moved to queue! Scheduled for ${data.count} platform(s)`);
+      setMovingToQueueDraftId(null);
+      refetchDrafts();
+    },
+    onError: (error) => {
+      toast.error(`Failed to move draft to queue: ${error.message}`);
+      setMovingToQueueDraftId(null);
+    },
+  });
+
   const handleGenerateDrafts = () => {
     if (!selectedAssetId) {
       toast.error("Please select an asset first");
@@ -158,6 +172,14 @@ export default function DraftsPage() {
       navigator.clipboard.writeText(draft.content);
       toast.success("Content copied to clipboard!");
     }
+  };
+
+  const handleMoveToQueue = (draftId: string) => {
+    setMovingToQueueDraftId(draftId);
+    moveToQueueMutation.mutate({
+      brandId,
+      draftId,
+    });
   };
 
   return (
@@ -352,6 +374,17 @@ export default function DraftsPage() {
                               Copy
                             </Button>
                             <Button
+                              size="sm"
+                              onClick={() => handleMoveToQueue(draft.id)}
+                              disabled={movingToQueueDraftId === draft.id}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              {movingToQueueDraftId === draft.id && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                              <Send className="mr-2 h-3 w-3" />
+                              Move to Queue
+                            </Button>
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => handleExportDraft(draft.id)}
                               disabled={exportingDraftId === draft.id}
