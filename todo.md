@@ -140,3 +140,11 @@
 - [x] Update preview component to display real images
 - [x] Add image loading states and error handling
 - [x] Test image preview functionality (6 tests passing)
+
+
+## Delete Brand Feature (Complete)
+- [x] Add delete button to Brand card
+- [x] Implement confirmation dialog for deletion
+- [x] Create deleteBrand tRPC procedure (already existed)
+- [x] Add cascade delete for related data (categories, assets, drafts)
+- [x] Test delete functionality end-to-end (8 tests passing)

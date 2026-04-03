@@ -1,18 +1,47 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { trpc } from "@/lib/trpc";
-import { useParams } from "wouter";
+import { useParams, useRouter } from "wouter";
 import { useState } from "react";
-import { Plus, Trash2, Edit2 } from "lucide-react";
+import { Plus, Trash2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BrandDetailPage() {
   const { brandId } = useParams<{ brandId: string }>();
+  const [, navigate] = useRouter() as any;
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { data: brand, isLoading } = trpc.brands.getById.useQuery({ brandId: brandId! });
   const { data: categories } = trpc.brands.listCategories.useQuery({ brandId: brandId! });
   const { data: partners } = trpc.brands.listPartners.useQuery({ brandId: brandId! });
   const { data: agents } = trpc.brands.listAgents.useQuery({ brandId: brandId! });
+  const deleteMutation = trpc.brands.delete.useMutation();
+  const utils = trpc.useUtils();
+
+  const handleDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync({ brandId: brandId! });
+      // Invalidate brands list to refresh
+      await utils.brands.list.invalidate();
+      toast.success("Brand deleted successfully");
+      // Navigate back to brands page
+      navigate("/dashboard/brands");
+    } catch (error) {
+      console.error("Failed to delete brand:", error);
+      toast.error("Failed to delete brand");
+    } finally {
+      setShowDeleteDialog(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="p-6">Loading brand details...</div>;
@@ -29,7 +58,44 @@ export default function BrandDetailPage() {
           <h1 className="text-3xl font-bold tracking-tight">{brand.name}</h1>
           <p className="text-muted-foreground mt-1">{brand.description}</p>
         </div>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setShowDeleteDialog(true)}
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete Brand
+        </Button>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              Delete Brand
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Are you sure you want to delete <strong>{brand.name}</strong>?</p>
+              <p className="text-sm text-muted-foreground">
+                This action cannot be undone. All categories, assets, and drafts associated with this brand will be permanently deleted.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end gap-2">
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
@@ -327,7 +393,7 @@ function CreateAgentButton({ brandId }: { brandId: string }) {
         />
         <div className="flex gap-2">
           <Button type="submit" size="sm" disabled={createMutation.isPending}>
-            {createMutation.isPending ? "Adding..." : "Adding..."}
+            {createMutation.isPending ? "Adding..." : "Add"}
           </Button>
           <Button type="button" size="sm" variant="outline" onClick={() => setShowForm(false)}>
             Cancel
@@ -349,6 +415,7 @@ function VoiceBibleEditor({ brandId, initialContent }: { brandId: string; initia
   const [content, setContent] = useState(initialContent || "");
   const [isSaving, setIsSaving] = useState(false);
   const updateMutation = trpc.brands.update.useMutation();
+  const utils = trpc.useUtils();
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -357,6 +424,8 @@ function VoiceBibleEditor({ brandId, initialContent }: { brandId: string; initia
         brandId,
         voiceBibleContent: content,
       });
+      // Invalidate brand query to refresh
+      await utils.brands.getById.invalidate({ brandId });
       toast.success("Voice Bible saved successfully");
     } catch (error) {
       console.error("Failed to save voice bible:", error);
