@@ -46,9 +46,9 @@ export function DraftPreview({
   const previewConfig = getPlatformPreviewConfig(draft.platform);
   const truncatedText = getTruncatedText(draft.content, previewConfig.maxTextLines, 60);
 
-  // Calculate responsive width (max 600px, min 300px)
-  const previewWidth = Math.min(600, Math.max(300, previewConfig.width / 2));
-  const previewHeight = (previewWidth / previewConfig.width) * previewConfig.height;
+  // Show full-size preview without scaling
+  const previewWidth = previewConfig.width;
+  const previewHeight = previewConfig.height;
 
   return (
     <Card className="overflow-hidden">
@@ -56,35 +56,62 @@ export function DraftPreview({
         <div className="space-y-4">
           {/* Platform Preview */}
           <div className="flex flex-col items-center">
-            <div
-              className={`relative ${previewConfig.backgroundColor} ${previewConfig.textColor} rounded-lg border border-border overflow-hidden flex items-center justify-center`}
-              style={{
-                width: `${previewWidth}px`,
-                height: `${previewHeight}px`,
-              }}
-            >
-              {assetImage && (
-                <img
-                  src={assetImage}
-                  alt="Asset"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              )}
-              {/* Text Overlay */}
-              <div
-                className={`absolute inset-0 ${previewConfig.padding} flex flex-col ${
-                  previewConfig.textPosition === "center"
-                    ? "justify-center"
-                    : previewConfig.textPosition === "bottom"
-                      ? "justify-end"
-                      : "justify-between"
-                } bg-black/40`}
-              >
-                <div className={`${previewConfig.fontSize} font-medium whitespace-pre-wrap line-clamp-${previewConfig.maxTextLines}`}>
-                  {truncatedText}
+            {previewConfig.textPosition === "bottom" ? (
+              // Text below image layout
+              <div className={`${previewConfig.backgroundColor} rounded-lg border border-border overflow-hidden`}>
+                {/* Image container */}
+                <div
+                  style={{
+                    width: `${previewWidth}px`,
+                    height: `${previewHeight}px`,
+                    overflow: "hidden",
+                  }}
+                >
+                  {assetImage && (
+                    <img
+                      src={assetImage}
+                      alt="Asset"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                {/* Text below image */}
+                <div className={`${previewConfig.padding} ${previewConfig.textColor}`}>
+                  <p className={`${previewConfig.fontSize} font-medium whitespace-pre-wrap line-clamp-${previewConfig.maxTextLines}`}>
+                    {truncatedText}
+                  </p>
                 </div>
               </div>
-            </div>
+            ) : (
+              // Overlay or center text layout
+              <div
+                className={`relative ${previewConfig.backgroundColor} ${previewConfig.textColor} rounded-lg border border-border overflow-hidden flex items-center justify-center`}
+                style={{
+                  width: `${previewWidth}px`,
+                  height: `${previewHeight}px`,
+                }}
+              >
+                {assetImage && (
+                  <img
+                    src={assetImage}
+                    alt="Asset"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
+                {/* Text Overlay or Center */}
+                <div
+                  className={`absolute inset-0 ${previewConfig.padding} flex flex-col ${
+                    previewConfig.textPosition === "center"
+                      ? "justify-center"
+                      : "justify-between"
+                  } bg-black/40`}
+                >
+                  <div className={`${previewConfig.fontSize} font-medium whitespace-pre-wrap line-clamp-${previewConfig.maxTextLines}`}>
+                    {truncatedText}
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="text-xs text-muted-foreground mt-2">
               {previewConfig.width}x{previewConfig.height}px
             </div>
