@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, Download, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DraftsPage() {
@@ -18,6 +18,8 @@ export default function DraftsPage() {
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editFeedback, setEditFeedback] = useState("");
+  const [exportFormat, setExportFormat] = useState<"html" | "json" | "xml">("html");
+  const [exportingDraftId, setExportingDraftId] = useState<string | null>(null);
 
   if (!brandId) return <div>Invalid brand</div>;
 
@@ -82,6 +84,28 @@ export default function DraftsPage() {
     },
   });
 
+  // Export draft mutation
+  const exportDraftMutation = trpc.export.exportDraft.useMutation({
+    onSuccess: (data) => {
+      // Create blob and download
+      const blob = new Blob([data.content], { type: data.mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = data.filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success(`Draft exported as ${exportFormat.toUpperCase()}`);
+      setExportingDraftId(null);
+    },
+    onError: (error) => {
+      toast.error(`Failed to export draft: ${error.message}`);
+      setExportingDraftId(null);
+    },
+  });
+
   const handleGenerateDrafts = () => {
     if (!selectedAssetId) {
       toast.error("Please select an asset first");
@@ -118,6 +142,22 @@ export default function DraftsPage() {
     setSelectedPlatforms((prev) =>
       prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
     );
+  };
+
+  const handleExportDraft = (draftId: string) => {
+    setExportingDraftId(draftId);
+    exportDraftMutation.mutate({
+      draftId,
+      format: exportFormat,
+    });
+  };
+
+  const handleCopyToClipboard = (draftId: string) => {
+    const draft = drafts?.find((d) => d.id === draftId);
+    if (draft) {
+      navigator.clipboard.writeText(draft.content);
+      toast.success("Content copied to clipboard!");
+    }
   };
 
   return (
@@ -211,6 +251,35 @@ export default function DraftsPage() {
         </TabsContent>
 
         <TabsContent value="review" className="space-y-6">
+          {/* Export Format Selector - only show when there are approved drafts */}
+          {drafts && drafts.some((d) => d.status === "reviewed") && (
+            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <CardHeader>
+                <CardTitle className="text-lg">Export Options</CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-end gap-4">
+                <div className="flex-1">
+                  <label className="text-sm font-medium">Export Format</label>
+                  <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as any)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="html">HTML</SelectItem>
+                      <SelectItem value="json">JSON (WordPress)</SelectItem>
+                      <SelectItem value="xml">XML (WordPress WXR)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {exportFormat === "html" && "Standalone HTML document"}
+                  {exportFormat === "json" && "WordPress REST API format"}
+                  {exportFormat === "xml" && "WordPress WXR import format"}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {!selectedAssetId ? (
             <Card>
               <CardContent className="pt-6">
@@ -269,6 +338,27 @@ export default function DraftsPage() {
                             >
                               {approveDraftMutation.isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                               Approve
+                            </Button>
+                          </>
+                        )}
+                        {draft.status === "reviewed" && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCopyToClipboard(draft.id)}
+                            >
+                              <Copy className="mr-2 h-3 w-3" />
+                              Copy
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleExportDraft(draft.id)}
+                              disabled={exportingDraftId === draft.id}
+                            >
+                              {exportingDraftId === draft.id && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                              <Download className="mr-2 h-3 w-3" />
+                              Export
                             </Button>
                           </>
                         )}

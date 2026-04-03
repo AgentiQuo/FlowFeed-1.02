@@ -35,22 +35,25 @@
 - [x] Implement RAG feedback loop (save user edits to feedback_logs table)
 - [x] Create "Teach AI" interface for brand voice refinement
 
-## Phase 5: Queue, Scheduling & Leads (Complete)
+## Phase 5: Queue, Scheduling & Leads (Partial)
 - [x] Build smart scheduling queue interface with drag-and-drop reordering
 - [x] Implement scheduling logic (daytime only, 2-3 hour random gaps)
 - [ ] Create lead capture system with inquiry forms
 - [ ] Build agent notification system for new leads
-- [ ] Implement WordPress-friendly export format
+- [x] Implement WordPress-friendly export format (moved to Phase 6)
 - [ ] Create lead management dashboard
 - [ ] Set up scheduled posting via Edge Functions
 
-## Phase 6: Polish & Production Readiness
+## Phase 6: WordPress Export & Production Readiness (Partial)
+- [x] Implement WordPress export functionality (HTML, JSON, XML formats)
+- [x] Add export UI to DraftsPage with format selection
+- [x] Implement download/copy functionality for approved drafts
+- [x] Write comprehensive vitest tests for export router
 - [ ] Implement comprehensive error handling and user feedback
 - [ ] Add loading states and skeleton screens throughout
 - [ ] Create cost dashboard for AI API usage monitoring
 - [ ] Implement rate limiting on API routes
 - [ ] Add accessibility features and keyboard navigation
-- [ ] Write unit tests for critical utilities
 - [ ] Write integration tests for key workflows
 - [ ] Create user documentation and onboarding guide
 - [ ] Perform security audit and finalize RLS policies
@@ -86,3 +89,14 @@
 - [x] Display extracted metadata in asset listing with full details
 - [ ] Add manual metadata editing capability
 - [ ] Test with sample property images
+
+
+## WordPress Export Feature (Complete)
+- [x] Create exportDraft tRPC procedure with multiple format support (HTML, JSON, XML)
+- [x] Implement WordPress REST API compatible JSON format
+- [x] Add HTML export with proper formatting and metadata
+- [x] Create batch export functionality for multiple drafts
+- [x] Build export UI with format selection
+- [x] Add download/copy functionality
+- [x] Test WordPress import compatibility
+- [x] Write and pass comprehensive vitest tests for all export formats
