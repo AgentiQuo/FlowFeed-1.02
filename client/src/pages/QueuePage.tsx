@@ -32,10 +32,10 @@ export default function QueuePage() {
 
   // Initialize filterBrandId from URL params
   useEffect(() => {
-    if (brandId) {
+    if (brandId && filterBrandId !== brandId) {
       setFilterBrandId(brandId);
     }
-  }, [brandId, filterBrandId]);
+  }, [brandId]);
 
   // Fetch all brands for filter dropdown
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
@@ -126,7 +126,7 @@ export default function QueuePage() {
 
     // Update queue with new order
     const newPostIds = newOrder.map((p) => p.id);
-    reorderMutation.mutate({ brandId: brandId || "", postIds: newPostIds });
+    reorderMutation.mutate({ brandId: filterBrandId || "", postIds: newPostIds });
 
     setDraggedId(null);
   };
