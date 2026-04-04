@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { getPlatformPreviewConfig, getTruncatedText } from "@/lib/platformPreview";
+import { getPlatformPreviewConfig } from "@/lib/platformPreview";
 
 interface DraftPreviewProps {
   draft: any;
@@ -12,7 +12,6 @@ export function DraftPreview({
   assetImage,
 }: DraftPreviewProps) {
   const previewConfig = getPlatformPreviewConfig(draft.platform);
-  const truncatedText = getTruncatedText(draft.content, previewConfig.maxTextLines, 60);
 
   // Use full available width (responsive)
   const displayWidth = previewConfig.width;
@@ -45,8 +44,8 @@ export function DraftPreview({
                 </div>
                 {/* Text below image */}
                 <div className={`${previewConfig.padding} ${previewConfig.textColor} overflow-hidden`}>
-                  <p className={`${previewConfig.fontSize} font-medium break-words`} style={{ display: '-webkit-box', WebkitLineClamp: previewConfig.maxTextLines, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {truncatedText}
+                  <p className={`${previewConfig.fontSize} font-medium break-words whitespace-pre-wrap`}>
+                    {draft.content}
                   </p>
                 </div>
               </div>
@@ -73,8 +72,8 @@ export function DraftPreview({
                       : "justify-between"
                   } bg-black/40`}
                 >
-                  <div className={`${previewConfig.fontSize} font-medium break-words`} style={{ display: '-webkit-box', WebkitLineClamp: previewConfig.maxTextLines, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'white' }}>
-                    {truncatedText}
+                  <div className={`${previewConfig.fontSize} font-medium break-words whitespace-pre-wrap`} style={{ color: 'white' }}>
+                    {draft.content}
                   </div>
                 </div>
               </div>
