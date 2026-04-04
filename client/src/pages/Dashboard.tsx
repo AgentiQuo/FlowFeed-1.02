@@ -62,9 +62,9 @@ export default function Dashboard() {
   const currentAsset = assets?.[currentAssetIndex];
   const activeBrand = brands?.find((b: any) => b.id === selectedBrandId);
 const filteredDrafts = useMemo(() => {
-    if (!drafts) return [];
-    return drafts.filter((d: any) => d.platform === selectedPlatform);
-  }, [drafts, selectedPlatform]);
+    if (!drafts || !currentAsset) return [];
+    return drafts.filter((d: any) => d.platform === selectedPlatform && d.assetId === currentAsset.id);
+  }, [drafts, selectedPlatform, currentAsset]);
 
   const platforms: Array<"instagram" | "x" | "linkedin" | "facebook"> = ["instagram", "x", "linkedin", "facebook"];
 
@@ -250,7 +250,7 @@ const filteredDrafts = useMemo(() => {
             </div>
 
             {/* Draft Preview */}
-            {filteredDrafts.length > 0 ? (
+            {currentAsset && filteredDrafts.length > 0 ? (
               <div className="space-y-4">
                 {filteredDrafts.map((draft: any) => {
                   const draftAsset = assets?.find((a: any) => a.id === draft.assetId);

@@ -14,26 +14,24 @@ export function DraftPreview({
   const previewConfig = getPlatformPreviewConfig(draft.platform);
   const truncatedText = getTruncatedText(draft.content, previewConfig.maxTextLines, 60);
 
-  // Scale preview to fit screen (max 300px width)
-  const maxDisplayWidth = 300;
-  const scale = maxDisplayWidth / previewConfig.width;
-  const previewWidth = previewConfig.width * scale;
-  const previewHeight = previewConfig.height * scale;
+  // Use full available width (responsive)
+  const displayWidth = previewConfig.width;
+  const displayHeight = previewConfig.height;
 
   return (
     <Card className="overflow-hidden">
       <CardContent className="pt-6">
         <div className="space-y-4">
           {/* Platform Preview */}
-          <div className="flex flex-col items-center" style={{ transform: `scale(${scale})`, transformOrigin: 'top center', marginBottom: `${(previewHeight - previewConfig.height * scale) * -1}px` }}>
+          <div className="flex flex-col items-center w-full">
             {previewConfig.textPosition === "bottom" ? (
               // Text below image layout
-              <div className={`${previewConfig.backgroundColor} rounded-lg border border-border overflow-hidden`}>
+              <div className={`${previewConfig.backgroundColor} rounded-lg border border-border overflow-hidden w-full`}>
                 {/* Image container */}
                 <div
                   style={{
-                    width: `${previewWidth}px`,
-                    height: `${previewHeight}px`,
+                    width: '100%',
+                    aspectRatio: `${previewConfig.width} / ${previewConfig.height}`,
                     overflow: "hidden",
                   }}
                 >
@@ -55,10 +53,9 @@ export function DraftPreview({
             ) : (
               // Overlay or center text layout
               <div
-                className={`relative ${previewConfig.backgroundColor} ${previewConfig.textColor} rounded-lg border border-border overflow-hidden flex items-center justify-center`}
+                className={`relative ${previewConfig.backgroundColor} ${previewConfig.textColor} rounded-lg border border-border overflow-hidden flex items-center justify-center w-full`}
                 style={{
-                  width: `${previewWidth}px`,
-                  height: `${previewHeight}px`,
+                  aspectRatio: `${previewConfig.width} / ${previewConfig.height}`,
                 }}
               >
                 {assetImage && (
@@ -82,7 +79,7 @@ export function DraftPreview({
                 </div>
               </div>
             )}
-            <div className="text-xs text-muted-foreground mt-2" style={{ transform: `scale(${1 / scale})` }}>
+            <div className="text-xs text-muted-foreground mt-2">
               {previewConfig.width}x{previewConfig.height}px
             </div>
           </div>
