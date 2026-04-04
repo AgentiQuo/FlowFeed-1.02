@@ -43,6 +43,9 @@ export default function Dashboard() {
   const [editContent, setEditContent] = useState<string>("");
   const [showApprovedOnly, setShowApprovedOnly] = useState(false);
 
+  // Utils (must be called at top level)
+  const utils = trpc.useUtils();
+
   // Queries
   const { data: brands } = trpc.brands.list.useQuery();
   const { data: assets } = trpc.ingestion.listAssets.useQuery(
@@ -62,7 +65,7 @@ export default function Dashboard() {
   const generateDrafts = trpc.content.generateDrafts.useMutation({
     onSuccess: () => {
       // Refetch drafts after generation
-      trpc.useUtils().content.getDrafts.invalidate();
+      utils.content.getDrafts.invalidate();
     },
   });
   const approveDraft = trpc.queue.publishPost.useMutation();
@@ -70,14 +73,14 @@ export default function Dashboard() {
     onSuccess: () => {
       setFeedbackDraftId(null);
       setFeedbackText("");
-      trpc.useUtils().content.getDrafts.invalidate();
+      utils.content.getDrafts.invalidate();
     },
   });
   const updateDraft = trpc.content.updateDraft.useMutation({
     onSuccess: () => {
       setEditingDraftId(null);
       setEditContent("");
-      trpc.useUtils().content.getDrafts.invalidate();
+      utils.content.getDrafts.invalidate();
     },
   });
 
