@@ -285,10 +285,34 @@ export const contentRouter = router({
           const delayHours = 2 + Math.random(); // 2-3 hours
           nextScheduledTime = new Date(lastTime.getTime() + delayHours * 60 * 60 * 1000);
         } else {
-          // If no posts scheduled yet, schedule for tomorrow at 9 AM
+          // If no posts scheduled yet, schedule 30 minutes from now
           nextScheduledTime = new Date();
+          nextScheduledTime.setMinutes(nextScheduledTime.getMinutes() + 30);
+        }
+        
+        // Ensure we don't schedule after 8 PM
+        if (nextScheduledTime.getHours() >= 20) {
           nextScheduledTime.setDate(nextScheduledTime.getDate() + 1);
           nextScheduledTime.setHours(9, 0, 0, 0);
+        }
+
+        // Get asset thumbnail URL if assetId exists
+        let thumbnailUrl: string | null = null;
+        if (draft.assetId) {
+          try {
+            const assetResult = await db
+              .select()
+              .from(contentAssets)
+              .where(eq(contentAssets.id, draft.assetId))
+              .limit(1);
+            
+            if (assetResult && assetResult.length > 0) {
+              const asset = assetResult[0];
+              thumbnailUrl = asset.s3Url || null;
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch asset thumbnail for ${draft.assetId}:`, error);
+          }
         }
 
         // Add to queue
@@ -298,6 +322,7 @@ export const contentRouter = router({
           platform: draft.platform,
           brandId: draft.brandId,
           content: draft.content,
+          thumbnailUrl: thumbnailUrl,
           scheduledFor: nextScheduledTime,
           status: "scheduled",
           createdAt: new Date(),

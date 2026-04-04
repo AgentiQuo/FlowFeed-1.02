@@ -308,3 +308,7 @@
 - [x] Check scheduling logic for default posting time - reduced from 3 hours to 30 minutes
 - [x] Debug server caching issues - restarted dev server to apply code changes
 - [x] Verified fixes work with all 152 tests passing
+- [x] Found second code path in approveDraft - also scheduling for tomorrow 9 AM
+- [x] Fixed approveDraft to schedule 30 minutes from now instead of tomorrow
+- [x] Added thumbnail capture to approveDraft procedure
+- [x] All tests passing (152/152) - fixes ready for deployment
