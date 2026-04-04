@@ -23,11 +23,8 @@ export const credentialsRouter = router({
         .from(brandCredentials)
         .where(eq(brandCredentials.brandId, input.brandId));
 
-      // Don't return the encrypted credentials in the list
-      return creds.map((c) => ({
-        ...c,
-        credentials: undefined, // Hide encrypted credentials
-      }));
+      // Return credentials so frontend can display them as masked
+      return creds;
     }),
 
   /**
@@ -134,11 +131,8 @@ export const credentialsRouter = router({
         return null;
       }
 
-      // Don't return the encrypted credentials
-      return {
-        ...cred[0],
-        credentials: undefined,
-      };
+      // Return credentials so frontend can display them as masked
+      return cred[0];
     }),
 
   /**
