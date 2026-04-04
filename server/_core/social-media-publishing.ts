@@ -30,7 +30,7 @@ export async function publishToInstagram(
         let meData = (await meResponse.json()) as any;
         
         // If we get a permission error, try without the business account field
-        if (meData.error?.message?.includes("nonexisting field")) {
+        if (meData.error && (meData.error.message?.includes("nonexisting field") || meData.error.message?.includes("instagram_business_account"))) {
           meResponse = await fetch(
             `https://graph.instagram.com/v18.0/me?fields=id,username&access_token=${accessToken}`
           );

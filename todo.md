@@ -353,3 +353,5 @@
 - [x] Implement fallback for different API scopes - tries with and without business account field
 - [x] Handle both business and personal account scenarios - detects permission issues vs account type issues
 - [x] Provide clear guidance on required permissions - tells users to regenerate token with required scope
+- [x] Fix error detection logic - now properly checks for error object and message
+- [x] Force server rebuild and restart - cleared caches and restarted with fresh code
