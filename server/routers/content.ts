@@ -446,55 +446,68 @@ function getPlatformPrompt(
   propertyDescription: string,
   tone: string
 ): string {
-  const basePrompt = `Generate a ${tone} ${platform} post for this property: ${propertyDescription}`;
-
   switch (platform) {
     case "instagram":
-      return `${basePrompt}. 
-      Requirements:
-      - Maximum 2,200 characters
-      - Include 3-5 relevant hashtags
-      - Use emojis appropriately
-      - Focus on visual appeal and lifestyle
-      - Include call-to-action`;
+      return `Write a ${tone} Instagram caption for this property: ${propertyDescription}
+
+Requirements:
+- Maximum 2,200 characters
+- Include 3-5 relevant hashtags
+- Use emojis appropriately
+- Focus on visual appeal and lifestyle
+- Include call-to-action
+
+Provide ONLY the caption text, nothing else.`;
 
     case "linkedin":
-      return `${basePrompt}.
-      Requirements:
-      - Professional tone
-      - Maximum 1,300 characters
-      - Highlight investment potential or market insights
-      - Include relevant industry hashtags
-      - Professional call-to-action`;
+      return `Write a ${tone} LinkedIn post for this property: ${propertyDescription}
+
+Requirements:
+- Professional tone
+- Maximum 1,300 characters
+- Highlight investment potential or market insights
+- Include relevant industry hashtags
+- Professional call-to-action
+
+Provide ONLY the post text, nothing else.`;
 
     case "facebook":
-      return `${basePrompt}.
-      Requirements:
-      - Conversational and engaging tone
-      - Maximum 2,000 characters
-      - Include key property features
-      - Add relevant hashtags
-      - Include link or contact information`;
+      return `Write a ${tone} Facebook post for this property: ${propertyDescription}
+
+Requirements:
+- Conversational and engaging tone
+- Maximum 2,000 characters
+- Include key property features
+- Add relevant hashtags
+- Include link or contact information
+
+Provide ONLY the post text, nothing else.`;
 
     case "x":
-      return `${basePrompt}.
-      Requirements:
-      - Maximum 280 characters (X/Twitter limit)
-      - Concise and impactful
-      - Include 1-2 relevant hashtags
-      - Use engaging language
-      - Include link or call-to-action if space allows`;
+      return `Write a ${tone} X/Twitter post for this property: ${propertyDescription}
+
+Requirements:
+- Maximum 280 characters (X/Twitter limit)
+- Concise and impactful
+- Include 1-2 relevant hashtags
+- Use engaging language
+- Include link or call-to-action if space allows
+
+Provide ONLY the post text, nothing else.`;
 
     case "website":
-      return `${basePrompt}.
-      Requirements:
-      - SEO-optimized description
-      - 150-300 words
-      - Highlight unique features
-      - Professional and informative
-      - Include call-to-action`;
+      return `Write a ${tone} SEO-optimized property description for this property: ${propertyDescription}
+
+Requirements:
+- SEO-optimized description
+- 150-300 words
+- Highlight unique features
+- Professional and informative
+- Include call-to-action
+
+Provide ONLY the description text, nothing else.`;
 
     default:
-      return basePrompt;
+      return `Write a ${tone} post for this property: ${propertyDescription}`;
   }
 }
