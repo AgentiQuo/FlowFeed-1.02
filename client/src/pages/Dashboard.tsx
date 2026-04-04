@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { DraftPreview } from "@/components/DraftPreview";
 import AssetUpload from "@/components/AssetUpload";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -157,24 +157,25 @@ const filteredDrafts = useMemo(() => {
       {/* INPUT SECTION */}
       <div className={inputSectionClass}>
         <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Assets</CardTitle>
-            <CardDescription>Select brand and browse assets</CardDescription>
-          </CardHeader>
           <CardContent className="space-y-6">
-            {/* Brand Tabs and Queue Button */}
+            {/* Header with Assets title and Queue button */}
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
+              {selectedBrandId && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => window.location.href = `/dashboard/queue/${selectedBrandId}`}
+                  title="Go to Queue"
+                >
+                  <Calendar className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            {/* Brand Tabs */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div>
                 <h3 className="text-sm font-semibold">Brand</h3>
-                {selectedBrandId && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.location.href = `/dashboard/queue/${selectedBrandId}`}
-                  >
-                    📅 Queue
-                  </Button>
-                )}
               </div>
               <Tabs value={selectedBrandId || ""} onValueChange={(value) => {
                 if (value !== "new") {
