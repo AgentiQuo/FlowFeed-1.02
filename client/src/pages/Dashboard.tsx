@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { DraftPreview } from "@/components/DraftPreview";
+import AssetUpload from "@/components/AssetUpload";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Dashboard() {
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const [currentAssetIndex, setCurrentAssetIndex] = useState(0);
   const [selectedPlatform, setSelectedPlatform] = useState<string>("instagram");
   const [isLayoutVertical, setIsLayoutVertical] = useState(window.innerWidth < 1024);
+  const [showUpload, setShowUpload] = useState(false);
 
   // Mutations
   const generateDrafts = trpc.content.generateDrafts.useMutation();
@@ -110,6 +112,14 @@ export default function Dashboard() {
               </Tabs>
             </div>
 
+            {/* Upload Section */}
+            {showUpload && selectedBrandId && (
+              <AssetUpload
+                brandId={selectedBrandId}
+                onUploadSuccess={() => setShowUpload(false)}
+              />
+            )}
+
             {/* Asset Carousel */}
             {assets && assets.length > 0 ? (
               <div className="space-y-4">
@@ -149,17 +159,17 @@ export default function Dashboard() {
                 {/* Action Buttons */}
                 <div className="flex gap-2">
                   <Button
-                    onClick={handleCreatePosts}
-                    disabled={generateDrafts.isPending}
+                    onClick={() => setShowUpload(!showUpload)}
+                    variant="outline"
+                    size="icon"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    onClick={() => handleCreatePosts()}
                     className="flex-1"
                   >
                     {generateDrafts.isPending ? "Creating..." : "Create"}
-                  </Button>
-                  <Button variant="outline" className="flex-1">
-                    Edit
-                  </Button>
-                  <Button variant="outline" size="icon">
-                    <Plus className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
