@@ -10,6 +10,7 @@ import { exportRouter } from "./routers/export";
 import { analyticsRouter } from "./routers/analytics";
 import { bulkScheduleRouter } from "./routers/bulk-schedule";
 import { templatesRouter } from "./routers/templates";
+import { credentialsRouter } from "./routers/credentials";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -33,6 +34,7 @@ export const appRouter = router({
   analytics: analyticsRouter,
   bulkSchedule: bulkScheduleRouter,
   templates: templatesRouter,
+  brandCredentials: credentialsRouter,
 });
 
 export type AppRouter = typeof appRouter;

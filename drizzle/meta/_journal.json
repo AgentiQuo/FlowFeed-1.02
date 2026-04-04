@@ -29,6 +29,13 @@
       "when": 1775223442673,
       "tag": "0003_spooky_jubilee",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1775297102510,
+      "tag": "0004_loud_kang",
+      "breakpoints": true
     }
   ]
 }

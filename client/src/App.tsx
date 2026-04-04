@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 import QueuePage from "./pages/QueuePage";
+import BrandSettingsPage from "./pages/BrandSettingsPage";
 
 function Router() {
   return (
@@ -19,6 +20,9 @@ function Router() {
       </Route>
       <Route path={"/dashboard/queue/:brandId"}>
         {() => <QueuePage />}
+      </Route>
+      <Route path={"/dashboard/brand/:brandId/settings"}>
+        {() => <BrandSettingsPage />}
       </Route>
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

@@ -170,3 +170,14 @@
 
 
 
+
+
+## Brand Settings & Credentials Management (In Progress)
+- [x] Create brandCredentials database table with encrypted credential storage
+- [x] Create credentials router with save, list, get, delete, and verify procedures
+- [x] Build Brand Settings page accessible from Brands tab
+- [x] Create credential input forms for Instagram, X, LinkedIn, Facebook
+- [ ] Add settings icon to Brands tab navigation
+- [ ] Add settings icon to Media tab navigation
+- [ ] Integrate credentials into publish workflow
+- [ ] Test credential storage and retrieval end-to-end

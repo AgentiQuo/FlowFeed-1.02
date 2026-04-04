@@ -190,3 +190,28 @@ export const feedbackLogs = mysqlTable("feedbackLogs", {
 
 export type FeedbackLog = typeof feedbackLogs.$inferSelect;
 export type InsertFeedbackLog = typeof feedbackLogs.$inferInsert;
+
+/**
+ * Brand Credentials table - stores encrypted social media API credentials per brand
+ * Supports Instagram, X, LinkedIn, Facebook, and other platforms
+ */
+export const brandCredentials = mysqlTable("brandCredentials", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  brandId: varchar("brandId", { length: 36 }).notNull(),
+  platform: mysqlEnum("platform", ["instagram", "linkedin", "facebook", "x", "website"]).notNull(),
+  // Platform-specific account identifiers
+  accountId: varchar("accountId", { length: 255 }),
+  accountName: varchar("accountName", { length: 255 }),
+  accountEmail: varchar("accountEmail", { length: 320 }),
+  // Encrypted credentials - stored as JSON for flexibility
+  credentials: longtext("credentials").notNull(), // JSON encrypted string
+  // Metadata
+  isActive: boolean("isActive").default(true).notNull(),
+  lastVerified: timestamp("lastVerified"),
+  verificationStatus: mysqlEnum("verificationStatus", ["pending", "verified", "failed"]).default("pending"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BrandCredential = typeof brandCredentials.$inferSelect;
+export type InsertBrandCredential = typeof brandCredentials.$inferInsert;

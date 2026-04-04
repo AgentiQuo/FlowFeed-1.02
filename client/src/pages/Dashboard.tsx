@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Calendar, Settings } from "lucide-react";
 import { DraftPreview } from "@/components/DraftPreview";
 import AssetUpload from "@/components/AssetUpload";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -174,8 +174,19 @@ const filteredDrafts = useMemo(() => {
             </div>
             {/* Brand Tabs */}
             <div className="space-y-3">
-              <div>
+              <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Brand</h3>
+                {selectedBrandId && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setLocation(`/dashboard/brand/${selectedBrandId}/settings`)}
+                    title="Brand Settings"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
               <Tabs value={selectedBrandId || ""} onValueChange={(value) => {
                 if (value !== "new") {
