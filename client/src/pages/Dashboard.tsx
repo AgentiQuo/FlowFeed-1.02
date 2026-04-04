@@ -61,14 +61,7 @@ export default function Dashboard() {
   // Derived state
   const currentAsset = assets?.[currentAssetIndex];
   const activeBrand = brands?.find((b: any) => b.id === selectedBrandId);
-  const currentDrafts = useMemo(() => {
-    if (!drafts || !currentAsset) return [];
-      return drafts.filter(
-        (d: any) => d.assetId === currentAsset.id && d.platform === selectedPlatform
-      );
-  }, [drafts, currentAsset, selectedPlatform]);
-
-  const filteredDrafts = useMemo(() => {
+const filteredDrafts = useMemo(() => {
     if (!drafts) return [];
     return drafts.filter((d: any) => d.platform === selectedPlatform);
   }, [drafts, selectedPlatform]);
@@ -259,18 +252,14 @@ export default function Dashboard() {
             {/* Draft Preview */}
             {filteredDrafts.length > 0 ? (
               <div className="space-y-4">
-                {filteredDrafts.map((draft: any) => (
+                {filteredDrafts.map((draft: any) => {
+                  const draftAsset = assets?.find((a: any) => a.id === draft.assetId);
+                  return (
                   <div key={draft.id} className="space-y-4">
-                    {/* Find asset for this draft */}
-                    {(() => {
-                      const draftAsset = assets?.find((a: any) => a.id === draft.assetId);
-                      return (
-                        <DraftPreview
-                          draft={draft}
-                          assetImage={draftAsset?.s3Url}
-                        />
-                      );
-                    })()}
+                    <DraftPreview
+                      draft={draft}
+                      assetImage={draftAsset?.s3Url}
+                    />
                     <div className="flex gap-2">
                       <Button
                         onClick={() => handleApproveDraft(draft.id)}
@@ -349,7 +338,8 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="flex items-center justify-center h-64 text-muted-foreground">
