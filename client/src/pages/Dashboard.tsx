@@ -313,28 +313,31 @@ const filteredDrafts = useMemo(() => {
                 </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setShowUpload(!showUpload)}
-                    variant="outline"
-                    size="icon"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={() => handleCreatePosts()}
-                    className="flex-1"
-                  >
-                    {generateDrafts.isPending ? "Creating..." : "Create"}
-                  </Button>
-                </div>
+
               </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-muted-foreground">
-                <p>No assets uploaded yet</p>
+              <div className="flex items-center justify-center h-64 bg-muted rounded-lg text-muted-foreground">
+                <p>No assets uploaded yet. Click + to add your first asset.</p>
               </div>
             )}
+
+            {/* Action Buttons - Always visible */}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowUpload(!showUpload)}
+                variant="outline"
+                size="icon"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={() => handleCreatePosts()}
+                className="flex-1"
+                disabled={!assets || assets.length === 0}
+              >
+                {generateDrafts.isPending ? "Creating..." : "Create"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

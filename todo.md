@@ -230,3 +230,18 @@
 - [x] Add verification UI feedback in BrandSettingsPage (loading, success, error states)
 - [x] Show verification status badge on credentials form
 - [x] Test with valid and invalid tokens
+
+
+## Queue Display & Scheduling Bugs (In Progress)
+- [ ] Debug missing queue thumbnails - posts show "No image" even with assets
+- [ ] Verify asset-to-post relationship in database
+- [ ] Check if draftMap is being populated correctly in QueuePage
+- [ ] Verify post scheduling logic - check if 2+ hour gaps are correct
+- [ ] Test scheduling with multiple posts to confirm timing
+
+
+## New Brand Upload Issue (Complete)
+- [x] Investigate missing upload options for newly created brands
+- [x] Check Dashboard asset section rendering for new brands
+- [x] Fix upload button/form display - moved action buttons outside conditional
+- [x] Test with TiraMofo brand - all tests passing

@@ -61,8 +61,16 @@ export default function QueuePage() {
   });
   
   // Debug: Log asset mapping info
-  if (queuePosts.length > 0 && Object.keys(assetImageMap).length === 0) {
-    console.warn('No assets found in assetImageMap. Assets:', brandAssets);
+  if (queuePosts.length > 0) {
+    console.log('QueuePage Debug:');
+    console.log('- brandId:', brandId);
+    console.log('- queuePosts:', queuePosts.length);
+    console.log('- allDrafts:', allDrafts.length);
+    console.log('- brandAssets:', brandAssets.length);
+    console.log('- assetImageMap keys:', Object.keys(assetImageMap).length);
+    if (Object.keys(assetImageMap).length === 0) {
+      console.warn('No assets in map. brandAssets:', brandAssets);
+    }
   }
 
 
