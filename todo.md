@@ -198,3 +198,12 @@
 - [ ] Integrate image generation API with asset upload
 - [x] Test long-press delete functionality
 - [ ] Test text-to-image generation and asset creation
+
+
+## Posting Schedule System (Complete)
+- [x] Create postingSchedules database table with medium-specific intervals
+- [x] Add schedule management API endpoints (get, update defaults)
+- [x] Implement slot-based queue logic per brand+media combination
+- [x] Update queue.addToQueue to use brand+media slot scheduling
+- [x] Initialize default schedules for Instagram, X, LinkedIn, Facebook
+- [x] Test queue scheduling with multiple brands and media

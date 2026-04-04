@@ -36,6 +36,13 @@
       "when": 1775297102510,
       "tag": "0004_loud_kang",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1775300489637,
+      "tag": "0005_violet_lucky_pierre",
+      "breakpoints": true
     }
   ]
 }

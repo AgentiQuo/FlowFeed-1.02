@@ -215,3 +215,27 @@ export const brandCredentials = mysqlTable("brandCredentials", {
 
 export type BrandCredential = typeof brandCredentials.$inferSelect;
 export type InsertBrandCredential = typeof brandCredentials.$inferInsert;
+
+
+/**
+ * Posting Schedules table - defines posting intervals per medium
+ * Stores default schedules for each platform (Instagram, X, Facebook, LinkedIn)
+ * These intervals are used to create "slots" for posting to maintain human-like rhythm
+ */
+export const postingSchedules = mysqlTable("postingSchedules", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  // Platform this schedule applies to
+  platform: mysqlEnum("platform", ["instagram", "linkedin", "facebook", "x"]).notNull().unique(),
+  // Minimum hours between posts for this platform
+  minHoursBetweenPosts: int("minHoursBetweenPosts").notNull(),
+  // Maximum hours between posts for this platform (for variation)
+  maxHoursBetweenPosts: int("maxHoursBetweenPosts").notNull(),
+  // Whether this schedule is active
+  isActive: boolean("isActive").default(true).notNull(),
+  // Timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PostingSchedule = typeof postingSchedules.$inferSelect;
+export type InsertPostingSchedule = typeof postingSchedules.$inferInsert;

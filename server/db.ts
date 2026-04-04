@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, brands, categories, partners, agents, contentAssets, drafts, posts, leads, feedbackLogs } from "../drizzle/schema";
+import { InsertUser, users, brands, categories, partners, agents, contentAssets, drafts, posts, leads, feedbackLogs, postingSchedules } from "../drizzle/schema";
 import * as schema from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -188,4 +188,56 @@ export async function getBrandFeedback(brandId: string, categoryId: string) {
   return await db.select().from(feedbackLogs).where(
     and(eq(feedbackLogs.brandId, brandId), eq(feedbackLogs.categoryId, categoryId))
   );
+}
+
+
+// Posting Schedule queries
+export async function getPostingSchedule(platform: string) {
+  const db = await getDb();
+  if (!db) return null;
+  return await db.select().from(postingSchedules).where(eq(postingSchedules.platform, platform as any)).limit(1);
+}
+
+export async function getAllPostingSchedules() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(postingSchedules);
+}
+
+export async function updatePostingSchedule(platform: string, minHours: number, maxHours: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Try to update, if no rows affected, insert
+  const result = await db.update(postingSchedules)
+    .set({ minHoursBetweenPosts: minHours, maxHoursBetweenPosts: maxHours })
+    .where(eq(postingSchedules.platform, platform as any));
+  
+  // If update didn't affect any rows, insert new schedule
+  if ((result as any).affectedRows === 0) {
+    const { nanoid } = await import('nanoid');
+    await db.insert(postingSchedules).values({
+      id: nanoid(),
+      platform: platform as any,
+      minHoursBetweenPosts: minHours,
+      maxHoursBetweenPosts: maxHours,
+      isActive: true,
+    });
+  }
+}
+
+// Get the last scheduled post for a brand+platform combination
+export async function getLastScheduledPost(brandId: string, platform: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(posts)
+    .where(and(
+      eq(posts.brandId, brandId),
+      eq(posts.platform, platform as any),
+      eq(posts.status, 'scheduled')
+    ))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
 }

@@ -160,13 +160,13 @@ export default function DraftsPage() {
   });
 
   // Move to queue mutation
-  const moveToQueueMutation = trpc.queue.moveToQueue.useMutation({
-    onSuccess: (data) => {
+  const moveToQueueMutation = trpc.queue.addToQueue.useMutation({
+    onSuccess: (data: any) => {
       toast.success(`Draft moved to queue! Scheduled for ${data.count} platform(s)`);
       setMovingToQueueDraftId(null);
       refetchDrafts();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(`Failed to move draft to queue: ${error.message}`);
       setMovingToQueueDraftId(null);
     },
@@ -230,6 +230,7 @@ export default function DraftsPage() {
     moveToQueueMutation.mutate({
       brandId,
       draftId,
+      platforms: ["instagram", "x", "linkedin", "facebook"],
     });
   };
 
