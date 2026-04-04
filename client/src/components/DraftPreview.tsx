@@ -1,47 +1,15 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Copy, Download, Send, Trash2 } from "lucide-react";
 import { getPlatformPreviewConfig, getTruncatedText } from "@/lib/platformPreview";
-import { toast } from "sonner";
 
 interface DraftPreviewProps {
   draft: any;
   assetImage?: string | null;
-  isQueued?: boolean;
-  isEditing?: boolean;
-  editContent?: string;
-  onEditChange?: (content: string) => void;
-  onSaveEdit?: () => void;
-  onCancelEdit?: () => void;
-  onStartEdit?: () => void;
-  onCopy?: () => void;
-  onExport?: () => void;
-  onQueue?: () => void;
-  onRemove?: () => void;
-  isPublishing?: boolean;
-  isMovingToQueue?: boolean;
-  isRemoving?: boolean;
 }
 
 export function DraftPreview({
   draft,
   assetImage,
-  isQueued,
-  isEditing,
-  editContent,
-  onEditChange,
-  onSaveEdit,
-  onCancelEdit,
-  onStartEdit,
-  onCopy,
-  onExport,
-  onQueue,
-  onRemove,
-  isPublishing,
-  isMovingToQueue,
-  isRemoving,
 }: DraftPreviewProps) {
   const previewConfig = getPlatformPreviewConfig(draft.platform);
   const truncatedText = getTruncatedText(draft.content, previewConfig.maxTextLines, 60);
@@ -126,68 +94,7 @@ export function DraftPreview({
                 {draft.status === "reviewed" && "Approved"}
                 {draft.status === "published" && "Published"}
               </Badge>
-              {isQueued && (
-                <Badge variant="outline" className="text-green-600 border-green-200">
-                  ✓ Queued
-                </Badge>
-              )}
             </div>
-          </div>
-
-          {/* Draft Content */}
-          {isEditing ? (
-            <div className="space-y-2">
-              <Textarea
-                value={editContent || ""}
-                onChange={(e) => onEditChange?.(e.target.value)}
-                placeholder="Edit draft content"
-                className="min-h-24"
-              />
-              <div className="flex gap-2">
-                <Button size="sm" onClick={onSaveEdit}>
-                  Save
-                </Button>
-                <Button size="sm" variant="outline" onClick={onCancelEdit}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm line-clamp-3 text-foreground">{draft.content}</p>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 flex-wrap">
-            {!isEditing && (
-              <>
-                <Button size="sm" variant="outline" onClick={onStartEdit}>
-                  Edit
-                </Button>
-                <Button size="sm" variant="outline" onClick={onCopy}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline" onClick={onExport}>
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={onQueue}
-                  disabled={isMovingToQueue || isQueued}
-                  className={isQueued ? "opacity-50" : ""}
-                >
-                  <Send className="h-4 w-4 mr-1" />
-                  {isMovingToQueue ? "Queueing..." : isQueued ? "Queued" : "Queue"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={onRemove}
-                  disabled={isRemoving}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </>
-            )}
           </div>
         </div>
       </CardContent>

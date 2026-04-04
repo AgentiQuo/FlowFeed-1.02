@@ -458,28 +458,57 @@ export default function DraftsPage() {
                         {drafts.filter((d: any) => draftPlatformFilter === null || d.platform === draftPlatformFilter).map((draft: any) => {
                         const assetImage = getAssetImageUrl(draft.assetId);
                         return (
-<DraftPreview
-                          key={draft.id}
-                          draft={draft}
-                          assetImage={assetImage}
-                          isQueued={!!queuedDrafts[draft.id]}
-                          isEditing={editingDraftId === draft.id}
-                          editContent={editContent}
-                          onEditChange={setEditContent}
-                          onSaveEdit={() => handleUpdateDraft(draft.id)}
-                          onCancelEdit={() => setEditingDraftId(null)}
-                          onStartEdit={() => {
-                            setEditingDraftId(draft.id);
-                            setEditContent(draft.content);
-                            setEditFeedback(draft.feedback || "");
-                          }}
-                          onCopy={() => handleCopyToClipboard(draft.id)}
-                          onExport={() => handleExportDraft(draft.id)}
-                          onQueue={() => handleMoveToQueue(draft.id)}
-                          onRemove={() => handleDeleteDraft(draft.id)}
-                          isMovingToQueue={movingToQueueDraftId === draft.id}
-                          isRemoving={deleteDraftMutation.isPending}
-                        />
+<div className="space-y-4">
+                          <DraftPreview
+                            key={draft.id}
+                            draft={draft}
+                            assetImage={assetImage}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => {
+                                setEditingDraftId(draft.id);
+                                setEditContent(draft.content);
+                                setEditFeedback(draft.feedback || "");
+                              }}
+                              variant="outline"
+                              className="flex-1"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              onClick={() => handleCopyToClipboard(draft.id)}
+                              variant="outline"
+                              className="flex-1"
+                            >
+                              <Copy className="w-4 h-4 mr-2" />
+                              Copy
+                            </Button>
+                            <Button
+                              onClick={() => handleMoveToQueue(draft.id)}
+                              disabled={movingToQueueDraftId === draft.id}
+                              className="flex-1"
+                            >
+                              {movingToQueueDraftId === draft.id ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <Send className="w-4 h-4 mr-2" />
+                              )}
+                              Queue
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteDraft(draft.id)}
+                              disabled={deleteDraftMutation.isPending}
+                              variant="destructive"
+                              className="flex-1"
+                            >
+                              {deleteDraftMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : null}
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
                       );
                         })}
                       </div>

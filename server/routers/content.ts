@@ -66,14 +66,18 @@ export const contentRouter = router({
 
       // Generate drafts for each platform
       const generatedDrafts = await Promise.all(
-        input.platforms.map((platform) =>
-          generateContentForPlatform(
+        input.platforms.map(async (platform) => {
+          const contentResult = await generateContentForPlatform(
             assetData,
             brand,
             platform,
             input.tone || "professional"
-          )
-        )
+          );
+          return {
+            platform,
+            content: contentResult,
+          };
+        })
       );
 
       // Save drafts to database
@@ -219,6 +223,86 @@ export const contentRouter = router({
     }),
 
   /**
+   * Rewrite draft content based on user feedback
+   */
+  rewriteDraft: protectedProcedure
+    .input(
+      z.object({
+        draftId: z.string(),
+        feedback: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
+
+      // Get draft to verify it exists and get context
+      const draft = await db
+        .select()
+        .from(drafts)
+        .where(eq(drafts.id, input.draftId))
+        .limit(1);
+
+      if (!draft || draft.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Draft not found",
+        });
+      }
+
+      const draftData = draft[0];
+
+      // Get asset and brand for context
+      const asset = await db
+        .select()
+        .from(contentAssets)
+        .where(eq(contentAssets.id, draftData.assetId))
+        .limit(1);
+
+      if (!asset || asset.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Asset not found",
+        });
+      }
+
+      const { getBrandById } = await import("../db");
+      const brand = await getBrandById(draftData.brandId);
+
+      if (!brand) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Brand not found",
+        });
+      }
+
+      // Generate new content based on feedback
+      const newContent = await generateContentForPlatform(
+        asset[0],
+        brand,
+        draftData.platform as any,
+        brand.voiceBibleContent || "professional",
+        input.feedback
+      );
+
+      // Update draft with new content
+      await db
+        .update(drafts)
+        .set({
+          content: newContent,
+          updatedAt: new Date(),
+        })
+        .where(eq(drafts.id, input.draftId));
+
+      return { success: true, content: newContent };
+    }),
+
+  /**
    * Delete draft
    */
   deleteDraft: protectedProcedure
@@ -245,7 +329,8 @@ async function generateContentForPlatform(
   asset: any,
   brand: any,
   platform: "instagram" | "linkedin" | "facebook" | "x" | "website",
-  tone: string
+  tone: string,
+  feedback?: string
 ) {
   const metadata = asset.extractedMetadata || {};
 
@@ -253,7 +338,12 @@ async function generateContentForPlatform(
   const propertyDescription = buildPropertyDescription(metadata);
 
   // Create platform-specific prompt
-  const prompt = getPlatformPrompt(platform, propertyDescription, tone);
+  let prompt = getPlatformPrompt(platform, propertyDescription, tone);
+  
+  // If feedback provided, add it to the prompt for rewriting
+  if (feedback) {
+    prompt += `\n\nUser feedback for improvement: ${feedback}\n\nPlease rewrite the content incorporating this feedback.`;
+  }
 
   // Call Claude via LLM helper
   const response = await invokeLLM({
@@ -283,10 +373,7 @@ async function generateContentForPlatform(
     }
   }
 
-  return {
-    platform,
-    content,
-  };
+  return content;
 }
 
 /**

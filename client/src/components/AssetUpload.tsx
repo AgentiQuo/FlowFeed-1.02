@@ -16,6 +16,7 @@ export default function AssetUpload({ brandId, onUploadSuccess }: AssetUploadPro
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadMutation = trpc.ingestion.uploadImage.useMutation();
+  const utils = trpc.useUtils();
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -90,6 +91,8 @@ export default function AssetUpload({ brandId, onUploadSuccess }: AssetUploadPro
       }
     }
 
+    // Refetch assets after upload completes
+    await utils.ingestion.listAssets.invalidate({ brandId });
     onUploadSuccess?.();
   };
 

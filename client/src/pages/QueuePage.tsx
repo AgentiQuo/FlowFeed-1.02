@@ -302,7 +302,20 @@ export default function QueuePage() {
                         <Badge className={getPlatformColor(post.platform)}>
                           {post.platform}
                         </Badge>
-                        <Badge variant="outline">{post.status}</Badge>
+                        <Badge
+                          className={`capitalize ${
+                            post.status === "published"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : post.status === "failed"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : post.status === "scheduled"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          }`}
+                          variant="outline"
+                        >
+                          {post.status === "queued" ? "Pending" : post.status}
+                        </Badge>
                       </div>
                       <p className="text-sm line-clamp-2 text-foreground">
                         {post.content}

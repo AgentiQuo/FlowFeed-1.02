@@ -30,6 +30,10 @@ export default function Dashboard() {
   const [selectedPlatform, setSelectedPlatform] = useState<string>("instagram");
   const [isLayoutVertical, setIsLayoutVertical] = useState(window.innerWidth < 1024);
   const [showUpload, setShowUpload] = useState(false);
+  const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
+  const [feedbackText, setFeedbackText] = useState<string>("");
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState<string>("");
 
   // Mutations
   const generateDrafts = trpc.content.generateDrafts.useMutation({
@@ -39,6 +43,20 @@ export default function Dashboard() {
     },
   });
   const approveDraft = trpc.queue.publishPost.useMutation();
+  const rewriteDraft = trpc.content.rewriteDraft.useMutation({
+    onSuccess: () => {
+      setFeedbackDraftId(null);
+      setFeedbackText("");
+      trpc.useUtils().content.getDrafts.invalidate();
+    },
+  });
+  const updateDraft = trpc.content.updateDraft.useMutation({
+    onSuccess: () => {
+      setEditingDraftId(null);
+      setEditContent("");
+      trpc.useUtils().content.getDrafts.invalidate();
+    },
+  });
 
   // Derived state
   const currentAsset = assets?.[currentAssetIndex];
@@ -68,6 +86,32 @@ export default function Dashboard() {
 
   const handleApproveDraft = async (draftId: string) => {
     await approveDraft.mutateAsync({ postId: draftId });
+  };
+
+  const handleFeedback = (draftId: string) => {
+    setFeedbackDraftId(draftId);
+    setFeedbackText("");
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!feedbackDraftId || !feedbackText.trim()) return;
+    await rewriteDraft.mutateAsync({
+      draftId: feedbackDraftId,
+      feedback: feedbackText,
+    });
+  };
+
+  const handleEditDraft = (draft: any) => {
+    setEditingDraftId(draft.id);
+    setEditContent(draft.content);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingDraftId || !editContent.trim()) return;
+    await updateDraft.mutateAsync({
+      draftId: editingDraftId,
+      content: editContent,
+    });
   };
 
   const handleNextAsset = () => {
@@ -220,7 +264,6 @@ export default function Dashboard() {
                     <DraftPreview
                       draft={draft}
                       assetImage={currentAsset?.s3Url}
-                      editContent={draft.content}
                     />
                     <div className="flex gap-2">
                       <Button
@@ -229,13 +272,76 @@ export default function Dashboard() {
                       >
                         Approve
                       </Button>
-                      <Button variant="outline" className="flex-1">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleFeedback(draft.id)}
+                      >
                         Feedback
                       </Button>
-                      <Button variant="outline" className="flex-1">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleEditDraft(draft)}
+                      >
                         Edit
                       </Button>
                     </div>
+                    {editingDraftId === draft.id && (
+                      <div className="space-y-2 mt-4 p-4 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
+                        <label className="text-sm font-medium">Edit caption:</label>
+                        <textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className="w-full p-2 border rounded text-sm"
+                          rows={4}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleSaveEdit}
+                            disabled={!editContent.trim() || updateDraft.isPending}
+                            className="flex-1"
+                          >
+                            {updateDraft.isPending ? "Saving..." : "Save Changes"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setEditingDraftId(null)}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                                        {feedbackDraftId === draft.id && (
+                      <div className="space-y-2 mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <label className="text-sm font-medium">Provide feedback for AI rewrite:</label>
+                        <textarea
+                          value={feedbackText}
+                          onChange={(e) => setFeedbackText(e.target.value)}
+                          placeholder="e.g., Make it more casual, add more emojis, focus on luxury features..."
+                          className="w-full p-2 border rounded text-sm"
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleSubmitFeedback}
+                            disabled={!feedbackText.trim() || rewriteDraft.isPending}
+                            className="flex-1"
+                          >
+                            {rewriteDraft.isPending ? "Rewriting..." : "Rewrite with AI"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setFeedbackDraftId(null)}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
