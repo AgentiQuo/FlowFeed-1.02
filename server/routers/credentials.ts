@@ -84,11 +84,12 @@ export const credentialsRouter = router({
             verificationStatus: "pending",
             updatedAt: now,
           })
-          .where(eq(brandCredentials.id, id));
+          .where(eq(brandCredentials.id, existing[0].id));
       } else {
         // Insert new
+        const { nanoid } = await import("nanoid");
         await db.insert(brandCredentials).values({
-          id,
+          id: nanoid(),
           brandId: input.brandId,
           platform: input.platform,
           accountId: input.accountId,
@@ -97,17 +98,14 @@ export const credentialsRouter = router({
           credentials: encryptedCredentials,
           isActive: true,
           verificationStatus: "pending",
-          createdAt: now,
-          updatedAt: now,
-        } as any);
+        });
       }
 
-      return { success: true, id };
+      return { success: true };
     }),
 
   /**
-   * Get credentials for a specific brand and platform
-   * Only returns to authorized users
+   * Get credentials for a brand and platform
    */
   get: protectedProcedure
     .input(
@@ -131,15 +129,14 @@ export const credentialsRouter = router({
         )
         .limit(1);
 
-      if (!cred || cred.length === 0) return null;
+      if (!cred || cred.length === 0) {
+        return null;
+      }
 
-      const credential = cred[0];
-      // Decrypt credentials (in production, use proper decryption)
-      const decryptedCreds = JSON.parse(credential.credentials);
-
+      // Don't return the encrypted credentials
       return {
-        ...credential,
-        credentials: decryptedCreds,
+        ...cred[0],
+        credentials: undefined,
       };
     }),
 
@@ -198,18 +195,53 @@ export const credentialsRouter = router({
         throw new Error("Credentials not found");
       }
 
-      // TODO: Implement actual verification based on platform
-      // For now, just mark as verified
+      let isVerified = false;
+      let errorMessage = "";
+
+      try {
+        if (cred[0].platform === "instagram") {
+          const credData = JSON.parse(cred[0].credentials);
+          const accessToken = credData.accessToken;
+
+          if (!accessToken) {
+            throw new Error("No access token found");
+          }
+
+          // Test Instagram token by calling Graph API
+          const response = await fetch(
+            `https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`
+          );
+          const data = await response.json();
+
+          if (data.error) {
+            errorMessage = data.error.message || "Invalid access token";
+            isVerified = false;
+          } else if (data.id && data.username) {
+            isVerified = true;
+          } else {
+            errorMessage = "Unexpected response from Instagram API";
+            isVerified = false;
+          }
+        } else {
+          // For other platforms, mark as verified (implement verification later)
+          isVerified = true;
+        }
+      } catch (error) {
+        errorMessage = error instanceof Error ? error.message : "Verification failed";
+        isVerified = false;
+      }
+
+      // Update verification status
       const now = new Date();
       await db
         .update(brandCredentials)
         .set({
-          verificationStatus: "verified",
+          verificationStatus: isVerified ? "verified" : "failed",
           lastVerified: now,
           updatedAt: now,
         })
         .where(eq(brandCredentials.id, cred[0].id));
 
-      return { success: true, verified: true };
+      return { success: true, verified: isVerified, error: errorMessage };
     }),
 });

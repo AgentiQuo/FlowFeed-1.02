@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, CheckCircle, XCircle, Loader } from "lucide-react";
 import { toast } from "sonner";
 import {
   Tabs,
@@ -42,6 +42,8 @@ export default function BrandSettingsPage() {
   const { brandId } = useParams<{ brandId: string }>();
   const [, setLocation] = useLocation();
   const [isSaving, setIsSaving] = useState(false);
+  const [isVerifying, setIsVerifying] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<Record<string, { verified: boolean; error?: string }>>({});
   const [credentials, setCredentials] = useState<Record<string, CredentialForm>>({});
 
   // Fetch all brands to get current brand
@@ -64,6 +66,38 @@ export default function BrandSettingsPage() {
       setIsSaving(false);
     },
   });
+
+  const verifyCredentialsMutation = trpc.brandCredentials.verify.useMutation({
+    onSuccess: (result: any) => {
+      setIsVerifying(null);
+      const platform = result.platform || Object.keys(credentials)[0];
+      setVerificationStatus((prev) => ({
+        ...prev,
+        [platform]: { verified: result.verified, error: result.error },
+      }));
+      if (result.verified) {
+        toast.success(`${platform} credentials verified successfully`);
+      } else {
+        toast.error(`Verification failed: ${result.error}`);
+      }
+    },
+    onError: (error: any) => {
+      setIsVerifying(null);
+      toast.error(`Verification error: ${error.message}`);
+    },
+  });
+
+  const handleVerifyCredentials = async (platform: "instagram" | "x" | "linkedin" | "facebook" | "website") => {
+    setIsVerifying(platform);
+    try {
+      await verifyCredentialsMutation.mutateAsync({
+        brandId: brandId || "",
+        platform,
+      });
+    } catch (error) {
+      console.error("Verification error:", error);
+    }
+  };
 
   const handleSaveCredentials = async (platform: "instagram" | "x" | "linkedin" | "facebook" | "website") => {
     setIsSaving(true);
@@ -310,7 +344,24 @@ export default function BrandSettingsPage() {
                       </div>
                     )}
 
-                    {/* Save Button */}
+                    {/* Verification Status */}
+                    {verificationStatus[platform.id] && (
+                      <div className="pt-2">
+                        {verificationStatus[platform.id].verified ? (
+                          <div className="flex items-center gap-2 text-green-600 text-sm">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>Credentials verified successfully</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-red-600 text-sm">
+                            <XCircle className="h-4 w-4" />
+                            <span>{verificationStatus[platform.id].error || "Verification failed"}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Save and Verify Buttons */}
                     <div className="flex gap-2 pt-4">
                       <Button
                         onClick={() => handleSaveCredentials(platform.id)}
@@ -318,6 +369,20 @@ export default function BrandSettingsPage() {
                       >
                         <Save className="h-4 w-4 mr-2" />
                         {isSaving ? "Saving..." : "Save Credentials"}
+                      </Button>
+                      <Button
+                        onClick={() => handleVerifyCredentials(platform.id)}
+                        disabled={isVerifying === platform.id || !credentials[platform.id]?.accessToken}
+                        variant="outline"
+                      >
+                        {isVerifying === platform.id ? (
+                          <>
+                            <Loader className="h-4 w-4 mr-2 animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          "Verify Credentials"
+                        )}
                       </Button>
                     </div>
                   </div>

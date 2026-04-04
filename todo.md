@@ -221,3 +221,12 @@
 - [x] Fix post scheduling logic - first posts should schedule within next few hours, not tomorrow - FIXED: getLastScheduledPost now orders by DESC
 - [ ] Verify asset-to-post relationship is correct
 - [ ] Test scheduling with multiple posts
+
+
+## Instagram Credential Verification (Complete)
+- [x] Create verifyInstagramCredentials endpoint in credentials router
+- [x] Implement Instagram Graph API token validation
+- [x] Add verification status to brandCredentials table
+- [x] Add verification UI feedback in BrandSettingsPage (loading, success, error states)
+- [x] Show verification status badge on credentials form
+- [x] Test with valid and invalid tokens
