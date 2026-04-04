@@ -9,7 +9,7 @@ export interface PublishResult {
 
 /**
  * Instagram Graph API publishing
- * Requires: accessToken and businessAccountId (must be provided in credentials)
+ * Requires: accessToken (businessAccountId is optional, will be fetched from /me endpoint if not provided)
  */
 export async function publishToInstagram(
   accessToken: string,
@@ -18,14 +18,43 @@ export async function publishToInstagram(
   caption: string
 ): Promise<PublishResult> {
   try {
-    // businessAccountId is required - user must provide it in credentials
-    const accountId = businessAccountId;
+    // If businessAccountId is not provided, fetch it from Instagram API using /me endpoint
+    let accountId = businessAccountId;
     if (!accountId) {
-      return {
-        success: false,
-        platform: "instagram",
-        error: "Instagram Business Account ID is required. Please add it to your credentials in Brand Settings. You can find it in Instagram Settings → Apps and Websites → Business Account ID.",
-      };
+      try {
+        // Use the /me endpoint to get the IG_USER_ID (which is the business account ID)
+        // This endpoint works with instagram_business_basic scope
+        const meResponse = await fetch(
+          `https://graph.instagram.com/v18.0/me?fields=id&access_token=${accessToken}`
+        );
+        
+        const meData = (await meResponse.json()) as any;
+        
+        if (meData.error) {
+          const errorMsg = meData.error.message || "Unknown error";
+          return {
+            success: false,
+            platform: "instagram",
+            error: `Failed to retrieve Instagram account: ${errorMsg}. Make sure your token is valid and has instagram_business_basic scope.`,
+          };
+        }
+        
+        if (meData.id) {
+          accountId = meData.id;
+        } else {
+          return {
+            success: false,
+            platform: "instagram",
+            error: "Could not retrieve Instagram account ID. Please ensure your token is valid and your account is a business account.",
+          };
+        }
+      } catch (e) {
+        return {
+          success: false,
+          platform: "instagram",
+          error: `Failed to retrieve Instagram account: ${(e as Error).message}`,
+        };
+      }
     }
 
     // Step 1: Create media container

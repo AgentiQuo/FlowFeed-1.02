@@ -4,22 +4,45 @@ import { publishToInstagram } from "./_core/social-media-publishing";
 // Mock fetch globally
 global.fetch = vi.fn();
 
-describe("Instagram Publishing with Business Account ID", () => {
+describe("Instagram Publishing with /me Endpoint", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should require businessAccountId", async () => {
+  it("should fetch businessAccountId from /me endpoint if not provided", async () => {
+    const mockFetch = global.fetch as any;
+
+    // Mock /me endpoint response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: "17841400963310000" }),
+    });
+
+    // Mock container creation response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: "container-123" }),
+    });
+
+    // Mock publish response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: "post-456" }),
+    });
+
     const result = await publishToInstagram(
       "test-token",
-      "", // Empty businessAccountId
+      "", // Empty businessAccountId - should be fetched
       "https://example.com/image.jpg",
       "Test caption"
     );
 
-    expect(result.success).toBe(false);
-    expect(result.error).toContain("Business Account ID is required");
-    expect(result.error).toContain("Brand Settings");
+    expect(result.success).toBe(true);
+    expect(result.postId).toBe("post-456");
+    
+    // Verify /me endpoint was called first
+    const calls = (mockFetch as any).mock.calls;
+    expect(calls[0][0]).toContain("/me?fields=id");
   });
 
   it("should successfully publish with valid businessAccountId", async () => {
@@ -47,6 +70,26 @@ describe("Instagram Publishing with Business Account ID", () => {
     expect(result.success).toBe(true);
     expect(result.postId).toBe("post-456");
     expect(result.platform).toBe("instagram");
+  });
+
+  it("should handle /me endpoint error when fetching account ID", async () => {
+    const mockFetch = global.fetch as any;
+
+    // Mock /me endpoint error response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ error: { message: "Invalid access token" } }),
+    });
+
+    const result = await publishToInstagram(
+      "invalid-token",
+      "",
+      "https://example.com/image.jpg",
+      "Test caption"
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Invalid access token");
   });
 
   it("should handle media container creation failure", async () => {
@@ -95,14 +138,16 @@ describe("Instagram Publishing with Business Account ID", () => {
     expect(result.error).toContain("Rate limit exceeded");
   });
 
-  it("should include businessAccountId in API request", async () => {
+  it("should use provided businessAccountId without calling /me endpoint", async () => {
     const mockFetch = global.fetch as any;
 
+    // Mock container creation response
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "container-123" }),
     });
 
+    // Mock publish response
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "post-456" }),
@@ -115,7 +160,10 @@ describe("Instagram Publishing with Business Account ID", () => {
       "Test caption"
     );
 
-    // Verify the businessAccountId is used in the API URL
+    // Should only have 2 calls (container + publish), not 3 (no /me call)
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    
+    // Verify the businessAccountId is used in the API URLs
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining("17841400963310000/media"),
       expect.any(Object)
