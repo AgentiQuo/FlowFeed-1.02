@@ -60,6 +60,19 @@ export default function QueuePage() {
     }
   });
 
+  // Debug logging
+  if (queuePosts.length > 0) {
+    console.log('QueuePage Debug:', {
+      queuePostsCount: queuePosts.length,
+      allDraftsCount: allDrafts.length,
+      brandAssetsCount: brandAssets.length,
+      assetImageMapSize: Object.keys(assetImageMap).length,
+      firstQueuePost: queuePosts[0],
+      firstDraft: allDrafts[0],
+      firstAsset: brandAssets[0],
+    });
+  }
+
   // Mutations
   const reorderMutation = trpc.queue.reorderQueue.useMutation({
     onSuccess: () => {
@@ -218,8 +231,7 @@ export default function QueuePage() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     {(() => {
-                      const draft = draftMap[post.draftId];
-                      const assetId = draft?.assetId;
+                      const assetId = (post as any).assetId || draftMap[post.draftId]?.assetId;
                       const imageUrl = assetId ? assetImageMap[assetId] : null;
                       return imageUrl ? (
                         <div className="flex-shrink-0">
