@@ -182,3 +182,9 @@
 - [x] Update Dashboard to navigate to AllBrandsPage when settings tab clicked
 - [ ] Integrate credentials into publish workflow
 - [ ] Test credential storage and retrieval end-to-end
+
+
+## Upload System Integration (Complete)
+- [x] Link existing AssetUpload component to + button next to Create button
+- [x] Verify upload functionality works with existing system
+- [x] Test drag-and-drop and folder upload features
