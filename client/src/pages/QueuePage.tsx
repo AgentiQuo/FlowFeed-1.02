@@ -1,10 +1,10 @@
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
-import { Calendar, Clock, Trash2, Send, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { Calendar, Clock, Trash2, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -25,24 +25,17 @@ import {
 
 export default function QueuePage() {
   const { brandId } = useParams<{ brandId: string }>();
+  const [, setLocation] = useLocation();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState<string | null>(null);
   const [assetImages, setAssetImages] = useState<Record<string, string>>({});
-  const [filterBrandId, setFilterBrandId] = useState<string | undefined>(undefined);
-
-  // Initialize filterBrandId from URL params
-  useEffect(() => {
-    if (brandId && filterBrandId !== brandId) {
-      setFilterBrandId(brandId);
-    }
-  }, [brandId]);
 
   // Fetch all brands for filter dropdown
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
 
-  // Fetch all scheduled posts (optionally filtered by brand)
+  // Fetch all scheduled posts for the current brand (from URL param)
   const { data: queuePosts = [], isLoading: isLoadingQueue, refetch: refetchQueue } = trpc.queue.getAllScheduledPosts.useQuery(
-    { brandId: filterBrandId }
+    { brandId: brandId }
   );
 
   // Fetch all assets from all brands for thumbnails
@@ -51,26 +44,12 @@ export default function QueuePage() {
   );
 
   // Build asset image map from all assets
-  useEffect(() => {
-    const images: Record<string, string> = {};
-    allAssets.forEach((asset) => {
-      if (asset.s3Url) {
-        images[asset.id] = asset.s3Url;
-      }
-    });
-    setAssetImages(images);
-  }, [allAssets]);
-
-  // Analytics and suggested times only available when viewing single brand
-  const { data: analytics } = trpc.queue.getQueueAnalytics.useQuery(
-    { brandId: filterBrandId || "" },
-    { enabled: !!filterBrandId }
-  );
-
-  const { data: suggestedTimes = [] } = trpc.queue.getSuggestedTimes.useQuery(
-    { brandId: filterBrandId || "", count: 5 },
-    { enabled: !!filterBrandId }
-  );
+  const assetImageMap: Record<string, string> = {};
+  allAssets.forEach((asset) => {
+    if (asset.s3Url) {
+      assetImageMap[asset.id] = asset.s3Url;
+    }
+  });
 
   // Mutations
   const reorderMutation = trpc.queue.reorderQueue.useMutation({
@@ -126,7 +105,7 @@ export default function QueuePage() {
 
     // Update queue with new order
     const newPostIds = newOrder.map((p) => p.id);
-    reorderMutation.mutate({ brandId: filterBrandId || "", postIds: newPostIds });
+    reorderMutation.mutate({ brandId: brandId || "", postIds: newPostIds });
 
     setDraggedId(null);
   };
@@ -144,6 +123,10 @@ export default function QueuePage() {
     removeMutation.mutate({ postId });
   };
 
+  const handleBrandChange = (newBrandId: string) => {
+    setLocation(`/dashboard/queue/${newBrandId}`);
+  };
+
   const formatScheduledTime = (date: Date | string) => {
     const d = typeof date === "string" ? new Date(date) : date;
     return d.toLocaleString("en-US", {
@@ -159,12 +142,10 @@ export default function QueuePage() {
       instagram: "bg-pink-100 text-pink-800",
       linkedin: "bg-blue-100 text-blue-800",
       facebook: "bg-blue-50 text-blue-700",
-      website: "bg-purple-100 text-purple-800",
+      x: "bg-gray-100 text-gray-800",
     };
     return colors[platform] || "bg-gray-100 text-gray-800";
   };
-
-
 
   return (
     <div className="p-6 space-y-6">
@@ -178,14 +159,11 @@ export default function QueuePage() {
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">Filter by Brand:</label>
-          <Select value={filterBrandId || "all"} onValueChange={(value) => {
-            setFilterBrandId(value === "all" ? undefined : value);
-          }}>
+          <Select value={brandId || ""} onValueChange={handleBrandChange}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="All Brands" />
+              <SelectValue placeholder="Select Brand" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Brands</SelectItem>
               {allBrands.map((brand) => (
                 <SelectItem key={brand.id} value={brand.id}>
                   {brand.name}
@@ -195,58 +173,6 @@ export default function QueuePage() {
           </Select>
         </div>
       </div>
-
-      {/* Analytics Cards */}
-      {analytics && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{analytics.scheduled}</div>
-              <p className="text-xs text-muted-foreground mt-1">Posts waiting to be published</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Published</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{analytics.published}</div>
-              <p className="text-xs text-muted-foreground mt-1">Posts already published</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Failed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-600">{analytics.failed}</div>
-              <p className="text-xs text-muted-foreground mt-1">Posts that failed to publish</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Suggested Times */}
-      {suggestedTimes.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Suggested Posting Times</CardTitle>
-            <CardDescription>Optimal times for your next posts</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {suggestedTimes.map((time, idx) => (
-                <Badge key={idx} variant="outline" className="font-mono text-xs">
-                  {formatScheduledTime(time)}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Queue List */}
       <Card>
@@ -285,10 +211,10 @@ export default function QueuePage() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    {(post as any).assetId && assetImages[(post as any).assetId] && (
+                    {(post as any).assetId && assetImageMap[(post as any).assetId] && (
                       <div className="flex-shrink-0">
                         <img
-                          src={assetImages[(post as any).assetId]}
+                          src={assetImageMap[(post as any).assetId]}
                           alt="Asset"
                           className="w-16 h-16 object-cover rounded border border-border"
                         />
