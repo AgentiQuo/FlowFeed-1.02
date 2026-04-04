@@ -222,23 +222,21 @@ export default function QueuePage() {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-semibold text-muted-foreground">
-                          #{index + 1}
-                        </span>
                         <Badge className={getPlatformColor(post.platform)}>
                           {post.platform}
                         </Badge>
-                        <Badge variant="outline">{post.status}</Badge>
                       </div>
                       <p className="text-sm line-clamp-2 text-foreground">
                         {post.content}
                       </p>
-                      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {post.scheduledFor ? formatScheduledTime(post.scheduledFor) : "Not scheduled"}
-                        </span>
-                      </div>
+                      {post.scheduledFor && (
+                        <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {formatScheduledTime(post.scheduledFor)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-2 shrink-0">
                       <Dialog>
