@@ -132,10 +132,14 @@ export default function QueuePage() {
     setDraggedId(null);
   };
 
-  const handlePublish = async (postId: string) => {
+  const handlePublish = async (postId: string, closeDialog?: () => void) => {
     setIsPublishing(postId);
     try {
       await publishMutation.mutateAsync({ postId });
+      // Close dialog after successful publish
+      if (closeDialog) {
+        closeDialog();
+      }
     } finally {
       setIsPublishing(null);
     }
@@ -195,7 +199,7 @@ export default function QueuePage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setLocation(`/dashboard/brand/${brandId}`)}
+            onClick={() => setLocation(`/dashboard`)}
             title="Go to Home"
           >
             <Home className="w-4 h-4" />
@@ -294,12 +298,14 @@ export default function QueuePage() {
                                 <DialogClose asChild>
                                   <Button variant="outline">Cancel</Button>
                                 </DialogClose>
-                                <Button
-                                  onClick={() => handlePublish(post.id)}
-                                  disabled={isPublishing === post.id}
-                                >
-                                  {isPublishing === post.id ? "Publishing..." : "Publish Now"}
-                                </Button>
+                                <DialogClose asChild>
+                                  <Button
+                                    onClick={() => handlePublish(post.id)}
+                                    disabled={isPublishing === post.id}
+                                  >
+                                    {isPublishing === post.id ? "Publishing..." : "Publish Now"}
+                                  </Button>
+                                </DialogClose>
                               </div>
                             </div>
                           </DialogContent>
