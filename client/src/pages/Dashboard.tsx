@@ -162,9 +162,20 @@ const filteredDrafts = useMemo(() => {
             <CardDescription>Select brand and browse assets</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Brand Tabs */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Brand</h3>
+            {/* Brand Tabs and Queue Button */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Brand</h3>
+                {selectedBrandId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.location.href = `/dashboard/queue/${selectedBrandId}`}
+                  >
+                    📅 Queue
+                  </Button>
+                )}
+              </div>
               <Tabs value={selectedBrandId || ""} onValueChange={(value) => {
                 if (value !== "new") {
                   window.location.href = `/dashboard/brand/${value}`;
