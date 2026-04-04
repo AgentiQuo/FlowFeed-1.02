@@ -36,10 +36,12 @@ export async function publishToInstagram(
             };
           }
         } else {
+          const errorData = await meResponse.json().catch(() => ({}));
+          const errorMsg = errorData.error?.message || `HTTP ${meResponse.status}`;
           return {
             success: false,
             platform: "instagram",
-            error: "Failed to retrieve Instagram business account. Please check your access token.",
+            error: `Failed to retrieve Instagram business account: ${errorMsg}. Please verify your access token is valid and your account is connected to a business account.`,
           };
         }
       } catch (e) {

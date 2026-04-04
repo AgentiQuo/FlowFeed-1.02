@@ -333,3 +333,16 @@
 - [x] Add 20 character limit validation - enforced with maxLength and slice
 - [x] Update brands router to support name updates - already supported
 - [x] Test editable brand name functionality - all 152 tests passing
+
+
+## Credentials Caching Issue (Complete)
+- [x] Investigate why newly saved credentials aren't used when publishing - credentials are fetched fresh from DB
+- [x] Check credential fetching in publishPost procedure - verified it fetches fresh credentials
+- [x] Ensure credentials are refreshed after save - already working correctly
+- [x] Test publishing with newly saved credentials - issue was Instagram account type, not caching
+
+## Instagram Business Account Verification (Complete)
+- [x] Improved error messages to show actual Instagram API response
+- [x] Updated verification to check for business account access
+- [x] Verification now catches personal Instagram accounts before publishing
+- [x] Better error message guides users to convert to business account
