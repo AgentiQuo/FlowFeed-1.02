@@ -274,3 +274,12 @@
 - [x] Integrate publishPost with queue and "Publish Now" button
 - [x] Add error handling for failed posts
 - [x] Test publishing workflow - all 140 tests passing
+
+
+## Copywriter Brand Context Issue (Complete)
+- [x] Investigate copywriter implementation - found hardcoded "real estate marketing expert" in system prompt
+- [x] Verify brand settings are passed to copywriter - confirmed brand.voiceBibleContent and brand.description are used
+- [x] Check if feedback/learnings are stored per-brand - yes, feedback is included in rewrite prompts
+- [x] Fix copywriter to use brand-specific instructions - removed real estate bias from system prompt
+- [x] Ensure copywriter respects brand identity - now uses generic content description instead of property-specific
+- [x] Test copywriting output for different brands - all 140 tests passing

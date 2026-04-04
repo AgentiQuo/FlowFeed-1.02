@@ -439,11 +439,11 @@ async function generateContentForPlatform(
     messages: [
       {
         role: "system",
-        content: `You are a real estate marketing expert for the brand "${brand.name}". Use the following brand voice guidelines to generate content:\n\nBrand Voice: ${brand.voiceBibleContent || "Professional and engaging real estate marketing content."}
+        content: `You are a marketing expert for the brand "${brand.name}". Use the following brand voice guidelines to generate content:\n\nBrand Voice: ${brand.voiceBibleContent || "Professional and engaging marketing content."}
 
-Brand Description: ${brand.description || "A real estate brand."}
+Brand Description: ${brand.description || "A professional brand."}
 
-Create content that reflects this brand's voice and values.`,
+Create content that reflects this brand's voice, values, and industry. Do NOT assume real estate - adapt your tone and messaging to match the brand's actual business.`,
       },
       {
         role: "user",
@@ -475,6 +475,14 @@ Create content that reflects this brand's voice and values.`,
 function buildPropertyDescription(metadata: any): string {
   const parts: string[] = [];
 
+  // Build generic description from available metadata (not real estate specific)
+  // Use generic metadata fields that work for any industry
+  if (metadata.title) parts.push(metadata.title);
+  if (metadata.description) parts.push(metadata.description);
+  if (metadata.category) parts.push(`Category: ${metadata.category}`);
+  if (metadata.features && Array.isArray(metadata.features)) {
+    parts.push(`Features: ${metadata.features.join(", ")}`);
+  }
   if (metadata.bedrooms) parts.push(`${metadata.bedrooms} bedrooms`);
   if (metadata.bathrooms) parts.push(`${metadata.bathrooms} bathrooms`);
   if (metadata.squareFeet)
@@ -484,7 +492,7 @@ function buildPropertyDescription(metadata: any): string {
     parts.push(`${metadata.architecturalStyle} style`);
   if (metadata.condition) parts.push(`${metadata.condition} condition`);
 
-  return parts.join(", ") || "Beautiful property";
+  return parts.join(", ") || "Great content";
 }
 
 /**
@@ -492,12 +500,12 @@ function buildPropertyDescription(metadata: any): string {
  */
 function getPlatformPrompt(
   platform: string,
-  propertyDescription: string,
+  contentDescription: string,
   tone: string
 ): string {
   switch (platform) {
     case "instagram":
-      return `Write a ${tone} Instagram caption for this property: ${propertyDescription}
+      return `Write a ${tone} Instagram caption for this content: ${contentDescription}
 
 Requirements:
 - Maximum 2,200 characters
@@ -509,7 +517,7 @@ Requirements:
 Provide ONLY the caption text, nothing else.`;
 
     case "linkedin":
-      return `Write a ${tone} LinkedIn post for this property: ${propertyDescription}
+      return `Write a ${tone} LinkedIn post for this content: ${contentDescription}
 
 Requirements:
 - Professional tone
@@ -521,7 +529,7 @@ Requirements:
 Provide ONLY the post text, nothing else.`;
 
     case "facebook":
-      return `Write a ${tone} Facebook post for this property: ${propertyDescription}
+      return `Write a ${tone} Facebook post for this content: ${contentDescription}
 
 Requirements:
 - Conversational and engaging tone
@@ -533,7 +541,7 @@ Requirements:
 Provide ONLY the post text, nothing else.`;
 
     case "x":
-      return `Write a ${tone} X/Twitter post for this property: ${propertyDescription}
+      return `Write a ${tone} X/Twitter post for this content: ${contentDescription}
 
 Requirements:
 - Maximum 280 characters (X/Twitter limit)
@@ -545,7 +553,7 @@ Requirements:
 Provide ONLY the post text, nothing else.`;
 
     case "website":
-      return `Write a ${tone} SEO-optimized property description for this property: ${propertyDescription}
+      return `Write a ${tone} SEO-optimized description for this content: ${contentDescription}
 
 Requirements:
 - SEO-optimized description
@@ -557,6 +565,6 @@ Requirements:
 Provide ONLY the description text, nothing else.`;
 
     default:
-      return `Write a ${tone} post for this property: ${propertyDescription}`;
+      return `Write a ${tone} post for this content: ${contentDescription}`;
   }
 }
