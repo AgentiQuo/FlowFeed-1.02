@@ -231,28 +231,24 @@ function CreateCategoryButton({ brandId }: { brandId: string }) {
     }
   };
 
-  if (showForm) {
-    return (
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Category name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="flex-1 px-3 py-2 border border-input rounded-md text-sm"
-          required
-        />
-        <Button type="submit" size="sm" disabled={createMutation.isPending}>
-          {createMutation.isPending ? "Adding..." : "Add"}
-        </Button>
-        <Button type="button" size="sm" variant="outline" onClick={() => setShowForm(false)}>
-          Cancel
-        </Button>
-      </form>
-    );
-  }
-
-  return (
+  return showForm ? (
+    <form onSubmit={handleSubmit} className="flex gap-2">
+      <input
+        type="text"
+        placeholder="Category name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="flex-1 px-3 py-2 border border-input rounded-md text-sm"
+        required
+      />
+      <Button type="submit" size="sm" disabled={createMutation.isPending}>
+        {createMutation.isPending ? "Adding..." : "Add"}
+      </Button>
+      <Button type="button" size="sm" variant="outline" onClick={() => setShowForm(false)}>
+        Cancel
+      </Button>
+    </form>
+  ) : (
     <Button size="sm" onClick={() => setShowForm(true)}>
       <Plus className="w-4 h-4 mr-2" />
       Add Category
@@ -290,8 +286,7 @@ function CreatePartnerButton({ brandId }: { brandId: string }) {
     }
   };
 
-  if (showForm) {
-    return (
+  return showForm ? (
       <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full max-w-md">
         <input
           type="text"
@@ -324,10 +319,7 @@ function CreatePartnerButton({ brandId }: { brandId: string }) {
           </Button>
         </div>
       </form>
-    );
-  }
-
-  return (
+    ) : (
     <Button size="sm" onClick={() => setShowForm(true)}>
       <Plus className="w-4 h-4 mr-2" />
       Add Partner
