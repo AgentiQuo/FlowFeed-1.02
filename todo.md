@@ -369,3 +369,9 @@
 - [x] Check if credentials are being saved to database - verified credentials exist in database
 - [x] Verify credentials are being retrieved correctly - query works but state wasn't being populated
 - [x] Fix persistence issue - added useEffect to populate credentials from existingCredentials query
+
+
+## Instagram Scope Validator Fix (Complete)
+- [x] Fix scope validator to check for correct Instagram scopes - now uses debug_token endpoint
+- [x] Update required scopes list to match actual Facebook API scopes - checks for instagram_business_basic, instagram_business_content_publish, instagram_business_manage_messages
+- [x] Test scope validation with correct token - all 152 tests passing
