@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
-import { Upload, X, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Upload, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface AssetUploadProps {
   brandId: string;
@@ -12,8 +13,7 @@ interface AssetUploadProps {
 
 export default function AssetUpload({ brandId, onUploadSuccess }: AssetUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [uploadingFiles, setUploadingFiles] = useState<Record<string, { progress: number; status: 'uploading' | 'success' | 'error' }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadMutation = trpc.ingestion.uploadImage.useMutation();
   const utils = trpc.useUtils();
@@ -33,29 +33,37 @@ export default function AssetUpload({ brandId, onUploadSuccess }: AssetUploadPro
     const files = Array.from(e.dataTransfer.files).filter((file) =>
       file.type.startsWith("image/")
     );
-    setSelectedFiles((prev) => [...prev, ...files]);
+    uploadFiles(files);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedFiles((prev) => [...prev, ...files]);
+    uploadFiles(files);
   };
 
-  const removeFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+  const uploadFiles = async (files: File[]) => {
+    // Initialize upload state for all files
+    const newUploads: Record<string, { progress: number; status: 'uploading' | 'success' | 'error' }> = {};
+    files.forEach((file) => {
+      newUploads[file.name] = { progress: 0, status: 'uploading' };
+    });
+    setUploadingFiles((prev) => ({ ...prev, ...newUploads }));
 
-  const handleUpload = async () => {
-    for (const file of selectedFiles) {
+    // Upload each file
+    for (const file of files) {
       try {
-        setUploadProgress((prev) => ({ ...prev, [file.name]: 0 }));
-
         // Simulate progress
         const progressInterval = setInterval(() => {
-          setUploadProgress((prev) => {
-            const current = prev[file.name] || 0;
+          setUploadingFiles((prev) => {
+            const current = prev[file.name]?.progress || 0;
             if (current < 90) {
-              return { ...prev, [file.name]: current + Math.random() * 30 };
+              return {
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  progress: current + Math.random() * 30,
+                },
+              };
             }
             return prev;
           });
@@ -71,33 +79,58 @@ export default function AssetUpload({ brandId, onUploadSuccess }: AssetUploadPro
         } as any);
 
         clearInterval(progressInterval);
-        setUploadProgress((prev) => ({ ...prev, [file.name]: 100 }));
+        
+        // Mark as success
+        setUploadingFiles((prev) => ({
+          ...prev,
+          [file.name]: { progress: 100, status: 'success' },
+        }));
 
+        toast.success(`${file.name} uploaded successfully`);
+
+        // Remove from list after delay
         setTimeout(() => {
-          setSelectedFiles((prev) => prev.filter((f) => f.name !== file.name));
-          setUploadProgress((prev) => {
-            const newProgress = { ...prev };
-            delete newProgress[file.name];
-            return newProgress;
+          setUploadingFiles((prev) => {
+            const newState = { ...prev };
+            delete newState[file.name];
+            return newState;
           });
-        }, 800);
+        }, 2000);
       } catch (error) {
         console.error("Upload failed:", error);
-        setUploadProgress((prev) => {
-          const newProgress = { ...prev };
-          delete newProgress[file.name];
-          return newProgress;
-        });
+        setUploadingFiles((prev) => ({
+          ...prev,
+          [file.name]: { progress: 0, status: 'error' },
+        }));
+        toast.error(`Failed to upload ${file.name}`);
+
+        // Remove from list after delay
+        setTimeout(() => {
+          setUploadingFiles((prev) => {
+            const newState = { ...prev };
+            delete newState[file.name];
+            return newState;
+          });
+        }, 3000);
       }
     }
 
-    // Refetch assets after upload completes
+    // Refetch assets after all uploads complete
     await utils.ingestion.listAssets.invalidate({ brandId });
-    onUploadSuccess?.();
+    
+    // Check if all uploads succeeded
+    const allSucceeded = files.every((file) => uploadingFiles[file.name]?.status === 'success');
+    if (allSucceeded && files.length > 0) {
+      onUploadSuccess?.();
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
-  const hasFiles = selectedFiles.length > 0;
-  const hasProgress = Object.keys(uploadProgress).length > 0;
+  const hasUploads = Object.keys(uploadingFiles).length > 0;
 
   return (
     <Card className="border-dashed">
@@ -137,59 +170,44 @@ export default function AssetUpload({ brandId, onUploadSuccess }: AssetUploadPro
           </Button>
         </div>
 
-        {/* Selected Files List */}
-        {hasFiles && (
+        {/* Upload Progress List */}
+        {hasUploads && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">
-              {selectedFiles.length} file{selectedFiles.length !== 1 ? "s" : ""} selected
-            </p>
+            <p className="text-sm font-medium">Uploading files...</p>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {selectedFiles.map((file, index) => (
-                <div key={`${file.name}-${index}`} className="flex items-center gap-2 p-2 bg-muted rounded">
+              {Object.entries(uploadingFiles).map(([fileName, { progress, status }]) => (
+                <div key={fileName} className="flex items-center gap-2 p-2 bg-muted rounded">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate font-medium">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                    {uploadProgress[file.name] !== undefined && (
-                      <Progress
-                        value={uploadProgress[file.name]}
-                        className="mt-1 h-1"
-                      />
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm truncate font-medium">{fileName}</p>
+                      {status === 'success' && (
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      )}
+                      {status === 'error' && (
+                        <X className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      )}
+                    </div>
+                    {status === 'uploading' && (
+                      <Progress value={progress} className="mt-1 h-1" />
+                    )}
+                    {status === 'success' && (
+                      <p className="text-xs text-green-600">Upload complete</p>
+                    )}
+                    {status === 'error' && (
+                      <p className="text-xs text-red-600">Upload failed</p>
                     )}
                   </div>
-                  {!uploadProgress[file.name] && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Upload Button */}
-        {hasFiles && !hasProgress && (
-          <Button
-            onClick={handleUpload}
-            disabled={uploadMutation.isPending}
-            className="w-full"
-          >
-            {uploadMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              `Upload ${selectedFiles.length} file${selectedFiles.length !== 1 ? "s" : ""}`
-            )}
-          </Button>
+        {/* Empty state message */}
+        {!hasUploads && (
+          <p className="text-xs text-muted-foreground text-center">
+            Files will upload automatically after selection
+          </p>
         )}
       </div>
     </Card>

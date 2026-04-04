@@ -245,3 +245,11 @@
 - [x] Check Dashboard asset section rendering for new brands
 - [x] Fix upload button/form display - moved action buttons outside conditional
 - [x] Test with TiraMofo brand - all tests passing
+
+
+## AssetUpload UX Improvement (Complete)
+- [x] Review current AssetUpload flow (select -> list -> upload button)
+- [x] Refactor to auto-upload immediately after file selection
+- [x] Remove hidden upload button, simplify UI
+- [x] Show upload progress and completion feedback with status icons
+- [x] Test with multiple file selections - all tests passing
