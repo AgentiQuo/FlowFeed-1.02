@@ -37,6 +37,7 @@ interface CredentialForm {
   apiKey?: string;
   apiSecret?: string;
   bearerToken?: string;
+  businessAccountId?: string;
 }
 
 interface BrandGuides {
@@ -122,6 +123,7 @@ export default function BrandSettingsPage() {
           apiKey: credData.apiKey ? "••••••••••••••••••••" : "",
           apiSecret: credData.apiSecret ? "••••••••••••••••••••" : "",
           bearerToken: credData.bearerToken ? "••••••••••••••••••••" : "",
+          businessAccountId: credData.businessAccountId || "",
         };
       });
       setCredentials(credentialsMap);
@@ -217,6 +219,7 @@ export default function BrandSettingsPage() {
           apiKey: cred.apiKey,
           apiSecret: cred.apiSecret,
           bearerToken: cred.bearerToken,
+          businessAccountId: cred.businessAccountId,
         },
       });
     } catch (error) {
@@ -489,6 +492,18 @@ export default function BrandSettingsPage() {
                                 }
                               />
                               <p className="text-xs text-gray-500">Required for posting to Instagram</p>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`${platform.id}-businessAccountId`}>Business Account ID</Label>
+                              <Input
+                                id={`${platform.id}-businessAccountId`}
+                                placeholder="e.g., 17841400963310000"
+                                value={credentials[platform.id]?.businessAccountId || ""}
+                                onChange={(e) =>
+                                  handleInputChange(platform.id, "businessAccountId", e.target.value)
+                                }
+                              />
+                              <p className="text-xs text-gray-500">Find this in Instagram Settings → Apps and Websites → Business Account ID. If not provided, we'll attempt to retrieve it automatically.</p>
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`${platform.id}-apiSecret`}>App Secret</Label>

@@ -9,7 +9,7 @@ export interface PublishResult {
 
 /**
  * Instagram Graph API publishing
- * Requires: accessToken (businessAccountId is optional, will be fetched from API if not provided)
+ * Requires: accessToken and businessAccountId (must be provided in credentials)
  */
 export async function publishToInstagram(
   accessToken: string,
@@ -18,42 +18,14 @@ export async function publishToInstagram(
   caption: string
 ): Promise<PublishResult> {
   try {
-    // If businessAccountId is not provided, fetch it from Instagram API
-    let accountId = businessAccountId;
+    // businessAccountId is required - user must provide it in credentials
+    const accountId = businessAccountId;
     if (!accountId) {
-      try {
-        // Use the /me/instagram_business_accounts endpoint which works with instagram_business_basic scope
-        const accountsResponse = await fetch(
-          `https://graph.instagram.com/v18.0/me/instagram_business_accounts?access_token=${accessToken}`
-        );
-        
-        const accountsData = (await accountsResponse.json()) as any;
-        
-        if (accountsData.error) {
-          const errorMsg = accountsData.error.message || "Unknown error";
-          return {
-            success: false,
-            platform: "instagram",
-            error: `Failed to retrieve Instagram business account: ${errorMsg}. Make sure your token has instagram_business_basic and instagram_business_content_publish scopes.`,
-          };
-        }
-        
-        if (accountsData.data && accountsData.data.length > 0) {
-          accountId = accountsData.data[0].id;
-        } else {
-          return {
-            success: false,
-            platform: "instagram",
-            error: "No Instagram business accounts found. Please ensure your Instagram account is connected to a business account.",
-          };
-        }
-      } catch (e) {
-        return {
-          success: false,
-          platform: "instagram",
-          error: `Failed to retrieve Instagram business account: ${(e as Error).message}`,
-        };
-      }
+      return {
+        success: false,
+        platform: "instagram",
+        error: "Instagram Business Account ID is required. Please add it to your credentials in Brand Settings. You can find it in Instagram Settings → Apps and Websites → Business Account ID.",
+      };
     }
 
     // Step 1: Create media container

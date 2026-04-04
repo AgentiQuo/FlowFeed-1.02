@@ -47,6 +47,7 @@ export const credentialsRouter = router({
           apiKey: z.string().optional(),
           apiSecret: z.string().optional(),
           bearerToken: z.string().optional(),
+          businessAccountId: z.string().optional(),
         }),
       })
     )
