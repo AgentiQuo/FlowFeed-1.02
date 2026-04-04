@@ -30,6 +30,13 @@ export default function QueuePage() {
   const [assetImages, setAssetImages] = useState<Record<string, string>>({});
   const [filterBrandId, setFilterBrandId] = useState<string | undefined>(undefined);
 
+  // Initialize filterBrandId from URL params
+  useEffect(() => {
+    if (brandId && !filterBrandId) {
+      setFilterBrandId(brandId);
+    }
+  }, [brandId]);
+
   // Fetch all brands for filter dropdown
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
 
