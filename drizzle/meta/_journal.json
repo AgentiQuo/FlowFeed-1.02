@@ -43,6 +43,13 @@
       "when": 1775300489637,
       "tag": "0005_violet_lucky_pierre",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1775305305949,
+      "tag": "0006_gigantic_galactus",
+      "breakpoints": true
     }
   ]
 }

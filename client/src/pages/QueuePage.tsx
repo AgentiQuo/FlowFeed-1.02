@@ -38,40 +38,7 @@ export default function QueuePage() {
     { brandId: brandId }
   );
 
-  // Fetch all drafts to get asset information
-  const { data: allDrafts = [] } = trpc.content.getDrafts.useQuery(
-    { brandId: brandId }
-  );
-
-  // Fetch all assets for the brand to get image URLs
-  const { data: brandAssets = [] } = trpc.ingestion.listAssets.useQuery(
-    { brandId: brandId }
-  );
-
-  // Build draft map and asset image map
-  const draftMap: Record<string, any> = {};
-  const assetImageMap: Record<string, string> = {};
-  allDrafts.forEach((draft) => {
-    draftMap[draft.id] = draft;
-  });
-  brandAssets.forEach((asset) => {
-    if (asset.s3Url) {
-      assetImageMap[asset.id] = asset.s3Url;
-    }
-  });
-  
-  // Debug: Log asset mapping info
-  if (queuePosts.length > 0) {
-    console.log('QueuePage Debug:');
-    console.log('- brandId:', brandId);
-    console.log('- queuePosts:', queuePosts.length);
-    console.log('- allDrafts:', allDrafts.length);
-    console.log('- brandAssets:', brandAssets.length);
-    console.log('- assetImageMap keys:', Object.keys(assetImageMap).length);
-    if (Object.keys(assetImageMap).length === 0) {
-      console.warn('No assets in map. brandAssets:', brandAssets);
-    }
-  }
+  // Thumbnails are now stored directly on posts, no need to fetch assets
 
 
 
@@ -247,13 +214,12 @@ export default function QueuePage() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     {(() => {
-                      const assetId = (post as any).assetId || draftMap[post.draftId]?.assetId;
-                      const imageUrl = assetId ? assetImageMap[assetId] : null;
+                      const imageUrl = (post as any).thumbnailUrl;
                       return imageUrl ? (
                         <div className="flex-shrink-0">
                           <img
                             src={imageUrl}
-                            alt="Asset"
+                            alt="Post thumbnail"
                             className="w-16 h-16 object-cover rounded border border-border"
                           />
                         </div>

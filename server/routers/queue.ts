@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb, getPostingSchedule, getLastScheduledPost } from "../db";
-import { posts, drafts } from "../../drizzle/schema";
+import { posts, drafts, contentAssets } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { processScheduledPosts } from "../_core/webhook";
 
@@ -173,6 +173,20 @@ export const queueRouter = router({
       }
 
       const draft = draftResult[0];
+      
+      // Get asset thumbnail URL if assetId exists
+      let thumbnailUrl: string | null = null;
+      if (draft.assetId) {
+        const assetResult = await db
+          .select()
+          .from(contentAssets)
+          .where(eq(contentAssets.id, draft.assetId))
+          .limit(1);
+        
+        if (assetResult && assetResult.length > 0) {
+          thumbnailUrl = assetResult[0].s3Url || null;
+        }
+      }
 
       // Create post entry for each platform with independent scheduling per brand+platform combo
       const newPosts = [];
@@ -191,6 +205,7 @@ export const queueRouter = router({
           scheduledFor: scheduledTime,
           publishedAt: null,
           queuePosition: 0,
+          thumbnailUrl: thumbnailUrl,
           createdAt: new Date(),
           updatedAt: new Date(),
         };

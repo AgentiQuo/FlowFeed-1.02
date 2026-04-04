@@ -1,0 +1,1 @@
+ALTER TABLE `posts` ADD `thumbnailUrl` varchar(2048);

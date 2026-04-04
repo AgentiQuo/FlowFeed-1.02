@@ -143,6 +143,7 @@ export const posts = mysqlTable("posts", {
   scheduledFor: timestamp("scheduledFor"),
   publishedAt: timestamp("publishedAt"),
   queuePosition: int("queuePosition"),
+  thumbnailUrl: varchar("thumbnailUrl", { length: 2048 }),
   impressions: int("impressions").default(0),
   engagements: int("engagements").default(0),
   clicks: int("clicks").default(0),

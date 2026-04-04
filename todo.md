@@ -253,3 +253,12 @@
 - [x] Remove hidden upload button, simplify UI
 - [x] Show upload progress and completion feedback with status icons
 - [x] Test with multiple file selections - all tests passing
+
+
+## Thumbnail Capture on Queue (Complete)
+- [x] Add thumbnailUrl field to posts table in schema
+- [x] Generate migration SQL for thumbnailUrl field
+- [x] Update addToQueue to capture asset URL as thumbnail
+- [x] Update QueuePage to display stored thumbnails
+- [x] Remove dynamic asset fetching from QueuePage
+- [x] Test thumbnail display with new posts - all 140 tests passing
