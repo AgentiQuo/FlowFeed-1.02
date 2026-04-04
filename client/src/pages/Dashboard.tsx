@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useParams } from "wouter";
+import { useState, useMemo, useEffect } from "react";
+import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +12,25 @@ import { useAuth } from "@/_core/hooks/useAuth";
 export default function Dashboard() {
   const { user } = useAuth();
   const params = useParams();
+  const [, setLocation] = useLocation();
   const selectedBrandId = params.brandId;
+
+  // Auto-select last used brand on first load
+  useEffect(() => {
+    if (!selectedBrandId) {
+      const lastBrandId = localStorage.getItem("lastSelectedBrandId");
+      if (lastBrandId) {
+        setLocation(`/dashboard/brand/${lastBrandId}`);
+      }
+    }
+  }, [selectedBrandId, setLocation]);
+
+  // Save brand selection to localStorage
+  useEffect(() => {
+    if (selectedBrandId) {
+      localStorage.setItem("lastSelectedBrandId", selectedBrandId);
+    }
+  }, [selectedBrandId]);
 
   // State
   const [currentAssetIndex, setCurrentAssetIndex] = useState(0);
@@ -23,6 +41,7 @@ export default function Dashboard() {
   const [feedbackText, setFeedbackText] = useState<string>("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>("");
+  const [showApprovedOnly, setShowApprovedOnly] = useState(false);
 
   // Queries
   const { data: brands } = trpc.brands.list.useQuery();

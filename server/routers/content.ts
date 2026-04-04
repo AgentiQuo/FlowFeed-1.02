@@ -134,7 +134,37 @@ export const contentRouter = router({
         });
       }
 
-      const conditions = [eq(drafts.brandId, input.brandId)];
+      const conditions = [eq(drafts.brandId, input.brandId), eq(drafts.status, "draft")];
+      if (input.assetId) {
+        conditions.push(eq(drafts.assetId, input.assetId));
+      }
+
+      return await db
+        .select()
+        .from(drafts)
+        .where(and(...conditions));
+    }),
+
+  /**
+   * Get approved/reviewed drafts for an asset
+   */
+  getApprovedDrafts: protectedProcedure
+    .input(
+      z.object({
+        brandId: z.string(),
+        assetId: z.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
+
+      const conditions = [eq(drafts.brandId, input.brandId), eq(drafts.status, "reviewed")];
       if (input.assetId) {
         conditions.push(eq(drafts.assetId, input.assetId));
       }
@@ -208,7 +238,7 @@ export const contentRouter = router({
     }),
 
   /**
-   * Approve draft for scheduling
+   * Approve a draft (change status from draft to reviewed)
    */
   approveDraft: protectedProcedure
     .input(z.object({ draftId: z.string() }))
