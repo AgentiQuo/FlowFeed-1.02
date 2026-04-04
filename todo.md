@@ -306,3 +306,5 @@
 - [x] Investigate why posts are scheduled for tomorrow instead of being posted immediately - changed default from 3 hours to 30 minutes
 - [x] Verify thumbnailUrl is captured when post is moved to queue - confirmed s3Url is used
 - [x] Check scheduling logic for default posting time - reduced from 3 hours to 30 minutes
+- [x] Debug server caching issues - restarted dev server to apply code changes
+- [x] Verified fixes work with all 152 tests passing
