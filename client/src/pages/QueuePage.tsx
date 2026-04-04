@@ -220,15 +220,24 @@ export default function QueuePage() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    {draftMap[post.draftId]?.assetId && assetImageMap[draftMap[post.draftId]?.assetId] && (
-                      <div className="flex-shrink-0">
-                        <img
-                          src={assetImageMap[draftMap[post.draftId]?.assetId]}
-                          alt="Asset"
-                          className="w-16 h-16 object-cover rounded border border-border"
-                        />
-                      </div>
-                    )}
+                    {(() => {
+                      const draft = draftMap[post.draftId];
+                      const assetId = draft?.assetId;
+                      const imageUrl = assetId ? assetImageMap[assetId] : null;
+                      return imageUrl ? (
+                        <div className="flex-shrink-0">
+                          <img
+                            src={imageUrl}
+                            alt="Asset"
+                            className="w-16 h-16 object-cover rounded border border-border"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex-shrink-0 w-16 h-16 bg-muted rounded border border-border flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">No image</span>
+                        </div>
+                      );
+                    })()}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className={getPlatformColor(post.platform)}>
