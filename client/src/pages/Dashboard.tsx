@@ -68,7 +68,11 @@ export default function Dashboard() {
       utils.content.getDrafts.invalidate();
     },
   });
-  const approveDraft = trpc.queue.publishPost.useMutation();
+  const approveDraft = trpc.content.approveDraft.useMutation({
+    onSuccess: () => {
+      utils.content.getDrafts.invalidate();
+    },
+  });
   const rewriteDraft = trpc.content.rewriteDraft.useMutation({
     onSuccess: () => {
       setFeedbackDraftId(null);
@@ -103,7 +107,7 @@ const filteredDrafts = useMemo(() => {
   };
 
   const handleApproveDraft = async (draftId: string) => {
-    await approveDraft.mutateAsync({ postId: draftId });
+    await approveDraft.mutateAsync({ draftId });
   };
 
   const handleFeedback = (draftId: string) => {
