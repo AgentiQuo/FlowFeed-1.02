@@ -214,3 +214,10 @@
 - [x] Add App Secret field (optional) with proper Instagram naming
 - [x] Credentials router already handles App Secret storage
 - [x] Test credential storage and retrieval with both fields
+
+
+## Queue Display & Scheduling Bugs (In Progress)
+- [ ] Debug missing queue thumbnail images - check asset URL retrieval
+- [x] Fix post scheduling logic - first posts should schedule within next few hours, not tomorrow - FIXED: getLastScheduledPost now orders by DESC
+- [ ] Verify asset-to-post relationship is correct
+- [ ] Test scheduling with multiple posts

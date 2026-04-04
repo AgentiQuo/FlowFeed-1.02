@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, brands, categories, partners, agents, contentAssets, drafts, posts, leads, feedbackLogs, postingSchedules } from "../drizzle/schema";
 import * as schema from "../drizzle/schema";
@@ -237,6 +237,7 @@ export async function getLastScheduledPost(brandId: string, platform: string) {
       eq(posts.platform, platform as any),
       eq(posts.status, 'scheduled')
     ))
+    .orderBy(desc(posts.scheduledFor))
     .limit(1);
   
   return result.length > 0 ? result[0] : null;

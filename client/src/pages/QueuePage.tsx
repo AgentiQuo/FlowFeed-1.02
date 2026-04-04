@@ -59,6 +59,11 @@ export default function QueuePage() {
       assetImageMap[asset.id] = asset.s3Url;
     }
   });
+  
+  // Debug: Log asset mapping info
+  if (queuePosts.length > 0 && Object.keys(assetImageMap).length === 0) {
+    console.warn('No assets found in assetImageMap. Assets:', brandAssets);
+  }
 
 
 
