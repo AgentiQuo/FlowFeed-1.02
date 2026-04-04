@@ -59,6 +59,18 @@ export async function publishToInstagram(
     }
 
     // Step 1: Create media container
+    const requestBody = {
+      image_url: imageUrl,
+      caption: caption,
+      access_token: accessToken,
+    };
+    console.log("[Instagram] Creating media container with:", {
+      accountId,
+      imageUrl,
+      captionLength: caption.length,
+      captionPreview: caption.substring(0, 100),
+    });
+    
     const containerResponse = await fetch(
       `https://graph.instagram.com/v18.0/${accountId}/media`,
       {
@@ -66,11 +78,7 @@ export async function publishToInstagram(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          image_url: imageUrl,
-          caption: caption,
-          access_token: accessToken,
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
@@ -84,9 +92,24 @@ export async function publishToInstagram(
     }
 
     const containerData = (await containerResponse.json()) as any;
+    console.log("[Instagram] Media container response:", containerData);
     const mediaId = containerData.id;
 
+    if (!mediaId) {
+      console.error("[Instagram] No media ID in response:", containerData);
+      return {
+        success: false,
+        platform: "instagram",
+        error: `Failed to create media container: No media ID returned. Response: ${JSON.stringify(containerData)}`,
+      };
+    }
+
     // Step 2: Publish the media
+    // Instagram needs time to process the media before publishing
+    // Wait 2 seconds to ensure media is ready
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    console.log("[Instagram] Publishing media with creation_id:", mediaId);
     const publishResponse = await fetch(
       `https://graph.instagram.com/v18.0/${accountId}/media_publish`,
       {
@@ -103,6 +126,7 @@ export async function publishToInstagram(
 
     if (!publishResponse.ok) {
       const error = await publishResponse.json();
+      console.error("[Instagram] Publish failed with status", publishResponse.status, ":", error);
       return {
         success: false,
         platform: "instagram",
@@ -111,6 +135,7 @@ export async function publishToInstagram(
     }
 
     const publishData = (await publishResponse.json()) as any;
+    console.log("[Instagram] Publish successful, post ID:", publishData.id);
     return {
       success: true,
       postId: publishData.id,

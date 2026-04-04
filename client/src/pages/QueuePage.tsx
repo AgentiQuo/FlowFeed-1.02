@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Calendar, Clock, Trash2, Send, Home } from "lucide-react";
+import { Calendar, Clock, Trash2, Send, Home, Loader } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -241,43 +241,23 @@ export default function QueuePage() {
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <div className="flex gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={isPublishing === post.id}
-                            >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handlePublish(post.id)}
+                          disabled={isPublishing === post.id}
+                        >
+                          {isPublishing === post.id ? (
+                            <>
+                              <Loader className="h-4 w-4 animate-spin mr-2" />
+                              Publishing...
+                            </>
+                          ) : (
+                            <>
                               <Send className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Publish Post Now?</DialogTitle>
-                              <DialogDescription>
-                                This will immediately publish the post to {post.platform}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="p-3 bg-muted rounded-lg">
-                                <p className="text-sm">{post.content}</p>
-                              </div>
-                              <div className="flex gap-2 justify-end">
-                                <DialogClose asChild>
-                                  <Button variant="outline">Cancel</Button>
-                                </DialogClose>
-                                <DialogClose asChild>
-                                  <Button
-                                    onClick={() => handlePublish(post.id)}
-                                    disabled={isPublishing === post.id}
-                                  >
-                                    {isPublishing === post.id ? "Publishing..." : "Publish Now"}
-                                  </Button>
-                                </DialogClose>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                            </>
+                          )}
+                        </Button>
                         <Button
                           size="sm"
                           variant="ghost"
