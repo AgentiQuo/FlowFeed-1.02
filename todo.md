@@ -188,3 +188,13 @@
 - [x] Link existing AssetUpload component to + button next to Create button
 - [x] Verify upload functionality works with existing system
 - [x] Test drag-and-drop and folder upload features
+
+
+## Asset Management & Image Generation (In Progress)
+- [x] Create deleteAsset API endpoint in ingestion router
+- [x] Implement long-press delete button between navigation arrows in Dashboard
+- [x] Add delete confirmation dialog with visual feedback
+- [ ] Add text-to-image generation dialog in upload section
+- [ ] Integrate image generation API with asset upload
+- [x] Test long-press delete functionality
+- [ ] Test text-to-image generation and asset creation

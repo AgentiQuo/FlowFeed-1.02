@@ -4,10 +4,12 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ChevronLeft, ChevronRight, Calendar, Settings } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Calendar, Settings, Trash2 } from "lucide-react";
 import { DraftPreview } from "@/components/DraftPreview";
 import AssetUpload from "@/components/AssetUpload";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useRef } from "react";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -34,6 +36,8 @@ export default function Dashboard() {
 
   // State
   const [currentAssetIndex, setCurrentAssetIndex] = useState(0);
+  const [isLongPressing, setIsLongPressing] = useState(false);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<string>("instagram");
   const [isLayoutVertical, setIsLayoutVertical] = useState(window.innerWidth < 1024);
   const [showUpload, setShowUpload] = useState(false);
@@ -85,6 +89,11 @@ export default function Dashboard() {
       setEditingDraftId(null);
       setEditContent("");
       utils.content.getDrafts.invalidate();
+    },
+  });
+  const deleteAsset = trpc.ingestion.deleteAsset.useMutation({
+    onSuccess: () => {
+      utils.ingestion.listAssets.invalidate();
     },
   });
 
@@ -145,6 +154,36 @@ const filteredDrafts = useMemo(() => {
   const handlePrevAsset = () => {
     if (currentAssetIndex > 0) {
       setCurrentAssetIndex(currentAssetIndex - 1);
+    }
+  };
+
+  const handleDeleteAssetMouseDown = () => {
+    longPressTimerRef.current = setTimeout(() => {
+      setIsLongPressing(true);
+    }, 500);
+  };
+
+  const handleDeleteAssetMouseUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const confirmDeleteAsset = async () => {
+    if (!currentAsset) return;
+    try {
+      await deleteAsset.mutateAsync({ assetId: currentAsset.id });
+      toast.success("Asset deleted successfully");
+      setIsLongPressing(false);
+      if (currentAssetIndex > 0) {
+        setCurrentAssetIndex(currentAssetIndex - 1);
+      } else {
+        setCurrentAssetIndex(0);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to delete asset: ${error.message}`);
+      setIsLongPressing(false);
     }
   };
 
@@ -210,7 +249,7 @@ const filteredDrafts = useMemo(() => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">Asset {currentAssetIndex + 1} of {assets?.length}</h3>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     <Button
                       variant="outline"
                       size="sm"
@@ -219,6 +258,39 @@ const filteredDrafts = useMemo(() => {
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
+                    {isLongPressing ? (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={confirmDeleteAsset}
+                          disabled={deleteAsset.isPending}
+                        >
+                          {deleteAsset.isPending ? "Deleting..." : "Confirm Delete"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsLongPressing(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-destructive"
+                        onMouseDown={handleDeleteAssetMouseDown}
+                        onMouseUp={handleDeleteAssetMouseUp}
+                        onMouseLeave={handleDeleteAssetMouseUp}
+                        onTouchStart={handleDeleteAssetMouseDown}
+                        onTouchEnd={handleDeleteAssetMouseUp}
+                        title="Long-press to delete asset"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
