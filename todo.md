@@ -381,3 +381,10 @@
 - [x] Verify credentials are still in database - confirmed credentials exist and are valid
 - [x] Debug why useEffect isn't populating credentials - found code was intentionally clearing tokens for security
 - [x] Fix credential loading permanently - now shows masked tokens (••••••••••••••••••••) to indicate saved credentials
+
+
+## Instagram API Endpoint Fix (Complete)
+- [x] Changed from /me?fields=instagram_business_account to /me/instagram_business_accounts
+- [x] Now works with instagram_business_basic scope instead of requiring non-existent scope
+- [x] Improved error messages to show required scopes
+- [x] All 152 tests passing
