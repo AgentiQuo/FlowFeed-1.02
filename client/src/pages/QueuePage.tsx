@@ -161,10 +161,7 @@ export default function QueuePage() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Scheduling Queue</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage and schedule your content posts across platforms
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Queue</h1>
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">Filter by Brand:</label>
