@@ -14,17 +14,6 @@ export default function Dashboard() {
   const params = useParams();
   const selectedBrandId = params.brandId;
 
-  // Queries
-  const { data: brands } = trpc.brands.list.useQuery();
-  const { data: assets } = trpc.ingestion.listAssets.useQuery(
-    { brandId: selectedBrandId || "" },
-    { enabled: !!selectedBrandId }
-  );
-  const { data: drafts } = trpc.content.getDrafts.useQuery(
-    { brandId: selectedBrandId || "" },
-    { enabled: !!selectedBrandId }
-  );
-
   // State
   const [currentAssetIndex, setCurrentAssetIndex] = useState(0);
   const [selectedPlatform, setSelectedPlatform] = useState<string>("instagram");
@@ -34,6 +23,21 @@ export default function Dashboard() {
   const [feedbackText, setFeedbackText] = useState<string>("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>("");
+
+  // Queries
+  const { data: brands } = trpc.brands.list.useQuery();
+  const { data: assets } = trpc.ingestion.listAssets.useQuery(
+    { brandId: selectedBrandId || "" },
+    { enabled: !!selectedBrandId }
+  );
+
+  // Derived state (before queries that depend on it)
+  const currentAsset = assets?.[currentAssetIndex];
+
+  const { data: drafts } = trpc.content.getDrafts.useQuery(
+    { brandId: selectedBrandId || "", assetId: currentAsset?.id || "" },
+    { enabled: !!selectedBrandId && !!currentAsset?.id }
+  );
 
   // Mutations
   const generateDrafts = trpc.content.generateDrafts.useMutation({
@@ -59,7 +63,6 @@ export default function Dashboard() {
   });
 
   // Derived state
-  const currentAsset = assets?.[currentAssetIndex];
   const activeBrand = brands?.find((b: any) => b.id === selectedBrandId);
 const filteredDrafts = useMemo(() => {
     if (!drafts || !currentAsset) return [];

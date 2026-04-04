@@ -32,6 +32,16 @@ export const contentRouter = router({
         });
       }
 
+      // Delete existing drafts for this asset+platforms to avoid duplicates
+      await db
+        .delete(drafts)
+        .where(
+          and(
+            eq(drafts.brandId, input.brandId),
+            eq(drafts.assetId, input.assetId)
+          )
+        );
+
       // Verify asset exists and belongs to user's brand
       const assetResult = await db
         .select()
@@ -286,7 +296,7 @@ export const contentRouter = router({
         asset[0],
         brand,
         draftData.platform as any,
-        brand.voiceBibleContent || "professional",
+        "professional",
         input.feedback
       );
 
@@ -350,7 +360,11 @@ async function generateContentForPlatform(
     messages: [
       {
         role: "system",
-        content: `You are a real estate marketing expert. Use the following brand voice guidelines to generate content:\n\n${brand.voiceBible || "Professional and engaging real estate marketing content."}`,
+        content: `You are a real estate marketing expert for the brand "${brand.name}". Use the following brand voice guidelines to generate content:\n\nBrand Voice: ${brand.voiceBibleContent || "Professional and engaging real estate marketing content."}
+
+Brand Description: ${brand.description || "A real estate brand."}
+
+Create content that reflects this brand's voice and values.`,
       },
       {
         role: "user",
