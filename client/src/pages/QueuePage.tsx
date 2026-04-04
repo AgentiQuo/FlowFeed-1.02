@@ -32,10 +32,10 @@ export default function QueuePage() {
 
   // Initialize filterBrandId from URL params
   useEffect(() => {
-    if (brandId && !filterBrandId) {
+    if (brandId) {
       setFilterBrandId(brandId);
     }
-  }, [brandId]);
+  }, [brandId, filterBrandId]);
 
   // Fetch all brands for filter dropdown
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
@@ -178,7 +178,9 @@ export default function QueuePage() {
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium">Filter by Brand:</label>
-          <Select value={filterBrandId || "all"} onValueChange={(value) => setFilterBrandId(value === "all" ? undefined : value)}>
+          <Select value={filterBrandId || "all"} onValueChange={(value) => {
+            setFilterBrandId(value === "all" ? undefined : value);
+          }}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="All Brands" />
             </SelectTrigger>
