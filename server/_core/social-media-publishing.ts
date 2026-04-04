@@ -9,7 +9,7 @@ export interface PublishResult {
 
 /**
  * Instagram Graph API publishing
- * Requires: accessToken, businessAccountId
+ * Requires: accessToken (businessAccountId is optional, will be fetched from API if not provided)
  */
 export async function publishToInstagram(
   accessToken: string,
@@ -18,9 +18,42 @@ export async function publishToInstagram(
   caption: string
 ): Promise<PublishResult> {
   try {
+    // If businessAccountId is not provided, fetch it from Instagram API
+    let accountId = businessAccountId;
+    if (!accountId) {
+      try {
+        const meResponse = await fetch(
+          `https://graph.instagram.com/v18.0/me?fields=instagram_business_account&access_token=${accessToken}`
+        );
+        if (meResponse.ok) {
+          const meData = (await meResponse.json()) as any;
+          accountId = meData.instagram_business_account?.id;
+          if (!accountId) {
+            return {
+              success: false,
+              platform: "instagram",
+              error: "Could not retrieve Instagram business account ID. Please ensure your Instagram account is connected to a business account.",
+            };
+          }
+        } else {
+          return {
+            success: false,
+            platform: "instagram",
+            error: "Failed to retrieve Instagram business account. Please check your access token.",
+          };
+        }
+      } catch (e) {
+        return {
+          success: false,
+          platform: "instagram",
+          error: "Failed to retrieve Instagram business account ID",
+        };
+      }
+    }
+
     // Step 1: Create media container
     const containerResponse = await fetch(
-      `https://graph.instagram.com/v18.0/${businessAccountId}/media`,
+      `https://graph.instagram.com/v18.0/${accountId}/media`,
       {
         method: "POST",
         headers: {
@@ -48,7 +81,7 @@ export async function publishToInstagram(
 
     // Step 2: Publish the media
     const publishResponse = await fetch(
-      `https://graph.instagram.com/v18.0/${businessAccountId}/media_publish`,
+      `https://graph.instagram.com/v18.0/${accountId}/media_publish`,
       {
         method: "POST",
         headers: {

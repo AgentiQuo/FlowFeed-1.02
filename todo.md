@@ -319,3 +319,10 @@
 - [x] Check what credentials are required for Instagram posting - only accessToken needed
 - [x] Verify brand has Instagram credentials configured - confirmed credentials exist
 - [x] Fix credential validation - changed from instagramAccessToken to accessToken
+
+
+## Instagram Media Upload Error (Complete)
+- [x] Investigate "Unsupported post request" error from Instagram API - businessAccountId was empty
+- [x] Check media container creation in Instagram publishing code - requires business account ID
+- [x] Verify business account ID is correct - was not being stored
+- [x] Fix media upload - now fetches business account ID from Instagram API using access token
