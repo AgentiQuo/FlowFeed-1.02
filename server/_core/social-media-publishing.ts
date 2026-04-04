@@ -23,9 +23,10 @@ export async function publishToInstagram(
     if (!accountId) {
       try {
         // Use the /me endpoint to get the IG_USER_ID (which is the business account ID)
-        // This endpoint works with instagram_business_basic scope
+        // For Instagram Business Login tokens, use 'user_id' field (not 'id')
+        // 'id' returns app-scoped ID, 'user_id' returns the actual IG_ID needed for publishing
         const meResponse = await fetch(
-          `https://graph.instagram.com/v18.0/me?fields=id&access_token=${accessToken}`
+          `https://graph.instagram.com/v18.0/me?fields=user_id&access_token=${accessToken}`
         );
         
         const meData = (await meResponse.json()) as any;
@@ -39,8 +40,8 @@ export async function publishToInstagram(
           };
         }
         
-        if (meData.id) {
-          accountId = meData.id;
+        if (meData.user_id) {
+          accountId = meData.user_id;
         } else {
           return {
             success: false,

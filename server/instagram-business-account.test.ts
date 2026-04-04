@@ -15,7 +15,7 @@ describe("Instagram Publishing with /me Endpoint", () => {
     // Mock /me endpoint response
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ id: "17841400963310000" }),
+      json: async () => ({ user_id: "17841400963310000" }),
     });
 
     // Mock container creation response
@@ -40,9 +40,9 @@ describe("Instagram Publishing with /me Endpoint", () => {
     expect(result.success).toBe(true);
     expect(result.postId).toBe("post-456");
     
-    // Verify /me endpoint was called first
+    // Verify /me endpoint was called first with user_id field
     const calls = (mockFetch as any).mock.calls;
-    expect(calls[0][0]).toContain("/me?fields=id");
+    expect(calls[0][0]).toContain("/me?fields=user_id");
   });
 
   it("should successfully publish with valid businessAccountId", async () => {
