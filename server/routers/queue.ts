@@ -290,10 +290,10 @@ export const queueRouter = router({
     }),
 
   /**
-   * Approve and schedule a post immediately
+   * Publish a post immediately to social media platforms
    */
   publishPost: protectedProcedure
-    .input(z.object({ postId: z.string() }))
+    .input(z.object({ postId: z.string(), brandId: z.string() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -310,20 +310,120 @@ export const queueRouter = router({
 
       const post = postResult[0];
 
-      // Update post status to published
-      await db
-        .update(posts)
-        .set({
-          status: "published",
-          publishedAt: new Date(),
-        })
-        .where(eq(posts.id, input.postId));
+      // Get brand credentials
+      const { brandCredentials } = await import("../../drizzle/schema");
+      const credResult = await db
+        .select()
+        .from(brandCredentials)
+        .where(
+          and(
+            eq(brandCredentials.brandId, input.brandId),
+            eq(brandCredentials.platform, post.platform as any)
+          )
+        )
+        .limit(1);
 
-      // TODO: Call actual social media API to publish
-      // For now, just mark as published
+      if (!credResult || credResult.length === 0) {
+        throw new Error(`No credentials for ${post.platform}`);
+      }
 
-      return { success: true, post };
+      const credRecord = credResult[0];
+      
+      // Parse encrypted credentials JSON
+      let credData: any;
+      try {
+        credData = JSON.parse(credRecord.credentials);
+      } catch (e) {
+        throw new Error("Failed to parse credentials");
+      }
+
+      const {
+        publishToInstagram,
+        publishToX,
+        publishToLinkedIn,
+        publishToFacebook,
+      } = await import("../_core/social-media-publishing");
+
+      let result;
+
+      switch (post.platform) {
+        case "instagram":
+          if (!credData.instagramAccessToken || !credData.instagramBusinessAccountId) {
+            throw new Error("Instagram credentials incomplete");
+          }
+          result = await publishToInstagram(
+            credData.instagramAccessToken,
+            credData.instagramBusinessAccountId,
+            post.thumbnailUrl || "",
+            post.content
+          );
+          break;
+
+        case "x":
+          if (!credData.xBearerToken) {
+            throw new Error("X credentials incomplete");
+          }
+          result = await publishToX(
+            credData.xBearerToken,
+            post.content,
+            (post.thumbnailUrl || undefined)
+          );
+          break;
+
+        case "linkedin":
+          if (!credData.linkedinAccessToken || !credData.linkedinPersonId) {
+            throw new Error("LinkedIn credentials incomplete");
+          }
+          result = await publishToLinkedIn(
+            credData.linkedinAccessToken,
+            credData.linkedinPersonId,
+            post.content,
+            (post.thumbnailUrl || undefined)
+          );
+          break;
+
+        case "facebook":
+          if (!credData.facebookAccessToken || !credData.facebookPageId) {
+            throw new Error("Facebook credentials incomplete");
+          }
+          result = await publishToFacebook(
+            credData.facebookAccessToken,
+            credData.facebookPageId,
+            post.content,
+            (post.thumbnailUrl || undefined)
+          );
+          break;
+
+        default:
+          throw new Error(`Unsupported platform: ${post.platform}`);
+      }
+
+      if (result.success) {
+        await db
+          .update(posts)
+          .set({
+            status: "published" as any,
+            publishedAt: new Date(),
+          })
+          .where(eq(posts.id, input.postId));
+
+        return {
+          success: true,
+          postId: result.postId,
+          message: `Published to ${post.platform}`,
+        };
+      } else {
+        await db
+          .update(posts)
+          .set({
+            status: "failed" as any,
+          })
+          .where(eq(posts.id, input.postId));
+
+        throw new Error(`Failed: ${result.error}`);
+      }
     }),
+
 
   /**
    * Get a specific post
