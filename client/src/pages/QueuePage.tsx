@@ -104,7 +104,7 @@ export default function QueuePage() {
   const handlePublish = async (postId: string, closeDialog?: () => void) => {
     setIsPublishing(postId);
     try {
-      await publishMutation.mutateAsync({ postId });
+      await publishMutation.mutateAsync({ postId, brandId: brandId || "" });
       // Close dialog after successful publish
       if (closeDialog) {
         closeDialog();

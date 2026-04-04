@@ -41,30 +41,34 @@ export const brandsRouter = router({
       return newBrand;
     }),
 
-  update: protectedProcedure
+   update: protectedProcedure
     .input(
       z.object({
-        brandId: z.string(),
+        id: z.string(),
+        brandId: z.string().optional(),
         name: z.string().min(1).optional(),
         websiteUrl: z.string().optional(),
         description: z.string().optional(),
         voiceBibleContent: z.string().optional(),
         voiceBibleUrl: z.string().optional(),
+        copywritingGuide: z.string().optional(),
+        imageGenerationGuide: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-
+      const brandId = input.brandId || input.id;
       const updateData: Record<string, any> = {};
       if (input.name !== undefined) updateData.name = input.name;
       if (input.websiteUrl !== undefined) updateData.websiteUrl = input.websiteUrl;
       if (input.description !== undefined) updateData.description = input.description;
       if (input.voiceBibleContent !== undefined) updateData.voiceBibleContent = input.voiceBibleContent;
       if (input.voiceBibleUrl !== undefined) updateData.voiceBibleUrl = input.voiceBibleUrl;
-
-      await db.update(brands).set(updateData).where(eq(brands.id, input.brandId));
-      return await getBrandById(input.brandId);
+      if (input.copywritingGuide !== undefined) updateData.copywritingGuide = input.copywritingGuide;
+      if (input.imageGenerationGuide !== undefined) updateData.imageGenerationGuide = input.imageGenerationGuide;
+      await db.update(brands).set(updateData).where(eq(brands.id, brandId));
+      return await getBrandById(brandId);
     }),
 
   delete: protectedProcedure

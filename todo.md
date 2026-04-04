@@ -283,3 +283,12 @@
 - [x] Fix copywriter to use brand-specific instructions - removed real estate bias from system prompt
 - [x] Ensure copywriter respects brand identity - now uses generic content description instead of property-specific
 - [x] Test copywriting output for different brands - all 140 tests passing
+
+## Brand Marketing Guides (Complete)
+- [x] Extend database schema with copywriting and image generation guides
+- [x] Add copywriting guide fields to Brand Settings UI (language, tone, style, focus)
+- [x] Add image generation guide fields to Brand Settings UI (visual identity, colors)
+- [ ] Integrate copywriting guide into copywriter system prompt
+- [ ] Integrate image generation guide into image generation prompts
+- [ ] Write tests for brand guide storage and retrieval
+- [ ] Verify guides are used correctly in copywriting and image generation workflows

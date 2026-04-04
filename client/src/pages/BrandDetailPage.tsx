@@ -413,7 +413,7 @@ function VoiceBibleEditor({ brandId, initialContent }: { brandId: string; initia
     setIsSaving(true);
     try {
       await updateMutation.mutateAsync({
-        brandId,
+        id: brandId,
         voiceBibleContent: content,
       });
       // Invalidate brand query to refresh

@@ -36,6 +36,8 @@ export const brands = mysqlTable("brands", {
   voiceBibleUrl: varchar("voiceBibleUrl", { length: 2048 }),
   voiceBibleContent: longtext("voiceBibleContent"),
   description: text("description"),
+  copywritingGuide: longtext("copywritingGuide"),
+  imageGenerationGuide: longtext("imageGenerationGuide"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
