@@ -2,8 +2,8 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
-import { drafts, contentAssets, feedbackLogs } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { drafts, contentAssets, feedbackLogs, posts } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { invokeLLM } from "../_core/llm";
 
@@ -251,6 +251,17 @@ export const contentRouter = router({
         });
       }
 
+      // Get draft details
+      const draft = await db.select().from(drafts).where(eq(drafts.id, input.draftId)).limit(1).then(rows => rows[0]);
+
+      if (!draft) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Draft not found",
+        });
+      }
+
+      // Update draft status to reviewed
       await db
         .update(drafts)
         .set({
@@ -258,6 +269,44 @@ export const contentRouter = router({
           updatedAt: new Date(),
         })
         .where(eq(drafts.id, input.draftId));
+
+      // Auto-schedule to next available slot for this platform
+      try {
+        // Get the last scheduled post for this platform
+        const lastPost = await db.select().from(posts).where(and(
+          eq(posts.platform, draft.platform),
+          eq(posts.status, "scheduled")
+        )).orderBy(desc(posts.scheduledFor)).limit(1).then(rows => rows[0]);
+
+        // Calculate next available time (2-3 hours after last post)
+        let nextScheduledTime = new Date();
+        if (lastPost && lastPost.scheduledFor) {
+          const lastTime = new Date(lastPost.scheduledFor);
+          const delayHours = 2 + Math.random(); // 2-3 hours
+          nextScheduledTime = new Date(lastTime.getTime() + delayHours * 60 * 60 * 1000);
+        } else {
+          // If no posts scheduled yet, schedule for tomorrow at 9 AM
+          nextScheduledTime = new Date();
+          nextScheduledTime.setDate(nextScheduledTime.getDate() + 1);
+          nextScheduledTime.setHours(9, 0, 0, 0);
+        }
+
+        // Add to queue
+        await db.insert(posts).values({
+          id: `post-${nanoid()}`,
+          draftId: draft.id,
+          platform: draft.platform,
+          brandId: draft.brandId,
+          content: draft.content,
+          scheduledFor: nextScheduledTime,
+          status: "scheduled",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      } catch (error) {
+        // Log error but don't fail the approval
+        console.error("Failed to auto-schedule post:", error);
+      }
 
       return { success: true };
     }),

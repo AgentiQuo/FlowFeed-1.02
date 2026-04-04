@@ -3,8 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState, useMemo } from "react";
-import { Calendar, Clock, Trash2, Send, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, Clock, Trash2, Send, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -15,125 +15,136 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { DraftPreview } from "@/components/DraftPreview";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function QueuePage() {
   const { brandId } = useParams<{ brandId: string }>();
-  const [selectedDrafts, setSelectedDrafts] = useState<Set<string>>(new Set());
-  const [schedulingDraftId, setSchedulingDraftId] = useState<string | null>(null);
-  const [schedulingDate, setSchedulingDate] = useState<string>("");
-  const [schedulingTime, setSchedulingTime] = useState<string>("09:00");
-  const [batchSchedulingDate, setBatchSchedulingDate] = useState<string>("");
-  const [batchSchedulingTime, setBatchSchedulingTime] = useState<string>("09:00");
-  const [batchSchedulingInterval, setBatchSchedulingInterval] = useState<number>(1); // hours between posts
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [isPublishing, setIsPublishing] = useState<string | null>(null);
+  const [assetImages, setAssetImages] = useState<Record<string, string>>({});
+  const [filterBrandId, setFilterBrandId] = useState<string | undefined>(undefined);
 
-  // Fetch approved drafts for current brand
-  const { data: approvedDrafts = [], isLoading: isLoadingDrafts, refetch: refetchDrafts } = trpc.content.getApprovedDrafts.useQuery(
-    { brandId: brandId || "" },
-    { enabled: !!brandId }
+  // Fetch all brands for filter dropdown
+  const { data: allBrands = [] } = trpc.brands.list.useQuery();
+
+  // Fetch all scheduled posts (optionally filtered by brand)
+  const { data: queuePosts = [], isLoading: isLoadingQueue, refetch: refetchQueue } = trpc.queue.getAllScheduledPosts.useQuery(
+    { brandId: filterBrandId }
   );
 
-  // Fetch all assets for images
-  const { data: allAssets = [] } = trpc.ingestion.listAssets.useQuery({ brandId: "" });
+  // Fetch all assets from all brands for thumbnails
+  const { data: allAssets = [] } = trpc.ingestion.listAssets.useQuery(
+    { brandId: "" }
+  );
 
-  // Derive asset images
-  const assetImages = useMemo(() => {
+  // Build asset image map from all assets
+  useEffect(() => {
     const images: Record<string, string> = {};
     allAssets.forEach((asset) => {
       if (asset.s3Url) {
         images[asset.id] = asset.s3Url;
       }
     });
-    return images;
+    setAssetImages(images);
   }, [allAssets]);
 
+  // Analytics and suggested times only available when viewing single brand
+  const { data: analytics } = trpc.queue.getQueueAnalytics.useQuery(
+    { brandId: filterBrandId || "" },
+    { enabled: !!filterBrandId }
+  );
+
+  const { data: suggestedTimes = [] } = trpc.queue.getSuggestedTimes.useQuery(
+    { brandId: filterBrandId || "", count: 5 },
+    { enabled: !!filterBrandId }
+  );
+
   // Mutations
-  const addToQueueMutation = trpc.queue.addToQueue.useMutation({
+  const reorderMutation = trpc.queue.reorderQueue.useMutation({
     onSuccess: () => {
-      toast.success("Post added to queue");
-      setSchedulingDraftId(null);
-      setSchedulingDate("");
-      setSchedulingTime("09:00");
-      refetchDrafts();
+      toast.success("Queue reordered successfully");
+      refetchQueue();
     },
     onError: (error) => {
-      toast.error(`Failed to schedule: ${error.message}`);
+      toast.error(`Failed to reorder: ${error.message}`);
+    },
+  });
+
+  const publishMutation = trpc.queue.publishPost.useMutation({
+    onSuccess: () => {
+      toast.success("Post published successfully");
+      refetchQueue();
+    },
+    onError: (error) => {
+      toast.error(`Failed to publish: ${error.message}`);
     },
   });
 
   const removeMutation = trpc.queue.removeFromQueue.useMutation({
     onSuccess: () => {
       toast.success("Post removed from queue");
-      refetchDrafts();
+      refetchQueue();
     },
     onError: (error) => {
       toast.error(`Failed to remove: ${error.message}`);
     },
   });
 
-  const handleScheduleSingle = async () => {
-    if (!schedulingDraftId || !schedulingDate || !schedulingTime) {
-      toast.error("Please fill in all fields");
-      return;
-    }
+  const handleDragStart = (id: string) => {
+    setDraggedId(id);
+  };
 
-    const dateTime = new Date(`${schedulingDate}T${schedulingTime}`);
-    const draft = approvedDrafts.find((d: any) => d.id === schedulingDraftId);
-    if (!draft) return;
-    await addToQueueMutation.mutateAsync({
-      brandId: brandId || "",
-      draftId: schedulingDraftId,
-      platforms: [draft.platform],
-      scheduledAt: dateTime,
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (targetId: string) => {
+    if (!draggedId || draggedId === targetId) return;
+
+    const draggedIndex = queuePosts.findIndex((p) => p.id === draggedId);
+    const targetIndex = queuePosts.findIndex((p) => p.id === targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    // Reorder array
+    const newOrder = [...queuePosts];
+    const [draggedPost] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedPost);
+
+    // Update queue with new order
+    const newPostIds = newOrder.map((p) => p.id);
+    reorderMutation.mutate({ brandId: brandId || "", postIds: newPostIds });
+
+    setDraggedId(null);
+  };
+
+  const handlePublish = async (postId: string) => {
+    setIsPublishing(postId);
+    try {
+      await publishMutation.mutateAsync({ postId });
+    } finally {
+      setIsPublishing(null);
+    }
+  };
+
+  const handleRemove = (postId: string) => {
+    removeMutation.mutate({ postId });
+  };
+
+  const formatScheduledTime = (date: Date | string) => {
+    const d = typeof date === "string" ? new Date(date) : date;
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
-  };
-
-  const handleScheduleBatch = async () => {
-    if (selectedDrafts.size === 0 || !batchSchedulingDate || !batchSchedulingTime) {
-      toast.error("Please select posts and fill in scheduling details");
-      return;
-    }
-
-    let currentTime = new Date(`${batchSchedulingDate}T${batchSchedulingTime}`);
-    const draftsArray = Array.from(selectedDrafts);
-
-    for (const draftId of draftsArray) {
-      const draft = approvedDrafts.find((d: any) => d.id === draftId);
-      if (!draft) continue;
-      await addToQueueMutation.mutateAsync({
-        brandId: brandId || "",
-        draftId,
-        platforms: [draft.platform],
-        scheduledAt: currentTime,
-      });
-      // Add interval for next post
-      currentTime = new Date(currentTime.getTime() + batchSchedulingInterval * 60 * 60 * 1000);
-    }
-
-    setSelectedDrafts(new Set());
-    setBatchSchedulingDate("");
-    setBatchSchedulingTime("09:00");
-    setBatchSchedulingInterval(1);
-    toast.success(`${draftsArray.length} posts scheduled successfully`);
-  };
-
-  const toggleDraftSelection = (draftId: string) => {
-    const newSelected = new Set(selectedDrafts);
-    if (newSelected.has(draftId)) {
-      newSelected.delete(draftId);
-    } else {
-      newSelected.add(draftId);
-    }
-    setSelectedDrafts(newSelected);
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedDrafts.size === approvedDrafts.length) {
-      setSelectedDrafts(new Set());
-    } else {
-      setSelectedDrafts(new Set(approvedDrafts.map((d: any) => d.id)));
-    }
   };
 
   const getPlatformColor = (platform: string) => {
@@ -141,11 +152,12 @@ export default function QueuePage() {
       instagram: "bg-pink-100 text-pink-800",
       linkedin: "bg-blue-100 text-blue-800",
       facebook: "bg-blue-50 text-blue-700",
-      x: "bg-gray-100 text-gray-800",
       website: "bg-purple-100 text-purple-800",
     };
     return colors[platform] || "bg-gray-100 text-gray-800";
   };
+
+
 
   return (
     <div className="p-6 space-y-6">
@@ -154,212 +166,188 @@ export default function QueuePage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Scheduling Queue</h1>
           <p className="text-muted-foreground mt-2">
-            Schedule approved posts for publication across platforms
+            Manage and schedule your content posts across platforms
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Filter by Brand:</label>
+          <Select value={filterBrandId || "all"} onValueChange={(value) => setFilterBrandId(value === "all" ? undefined : value)}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All Brands" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {allBrands.map((brand) => (
+                <SelectItem key={brand.id} value={brand.id}>
+                  {brand.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Batch Scheduling Section */}
-      {selectedDrafts.size > 0 && (
-        <Card className="border-blue-200 bg-blue-50">
+      {/* Analytics Cards */}
+      {analytics && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{analytics.scheduled}</div>
+              <p className="text-xs text-muted-foreground mt-1">Posts waiting to be published</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Published</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{analytics.published}</div>
+              <p className="text-xs text-muted-foreground mt-1">Posts already published</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Failed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-600">{analytics.failed}</div>
+              <p className="text-xs text-muted-foreground mt-1">Posts that failed to publish</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Suggested Times */}
+      {suggestedTimes.length > 0 && (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-blue-600" />
-              Batch Schedule {selectedDrafts.size} Posts
-            </CardTitle>
-            <CardDescription>Schedule multiple posts with automatic time intervals</CardDescription>
+            <CardTitle className="text-base">Suggested Posting Times</CardTitle>
+            <CardDescription>Optimal times for your next posts</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium">Start Date</label>
-                <Input
-                  type="date"
-                  value={batchSchedulingDate}
-                  onChange={(e) => setBatchSchedulingDate(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Start Time</label>
-                <Input
-                  type="time"
-                  value={batchSchedulingTime}
-                  onChange={(e) => setBatchSchedulingTime(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Interval (hours)</label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="24"
-                  value={batchSchedulingInterval}
-                  onChange={(e) => setBatchSchedulingInterval(parseInt(e.target.value) || 1)}
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex items-end gap-2">
-                <Button
-                  onClick={handleScheduleBatch}
-                  disabled={addToQueueMutation.isPending}
-                  className="w-full"
-                >
-                  {addToQueueMutation.isPending ? "Scheduling..." : "Schedule All"}
-                </Button>
-              </div>
+            <div className="flex flex-wrap gap-2">
+              {suggestedTimes.map((time, idx) => (
+                <Badge key={idx} variant="outline" className="font-mono text-xs">
+                  {formatScheduledTime(time)}
+                </Badge>
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Approved Drafts List */}
+      {/* Queue List */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Approved Posts ({approvedDrafts.length})</CardTitle>
-              <CardDescription>Ready to be scheduled for publication</CardDescription>
-            </div>
-            {approvedDrafts.length > 0 && (
-              <Button
-                variant={selectedDrafts.size === approvedDrafts.length ? "default" : "outline"}
-                size="sm"
-                onClick={toggleSelectAll}
-              >
-                {selectedDrafts.size === approvedDrafts.length ? "Deselect All" : "Select All"}
-              </Button>
-            )}
-          </div>
+          <CardTitle>Queue ({queuePosts.length})</CardTitle>
+          <CardDescription>
+            Drag to reorder posts. They will be published at their scheduled times.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingDrafts ? (
+          {isLoadingQueue ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-32 bg-muted rounded-lg animate-pulse" />
+                <div key={i} className="h-24 bg-muted rounded-lg animate-pulse" />
               ))}
             </div>
-          ) : approvedDrafts.length === 0 ? (
+          ) : queuePosts.length === 0 ? (
             <div className="text-center py-12">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-muted-foreground">No approved posts yet</p>
+              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <p className="text-muted-foreground">No posts in queue</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Create and approve posts in the Dashboard to schedule them here
+                Generate drafts and add them to the queue to get started
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {approvedDrafts.map((draft: any) => (
+            <div className="space-y-3">
+              {queuePosts.map((post, index) => (
                 <div
-                  key={draft.id}
-                  className={`p-4 border rounded-lg transition-all ${
-                    selectedDrafts.has(draft.id) ? "bg-blue-50 border-blue-300" : "hover:bg-accent/50"
+                  key={post.id}
+                  draggable
+                  onDragStart={() => handleDragStart(post.id)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(post.id)}
+                  className={`p-4 border rounded-lg transition-all cursor-move hover:bg-accent/50 ${
+                    draggedId === post.id ? "opacity-50 bg-muted" : ""
                   }`}
                 >
-                  <div className="flex items-start gap-4">
-                    {/* Checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={selectedDrafts.has(draft.id)}
-                      onChange={() => toggleDraftSelection(draft.id)}
-                      className="mt-2"
-                    />
-
-                    {/* Preview */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge className={getPlatformColor(draft.platform)}>
-                              {draft.platform}
-                            </Badge>
-                            <Badge variant="secondary">Approved</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{draft.content}</p>
-                        </div>
-
-                        {/* Asset Image */}
-                        {draft.assetId && assetImages[draft.assetId] && (
-                          <div className="flex-shrink-0">
-                            <img
-                              src={assetImages[draft.assetId]}
-                              alt="Asset"
-                              className="w-20 h-20 object-cover rounded border border-border"
-                            />
-                          </div>
-                        )}
+                  <div className="flex items-start justify-between gap-4">
+                    {(post as any).assetId && assetImages[(post as any).assetId] && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={assetImages[(post as any).assetId]}
+                          alt="Asset"
+                          className="w-16 h-16 object-cover rounded border border-border"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-semibold text-muted-foreground">
+                          #{index + 1}
+                        </span>
+                        <Badge className={getPlatformColor(post.platform)}>
+                          {post.platform}
+                        </Badge>
+                        <Badge variant="outline">{post.status}</Badge>
+                      </div>
+                      <p className="text-sm line-clamp-2 text-foreground">
+                        {post.content}
+                      </p>
+                      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {post.scheduledFor ? formatScheduledTime(post.scheduledFor) : "Not scheduled"}
+                        </span>
                       </div>
                     </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-2 shrink-0">
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
-                            variant="outline"
                             size="sm"
-                            onClick={() => {
-                              setSchedulingDraftId(draft.id);
-                              setSchedulingDate("");
-                              setSchedulingTime("09:00");
-                            }}
+                            variant="outline"
+                            disabled={isPublishing === post.id}
                           >
-                            <Calendar className="h-4 w-4 mr-1" />
-                            Schedule
+                            <Send className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Schedule Post</DialogTitle>
+                            <DialogTitle>Publish Post Now?</DialogTitle>
                             <DialogDescription>
-                              Choose when to publish this {draft.platform} post
+                              This will immediately publish the post to {post.platform}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="space-y-4">
-                            <div>
-                              <label className="text-sm font-medium">Date</label>
-                              <Input
-                                type="date"
-                                value={schedulingDate}
-                                onChange={(e) => setSchedulingDate(e.target.value)}
-                                className="mt-1"
-                              />
+                            <div className="p-3 bg-muted rounded-lg">
+                              <p className="text-sm">{post.content}</p>
                             </div>
-                            <div>
-                              <label className="text-sm font-medium">Time</label>
-                              <Input
-                                type="time"
-                                value={schedulingTime}
-                                onChange={(e) => setSchedulingTime(e.target.value)}
-                                className="mt-1"
-                              />
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={handleScheduleSingle}
-                                disabled={addToQueueMutation.isPending}
-                                className="flex-1"
-                              >
-                                {addToQueueMutation.isPending ? "Scheduling..." : "Schedule"}
-                              </Button>
+                            <div className="flex gap-2 justify-end">
                               <DialogClose asChild>
-                                <Button variant="outline" className="flex-1">
-                                  Cancel
-                                </Button>
+                                <Button variant="outline">Cancel</Button>
                               </DialogClose>
+                              <Button
+                                onClick={() => handlePublish(post.id)}
+                                disabled={isPublishing === post.id}
+                              >
+                                {isPublishing === post.id ? "Publishing..." : "Publish Now"}
+                              </Button>
                             </div>
                           </div>
                         </DialogContent>
                       </Dialog>
-
                       <Button
-                        variant="ghost"
                         size="sm"
-                        onClick={() => removeMutation.mutate({ postId: draft.id })}
+                        variant="ghost"
+                        onClick={() => handleRemove(post.id)}
                         disabled={removeMutation.isPending}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </div>
