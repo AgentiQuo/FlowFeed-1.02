@@ -22,26 +22,44 @@ export async function publishToInstagram(
     let accountId = businessAccountId;
     if (!accountId) {
       try {
-        const meResponse = await fetch(
+        // First try with full scope
+        let meResponse = await fetch(
           `https://graph.instagram.com/v18.0/me?fields=instagram_business_account&access_token=${accessToken}`
         );
-        if (meResponse.ok) {
-          const meData = (await meResponse.json()) as any;
-          accountId = meData.instagram_business_account?.id;
-          if (!accountId) {
+        
+        let meData = (await meResponse.json()) as any;
+        
+        // If we get a permission error, try without the business account field
+        if (meData.error?.message?.includes("nonexisting field")) {
+          meResponse = await fetch(
+            `https://graph.instagram.com/v18.0/me?fields=id,username&access_token=${accessToken}`
+          );
+          meData = (await meResponse.json()) as any;
+          
+          // If basic fields work but business account field doesn't, it's a permission issue
+          if (meData.id && meData.username) {
             return {
               success: false,
               platform: "instagram",
-              error: "Could not retrieve Instagram business account ID. Please ensure your Instagram account is connected to a business account.",
+              error: "Your access token doesn't have permission to access business account information. Please regenerate your access token with 'instagram_business_account' scope.",
             };
           }
-        } else {
-          const errorData = await meResponse.json().catch(() => ({}));
-          const errorMsg = errorData.error?.message || `HTTP ${meResponse.status}`;
+        }
+        
+        if (meResponse.ok && meData.instagram_business_account?.id) {
+          accountId = meData.instagram_business_account.id;
+        } else if (!meResponse.ok) {
+          const errorMsg = meData.error?.message || `HTTP ${meResponse.status}`;
           return {
             success: false,
             platform: "instagram",
-            error: `Failed to retrieve Instagram business account: ${errorMsg}. Please verify your access token is valid and your account is connected to a business account.`,
+            error: `Failed to retrieve Instagram business account: ${errorMsg}. Please verify your access token is valid.`,
+          };
+        } else {
+          return {
+            success: false,
+            platform: "instagram",
+            error: "Could not retrieve Instagram business account ID. Please ensure your Instagram account is connected to a business account.",
           };
         }
       } catch (e) {

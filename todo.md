@@ -346,3 +346,10 @@
 - [x] Updated verification to check for business account access
 - [x] Verification now catches personal Instagram accounts before publishing
 - [x] Better error message guides users to convert to business account
+
+
+## Instagram API Permission Error (Complete)
+- [x] Fix "Tried accessing nonexisting field" error for instagram_business_account
+- [x] Implement fallback for different API scopes - tries with and without business account field
+- [x] Handle both business and personal account scenarios - detects permission issues vs account type issues
+- [x] Provide clear guidance on required permissions - tells users to regenerate token with required scope
