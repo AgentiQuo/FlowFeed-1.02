@@ -292,3 +292,10 @@
 - [ ] Integrate image generation guide into image generation prompts
 - [ ] Write tests for brand guide storage and retrieval
 - [ ] Verify guides are used correctly in copywriting and image generation workflows
+
+## Copywriter Brand Guide Integration (Complete)
+- [x] Examine copywriter implementation and identify where to inject brand guides
+- [x] Update copywriter system prompt to include brand.copywritingGuide
+- [x] Update copywriter rewrite/improve flow to use brand guides (already integrated via generateContentForPlatform)
+- [x] Test copywriter output with different brand guides (12 comprehensive tests)
+- [x] Verify guides are applied consistently across all platforms

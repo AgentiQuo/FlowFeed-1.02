@@ -443,7 +443,9 @@ async function generateContentForPlatform(
 
 Brand Description: ${brand.description || "A professional brand."}
 
-Create content that reflects this brand's voice, values, and industry. Do NOT assume real estate - adapt your tone and messaging to match the brand's actual business.`,
+Copywriting Guide:\n${brand.copywritingGuide || "Generate professional, engaging content that resonates with the target audience."}
+
+Create content that reflects this brand's voice, values, and industry. Follow the copywriting guide closely to ensure consistency with the brand's established tone, language style, and messaging focus. Do NOT assume real estate - adapt your tone and messaging to match the brand's actual business.`,
       },
       {
         role: "user",
