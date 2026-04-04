@@ -211,12 +211,26 @@ export default function BrandSettingsPage() {
                           <Input
                             id={`${platform.id}-accessToken`}
                             type="password"
-                            placeholder="Instagram Graph API Access Token"
+                            placeholder="Your Instagram Access Token"
                             value={credentials[platform.id]?.accessToken || ""}
                             onChange={(e) =>
                               handleInputChange(platform.id, "accessToken", e.target.value)
                             }
                           />
+                          <p className="text-xs text-gray-500">Required for posting to Instagram</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`${platform.id}-apiSecret`}>App Secret</Label>
+                          <Input
+                            id={`${platform.id}-apiSecret`}
+                            type="password"
+                            placeholder="Your Instagram App Secret"
+                            value={credentials[platform.id]?.apiSecret || ""}
+                            onChange={(e) =>
+                              handleInputChange(platform.id, "apiSecret", e.target.value)
+                            }
+                          />
+                          <p className="text-xs text-gray-500">Optional - used for token refresh</p>
                         </div>
                       </div>
                     )}

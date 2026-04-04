@@ -207,3 +207,10 @@
 - [x] Update queue.addToQueue to use brand+media slot scheduling
 - [x] Initialize default schedules for Instagram, X, LinkedIn, Facebook
 - [x] Test queue scheduling with multiple brands and media
+
+
+## Instagram Credentials Form Update (Complete)
+- [x] Update BrandSettingsPage Instagram form with Access Token (required, marked with *) first
+- [x] Add App Secret field (optional) with proper Instagram naming
+- [x] Credentials router already handles App Secret storage
+- [x] Test credential storage and retrieval with both fields
