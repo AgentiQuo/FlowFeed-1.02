@@ -244,4 +244,66 @@ export const credentialsRouter = router({
 
       return { success: true, verified: isVerified, error: errorMessage };
     }),
+
+  /**
+   * Check Instagram token scopes and permissions
+   */
+  checkInstagramScopes: protectedProcedure
+    .input(z.object({ brandId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { hasRequiredScopes: false, scopes: [], missingScopes: [] };
+
+      const creds = await db
+        .select()
+        .from(brandCredentials)
+        .where(
+          and(
+            eq(brandCredentials.brandId, input.brandId),
+            eq(brandCredentials.platform, "instagram")
+          )
+        );
+
+      if (!creds.length || !creds[0].credentials) {
+        return { hasRequiredScopes: false, scopes: [], missingScopes: ["instagram_business_account", "pages_read_engagement", "pages_manage_metadata"] };
+      }
+
+      const credData = JSON.parse(creds[0].credentials);
+      const accessToken = credData.accessToken;
+
+      if (!accessToken) {
+        return { hasRequiredScopes: false, scopes: [], missingScopes: ["instagram_business_account", "pages_read_engagement", "pages_manage_metadata"] };
+      }
+
+      try {
+        // Try to fetch with business account scope
+        const response = await fetch(
+          `https://graph.instagram.com/v18.0/me?fields=id,username,instagram_business_account&access_token=${accessToken}`
+        );
+        const data = (await response.json()) as any;
+
+        if (data.error) {
+          // Check what type of error
+          if (data.error.message?.includes("nonexisting field") || data.error.message?.includes("instagram_business_account")) {
+            // Token lacks business account scope
+            return {
+              hasRequiredScopes: false,
+              scopes: ["basic"],
+              missingScopes: ["instagram_business_account", "pages_read_engagement", "pages_manage_metadata"],
+            };
+          }
+          return { hasRequiredScopes: false, scopes: [], missingScopes: ["instagram_business_account", "pages_read_engagement", "pages_manage_metadata"] };
+        }
+
+        // Token has business account access
+        return {
+          hasRequiredScopes: true,
+          scopes: ["basic", "instagram_business_account"],
+          missingScopes: [],
+        };
+      } catch (error) {
+        return { hasRequiredScopes: false, scopes: [], missingScopes: ["instagram_business_account", "pages_read_engagement", "pages_manage_metadata"] };
+      }
+    }),
+
 });

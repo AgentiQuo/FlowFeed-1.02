@@ -355,3 +355,17 @@
 - [x] Provide clear guidance on required permissions - tells users to regenerate token with required scope
 - [x] Fix error detection logic - now properly checks for error object and message
 - [x] Force server rebuild and restart - cleared caches and restarted with fresh code
+
+
+## Token Scope Validator (Complete)
+- [x] Create backend API to check Instagram token scopes - checkInstagramScopes query added
+- [x] Add scope validator UI component to Brand Settings - scope validator card with check button
+- [x] Display missing permissions with guidance - shows granted and missing scopes with badges
+- [x] Test token scope validation functionality - all 152 tests passing
+
+
+## Credentials Persistence Issue (Complete)
+- [x] Investigate why credentials disappear after save - found credentials were saved but not displayed
+- [x] Check if credentials are being saved to database - verified credentials exist in database
+- [x] Verify credentials are being retrieved correctly - query works but state wasn't being populated
+- [x] Fix persistence issue - added useEffect to populate credentials from existingCredentials query

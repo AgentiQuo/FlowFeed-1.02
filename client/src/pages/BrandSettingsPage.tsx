@@ -52,6 +52,8 @@ export default function BrandSettingsPage() {
   const [isSavingGuides, setIsSavingGuides] = useState(false);
   const [isSavingName, setIsSavingName] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<Record<string, { verified: boolean; error?: string }>>({});
+  const [scopeStatus, setScopeStatus] = useState<Record<string, any>>({});
+  const [checkingScopesPlatform, setCheckingScopesPlatform] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<Record<string, CredentialForm>>({});
   const [guides, setGuides] = useState<BrandGuides>({
     copywritingGuide: "",
@@ -74,10 +76,57 @@ export default function BrandSettingsPage() {
     }
   }, [brand?.id]);
 
+
+
+  // Check Instagram token scopes
+  const checkInstagramScopes = async (platform: string) => {
+    if (platform !== "instagram") return;
+    
+    setCheckingScopesPlatform(platform);
+    try {
+      const result = await (trpc.brandCredentials.checkInstagramScopes as any).query({
+        brandId: brandId || "",
+      });
+      setScopeStatus(prev => ({
+        ...prev,
+        [platform]: result
+      }));
+    } catch (error: any) {
+      setScopeStatus(prev => ({
+        ...prev,
+        [platform]: { hasRequiredScopes: false, scopes: [], missingScopes: [], error: error.message }
+      }));
+    } finally {
+      setCheckingScopesPlatform(null);
+    }
+  };
+
   // Fetch existing credentials
   const { data: existingCredentials = [] } = trpc.brandCredentials.list.useQuery(
     { brandId: brandId || "" }
   );
+
+  // Initialize credentials from existing data
+  useEffect(() => {
+    if (existingCredentials && existingCredentials.length > 0) {
+      const credentialsMap: Record<string, CredentialForm> = {};
+      existingCredentials.forEach((cred: any) => {
+        credentialsMap[cred.platform] = {
+          platform: cred.platform,
+          accountId: cred.accountId || "",
+          accountName: cred.accountName || "",
+          accountEmail: cred.accountEmail || "",
+          accessToken: "",
+          accessTokenSecret: cred.accessTokenSecret || "",
+          apiKey: cred.apiKey || "",
+          apiSecret: cred.apiSecret || "",
+          bearerToken: cred.bearerToken || "",
+        };
+      });
+      setCredentials(credentialsMap);
+    }
+  }, [existingCredentials]);
+
 
   // Mutations
   const saveCredentialsMutation = trpc.brandCredentials.save.useMutation({
@@ -319,6 +368,70 @@ export default function BrandSettingsPage() {
                           {getCredentialStatus(platform.id)}
                         </Badge>
                       </div>
+
+                      {/* Scope Validator for Instagram */}
+                      {platform.id === "instagram" && (
+                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-semibold text-blue-900">API Permissions</p>
+                              <p className="text-xs text-blue-700 mt-1">
+                                {scopeStatus[platform.id]?.hasRequiredScopes 
+                                  ? "✓ All required permissions granted"
+                                  : "⚠ Missing permissions"}
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => checkInstagramScopes(platform.id)}
+                              disabled={checkingScopesPlatform === platform.id}
+                            >
+                              {checkingScopesPlatform === platform.id ? (
+                                <>
+                                  <Loader className="w-4 h-4 mr-2 animate-spin" />
+                                  Checking...
+                                </>
+                              ) : (
+                                "Check Permissions"
+                              )}
+                            </Button>
+                          </div>
+                          
+                          {scopeStatus[platform.id] && (
+                            <div className="mt-3 space-y-2 text-sm">
+                              {scopeStatus[platform.id].scopes?.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-semibold text-green-700">Granted Scopes:</p>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {scopeStatus[platform.id].scopes.map((scope: string) => (
+                                      <Badge key={scope} className="bg-green-100 text-green-800 text-xs">
+                                        ✓ {scope}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {scopeStatus[platform.id].missingScopes?.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-semibold text-red-700">Missing Scopes:</p>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {scopeStatus[platform.id].missingScopes.map((scope: string) => (
+                                      <Badge key={scope} className="bg-red-100 text-red-800 text-xs">
+                                        ✗ {scope}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                  <p className="text-xs text-red-600 mt-2">
+                                    To fix this, regenerate your Instagram access token with the required permissions in the Instagram App Dashboard.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <div className="space-y-4">
                         {/* Account Info */}
