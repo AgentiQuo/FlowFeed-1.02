@@ -375,3 +375,9 @@
 - [x] Fix scope validator to check for correct Instagram scopes - now uses debug_token endpoint
 - [x] Update required scopes list to match actual Facebook API scopes - checks for instagram_business_basic, instagram_business_content_publish, instagram_business_manage_messages
 - [x] Test scope validation with correct token - all 152 tests passing
+
+
+## Credentials Persistence Bug (Recurring) (Complete)
+- [x] Verify credentials are still in database - confirmed credentials exist and are valid
+- [x] Debug why useEffect isn't populating credentials - found code was intentionally clearing tokens for security
+- [x] Fix credential loading permanently - now shows masked tokens (••••••••••••••••••••) to indicate saved credentials

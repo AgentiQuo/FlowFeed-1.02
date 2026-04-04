@@ -111,16 +111,17 @@ export default function BrandSettingsPage() {
     if (existingCredentials && existingCredentials.length > 0) {
       const credentialsMap: Record<string, CredentialForm> = {};
       existingCredentials.forEach((cred: any) => {
+        const credData = JSON.parse(cred.credentials || "{}");
         credentialsMap[cred.platform] = {
           platform: cred.platform,
           accountId: cred.accountId || "",
           accountName: cred.accountName || "",
           accountEmail: cred.accountEmail || "",
-          accessToken: "",
-          accessTokenSecret: cred.accessTokenSecret || "",
-          apiKey: cred.apiKey || "",
-          apiSecret: cred.apiSecret || "",
-          bearerToken: cred.bearerToken || "",
+          accessToken: credData.accessToken ? "••••••••••••••••••••" : "",
+          accessTokenSecret: credData.accessTokenSecret ? "••••••••••••••••••••" : "",
+          apiKey: credData.apiKey ? "••••••••••••••••••••" : "",
+          apiSecret: credData.apiSecret ? "••••••••••••••••••••" : "",
+          bearerToken: credData.bearerToken ? "••••••••••••••••••••" : "",
         };
       });
       setCredentials(credentialsMap);
