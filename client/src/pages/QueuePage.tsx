@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Calendar, Clock, Trash2, Send } from "lucide-react";
+import { Calendar, Clock, Trash2, Send, Home } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -176,20 +176,30 @@ export default function QueuePage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Queue</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Filter by Brand:</label>
-          <Select value={brandId || ""} onValueChange={handleBrandChange}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select Brand" />
-            </SelectTrigger>
-            <SelectContent>
-              {allBrands.map((brand) => (
-                <SelectItem key={brand.id} value={brand.id}>
-                  {brand.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Filter by Brand:</label>
+            <Select value={brandId || ""} onValueChange={handleBrandChange}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select Brand" />
+              </SelectTrigger>
+              <SelectContent>
+                {allBrands.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setLocation(`/dashboard/brand/${brandId}`)}
+            title="Go to Home"
+          >
+            <Home className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
