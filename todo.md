@@ -312,3 +312,10 @@
 - [x] Fixed approveDraft to schedule 30 minutes from now instead of tomorrow
 - [x] Added thumbnail capture to approveDraft procedure
 - [x] All tests passing (152/152) - fixes ready for deployment
+
+
+## Instagram Credentials Error (Complete)
+- [x] Investigate "Instagram credentials incomplete" error - found field name mismatch
+- [x] Check what credentials are required for Instagram posting - only accessToken needed
+- [x] Verify brand has Instagram credentials configured - confirmed credentials exist
+- [x] Fix credential validation - changed from instagramAccessToken to accessToken

@@ -355,12 +355,12 @@ export const queueRouter = router({
 
       switch (post.platform) {
         case "instagram":
-          if (!credData.instagramAccessToken || !credData.instagramBusinessAccountId) {
-            throw new Error("Instagram credentials incomplete");
+          if (!credData.accessToken) {
+            throw new Error("Instagram access token missing");
           }
           result = await publishToInstagram(
-            credData.instagramAccessToken,
-            credData.instagramBusinessAccountId,
+            credData.accessToken,
+            credData.businessAccountId || "",
             post.thumbnailUrl || "",
             post.content
           );
