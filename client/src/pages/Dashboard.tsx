@@ -257,14 +257,20 @@ export default function Dashboard() {
             </div>
 
             {/* Draft Preview */}
-            {currentAsset && filteredDrafts.length > 0 ? (
+            {filteredDrafts.length > 0 ? (
               <div className="space-y-4">
-                {currentDrafts.map((draft: any) => (
+                {filteredDrafts.map((draft: any) => (
                   <div key={draft.id} className="space-y-4">
-                    <DraftPreview
-                      draft={draft}
-                      assetImage={currentAsset?.s3Url}
-                    />
+                    {/* Find asset for this draft */}
+                    {(() => {
+                      const draftAsset = assets?.find((a: any) => a.id === draft.assetId);
+                      return (
+                        <DraftPreview
+                          draft={draft}
+                          assetImage={draftAsset?.s3Url}
+                        />
+                      );
+                    })()}
                     <div className="flex gap-2">
                       <Button
                         onClick={() => handleApproveDraft(draft.id)}

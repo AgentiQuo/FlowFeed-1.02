@@ -14,16 +14,18 @@ export function DraftPreview({
   const previewConfig = getPlatformPreviewConfig(draft.platform);
   const truncatedText = getTruncatedText(draft.content, previewConfig.maxTextLines, 60);
 
-  // Show full-size preview without scaling
-  const previewWidth = previewConfig.width;
-  const previewHeight = previewConfig.height;
+  // Scale preview to fit screen (max 300px width)
+  const maxDisplayWidth = 300;
+  const scale = maxDisplayWidth / previewConfig.width;
+  const previewWidth = previewConfig.width * scale;
+  const previewHeight = previewConfig.height * scale;
 
   return (
     <Card className="overflow-hidden">
       <CardContent className="pt-6">
         <div className="space-y-4">
           {/* Platform Preview */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" style={{ transform: `scale(${scale})`, transformOrigin: 'top center', marginBottom: `${(previewHeight - previewConfig.height * scale) * -1}px` }}>
             {previewConfig.textPosition === "bottom" ? (
               // Text below image layout
               <div className={`${previewConfig.backgroundColor} rounded-lg border border-border overflow-hidden`}>
@@ -44,8 +46,8 @@ export function DraftPreview({
                   )}
                 </div>
                 {/* Text below image */}
-                <div className={`${previewConfig.padding} ${previewConfig.textColor}`}>
-                  <p className={`${previewConfig.fontSize} font-medium whitespace-pre-wrap line-clamp-${previewConfig.maxTextLines}`}>
+                <div className={`${previewConfig.padding} ${previewConfig.textColor} overflow-hidden`}>
+                  <p className={`${previewConfig.fontSize} font-medium break-words`} style={{ display: '-webkit-box', WebkitLineClamp: previewConfig.maxTextLines, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {truncatedText}
                   </p>
                 </div>
@@ -74,13 +76,13 @@ export function DraftPreview({
                       : "justify-between"
                   } bg-black/40`}
                 >
-                  <div className={`${previewConfig.fontSize} font-medium whitespace-pre-wrap line-clamp-${previewConfig.maxTextLines}`}>
+                  <div className={`${previewConfig.fontSize} font-medium break-words`} style={{ display: '-webkit-box', WebkitLineClamp: previewConfig.maxTextLines, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'white' }}>
                     {truncatedText}
                   </div>
                 </div>
               </div>
             )}
-            <div className="text-xs text-muted-foreground mt-2">
+            <div className="text-xs text-muted-foreground mt-2" style={{ transform: `scale(${1 / scale})` }}>
               {previewConfig.width}x{previewConfig.height}px
             </div>
           </div>
