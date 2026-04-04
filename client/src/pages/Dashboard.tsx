@@ -32,7 +32,12 @@ export default function Dashboard() {
   const [showUpload, setShowUpload] = useState(false);
 
   // Mutations
-  const generateDrafts = trpc.content.generateDrafts.useMutation();
+  const generateDrafts = trpc.content.generateDrafts.useMutation({
+    onSuccess: () => {
+      // Refetch drafts after generation
+      trpc.useUtils().content.getDrafts.invalidate();
+    },
+  });
   const approveDraft = trpc.queue.publishPost.useMutation();
 
   // Derived state
