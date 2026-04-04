@@ -326,3 +326,10 @@
 - [x] Check media container creation in Instagram publishing code - requires business account ID
 - [x] Verify business account ID is correct - was not being stored
 - [x] Fix media upload - now fetches business account ID from Instagram API using access token
+
+
+## Editable Brand Name (Complete)
+- [x] Make brand name editable on Brand Settings page - added input field in header
+- [x] Add 20 character limit validation - enforced with maxLength and slice
+- [x] Update brands router to support name updates - already supported
+- [x] Test editable brand name functionality - all 152 tests passing

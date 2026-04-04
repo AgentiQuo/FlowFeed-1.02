@@ -50,24 +50,27 @@ export default function BrandSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isVerifying, setIsVerifying] = useState<string | null>(null);
   const [isSavingGuides, setIsSavingGuides] = useState(false);
+  const [isSavingName, setIsSavingName] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<Record<string, { verified: boolean; error?: string }>>({});
   const [credentials, setCredentials] = useState<Record<string, CredentialForm>>({});
   const [guides, setGuides] = useState<BrandGuides>({
     copywritingGuide: "",
     imageGenerationGuide: "",
   });
+  const [brandName, setBrandName] = useState("");
 
   // Fetch all brands to get current brand
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
   const brand = allBrands.find((b: any) => b.id === brandId);
 
-  // Initialize guides when brand is loaded
+  // Initialize guides and name when brand is loaded
   useEffect(() => {
     if (brand) {
       setGuides({
         copywritingGuide: brand.copywritingGuide || "",
         imageGenerationGuide: brand.imageGenerationGuide || "",
       });
+      setBrandName(brand.name || "");
     }
   }, [brand?.id]);
 
@@ -96,6 +99,17 @@ export default function BrandSettingsPage() {
     onError: (error: any) => {
       toast.error(`Failed to save: ${error.message}`);
       setIsSavingGuides(false);
+    },
+  });
+
+  const updateBrandNameMutation = trpc.brands.update.useMutation({
+    onSuccess: () => {
+      toast.success("Brand name updated successfully");
+      setIsSavingName(false);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to save: ${error.message}`);
+      setIsSavingName(false);
     },
   });
 
@@ -173,6 +187,26 @@ export default function BrandSettingsPage() {
     }
   };
 
+  const handleSaveBrandName = async () => {
+    if (!brandName.trim()) {
+      toast.error("Brand name cannot be empty");
+      return;
+    }
+    if (brandName.length > 20) {
+      toast.error("Brand name must be 20 characters or less");
+      return;
+    }
+    setIsSavingName(true);
+    try {
+      await updateBrandNameMutation.mutateAsync({
+        id: brandId || "",
+        name: brandName,
+      });
+    } catch (error) {
+      console.error("Error saving brand name:", error);
+    }
+  };
+
   const handleInputChange = (platform: string, field: string, value: string) => {
     setCredentials((prev) => ({
       ...prev,
@@ -207,9 +241,38 @@ export default function BrandSettingsPage() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">Brand Settings</h1>
-            <p className="text-muted-foreground">{brand?.name}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex-1 max-w-xs">
+                <Input
+                  value={brandName}
+                  onChange={(e) => setBrandName(e.target.value.slice(0, 20))}
+                  placeholder="Brand name"
+                  maxLength={20}
+                  className="text-sm"
+                />
+              </div>
+              <Button
+                size="sm"
+                onClick={handleSaveBrandName}
+                disabled={isSavingName || brandName === brand?.name}
+                variant={brandName === brand?.name ? "outline" : "default"}
+              >
+                {isSavingName ? (
+                  <>
+                    <Loader className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save
+                  </>
+                )}
+              </Button>
+              <span className="text-xs text-muted-foreground ml-2">{brandName.length}/20</span>
+            </div>
           </div>
         </div>
 
