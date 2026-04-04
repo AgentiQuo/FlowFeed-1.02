@@ -60,18 +60,7 @@ export default function QueuePage() {
     }
   });
 
-  // Debug logging
-  if (queuePosts.length > 0) {
-    console.log('QueuePage Debug:', {
-      queuePostsCount: queuePosts.length,
-      allDraftsCount: allDrafts.length,
-      brandAssetsCount: brandAssets.length,
-      assetImageMapSize: Object.keys(assetImageMap).length,
-      firstQueuePost: queuePosts[0],
-      firstDraft: allDrafts[0],
-      firstAsset: brandAssets[0],
-    });
-  }
+
 
   // Mutations
   const reorderMutation = trpc.queue.reorderQueue.useMutation({
