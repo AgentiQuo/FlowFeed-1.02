@@ -174,22 +174,13 @@ const filteredDrafts = useMemo(() => {
             </div>
             {/* Brand Tabs */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div>
                 <h3 className="text-sm font-semibold">Brand</h3>
-                {selectedBrandId && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => setLocation(`/dashboard/brand/${selectedBrandId}/settings`)}
-                    title="Brand Settings"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                )}
               </div>
               <Tabs value={selectedBrandId || ""} onValueChange={(value) => {
-                if (value !== "new") {
+                if (value === "settings") {
+                  setLocation("/dashboard/brands");
+                } else if (value !== "new") {
                   window.location.href = `/dashboard/brand/${value}`;
                 }
               }} className="w-full">
@@ -199,8 +190,8 @@ const filteredDrafts = useMemo(() => {
                       {brand.name}
                     </TabsTrigger>
                   ))}
-                  <TabsTrigger value="new" className="flex-shrink-0">
-                    <Plus className="w-4 h-4" />
+                  <TabsTrigger value="settings" className="flex-shrink-0" title="All Brands & Settings">
+                    <Settings className="w-4 h-4" />
                   </TabsTrigger>
                 </TabsList>
               </Tabs>

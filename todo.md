@@ -177,7 +177,8 @@
 - [x] Create credentials router with save, list, get, delete, and verify procedures
 - [x] Build Brand Settings page accessible from Brands tab
 - [x] Create credential input forms for Instagram, X, LinkedIn, Facebook
-- [ ] Add settings icon to Brands tab navigation
-- [ ] Add settings icon to Media tab navigation
+- [x] Restructure brand tabs: move settings icon to last tab position (replace + button)
+- [x] Create AllBrandsPage showing all brands with + button to add new ones
+- [x] Update Dashboard to navigate to AllBrandsPage when settings tab clicked
 - [ ] Integrate credentials into publish workflow
 - [ ] Test credential storage and retrieval end-to-end
