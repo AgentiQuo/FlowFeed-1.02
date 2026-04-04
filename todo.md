@@ -299,3 +299,10 @@
 - [x] Update copywriter rewrite/improve flow to use brand guides (already integrated via generateContentForPlatform)
 - [x] Test copywriter output with different brand guides (12 comprehensive tests)
 - [x] Verify guides are applied consistently across all platforms
+
+
+## Queue and Scheduling Issues (Complete)
+- [x] Fix missing thumbnail in queue display for newly created posts - improved error handling in thumbnail fetching
+- [x] Investigate why posts are scheduled for tomorrow instead of being posted immediately - changed default from 3 hours to 30 minutes
+- [x] Verify thumbnailUrl is captured when post is moved to queue - confirmed s3Url is used
+- [x] Check scheduling logic for default posting time - reduced from 3 hours to 30 minutes

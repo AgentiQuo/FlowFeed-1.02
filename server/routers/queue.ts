@@ -177,14 +177,21 @@ export const queueRouter = router({
       // Get asset thumbnail URL if assetId exists
       let thumbnailUrl: string | null = null;
       if (draft.assetId) {
-        const assetResult = await db
-          .select()
-          .from(contentAssets)
-          .where(eq(contentAssets.id, draft.assetId))
-          .limit(1);
-        
-        if (assetResult && assetResult.length > 0) {
-          thumbnailUrl = assetResult[0].s3Url || null;
+        try {
+          const assetResult = await db
+            .select()
+            .from(contentAssets)
+            .where(eq(contentAssets.id, draft.assetId))
+            .limit(1);
+          
+          if (assetResult && assetResult.length > 0) {
+            const asset = assetResult[0];
+            // Use s3Url if available
+            thumbnailUrl = asset.s3Url || null;
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch asset thumbnail for ${draft.assetId}:`, error);
+          // Continue without thumbnail if asset fetch fails
         }
       }
 
@@ -549,9 +556,9 @@ async function calculateOptimalScheduleTime(brandId: string, platform: string): 
     const randomHours = minHours + Math.random() * (maxHours - minHours);
     nextSlotTime = new Date(lastTime.getTime() + randomHours * 60 * 60 * 1000);
   } else {
-    // First post for this brand+platform - schedule 3 hours from now
+    // First post for this brand+platform - schedule 30 minutes from now (or immediately if after 8 PM)
     nextSlotTime = new Date();
-    nextSlotTime.setHours(nextSlotTime.getHours() + 3);
+    nextSlotTime.setMinutes(nextSlotTime.getMinutes() + 30);
   }
   
   // Ensure we don't schedule after 8 PM
