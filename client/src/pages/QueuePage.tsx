@@ -38,14 +38,23 @@ export default function QueuePage() {
     { brandId: brandId }
   );
 
-  // Fetch all assets from all brands for thumbnails
-  const { data: allAssets = [] } = trpc.ingestion.listAssets.useQuery(
-    { brandId: "" }
+  // Fetch all drafts to get asset information
+  const { data: allDrafts = [] } = trpc.content.getDrafts.useQuery(
+    { brandId: brandId }
   );
 
-  // Build asset image map from all assets
+  // Fetch all assets for the brand to get image URLs
+  const { data: brandAssets = [] } = trpc.ingestion.listAssets.useQuery(
+    { brandId: brandId }
+  );
+
+  // Build draft map and asset image map
+  const draftMap: Record<string, any> = {};
   const assetImageMap: Record<string, string> = {};
-  allAssets.forEach((asset) => {
+  allDrafts.forEach((draft) => {
+    draftMap[draft.id] = draft;
+  });
+  brandAssets.forEach((asset) => {
     if (asset.s3Url) {
       assetImageMap[asset.id] = asset.s3Url;
     }
@@ -211,10 +220,10 @@ export default function QueuePage() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    {(post as any).assetId && assetImageMap[(post as any).assetId] && (
+                    {draftMap[post.draftId]?.assetId && assetImageMap[draftMap[post.draftId]?.assetId] && (
                       <div className="flex-shrink-0">
                         <img
-                          src={assetImageMap[(post as any).assetId]}
+                          src={assetImageMap[draftMap[post.draftId]?.assetId]}
                           alt="Asset"
                           className="w-16 h-16 object-cover rounded border border-border"
                         />
@@ -229,59 +238,59 @@ export default function QueuePage() {
                       <p className="text-sm line-clamp-2 text-foreground">
                         {post.content}
                       </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isPublishing === post.id}
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Publish Post Now?</DialogTitle>
+                              <DialogDescription>
+                                This will immediately publish the post to {post.platform}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="p-3 bg-muted rounded-lg">
+                                <p className="text-sm">{post.content}</p>
+                              </div>
+                              <div className="flex gap-2 justify-end">
+                                <DialogClose asChild>
+                                  <Button variant="outline">Cancel</Button>
+                                </DialogClose>
+                                <Button
+                                  onClick={() => handlePublish(post.id)}
+                                  disabled={isPublishing === post.id}
+                                >
+                                  {isPublishing === post.id ? "Publishing..." : "Publish Now"}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemove(post.id)}
+                          disabled={removeMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                       {post.scheduledFor && (
-                        <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatScheduledTime(post.scheduledFor)}
-                          </span>
+                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatScheduledTime(post.scheduledFor)}
                         </div>
                       )}
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={isPublishing === post.id}
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Publish Post Now?</DialogTitle>
-                            <DialogDescription>
-                              This will immediately publish the post to {post.platform}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="p-3 bg-muted rounded-lg">
-                              <p className="text-sm">{post.content}</p>
-                            </div>
-                            <div className="flex gap-2 justify-end">
-                              <DialogClose asChild>
-                                <Button variant="outline">Cancel</Button>
-                              </DialogClose>
-                              <Button
-                                onClick={() => handlePublish(post.id)}
-                                disabled={isPublishing === post.id}
-                              >
-                                {isPublishing === post.id ? "Publishing..." : "Publish Now"}
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleRemove(post.id)}
-                        disabled={removeMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
                     </div>
                   </div>
                 </div>
