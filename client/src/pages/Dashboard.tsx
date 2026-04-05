@@ -236,33 +236,7 @@ const filteredDrafts = useMemo(() => {
               </Tabs>
             </div>
 
-            {/* Action Buttons - Always visible */}
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setShowUpload(!showUpload)}
-                variant="outline"
-                size="icon"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-              <Button
-                onClick={() => handleCreatePosts()}
-                className="flex-1"
-                disabled={!assets || assets.length === 0}
-              >
-                {generateDrafts.isPending ? "Creating..." : "Create"}
-              </Button>
-            </div>
-
-            {/* Upload Section - appears directly under + button */}
-            {showUpload && selectedBrandId && (
-              <AssetUpload
-                brandId={selectedBrandId}
-                onUploadSuccess={() => setShowUpload(false)}
-              />
-            )}
-
-            {/* Asset Carousel */}
+            {/* Asset Carousel - ALWAYS AT TOP */}
             {assets && assets.length > 0 ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -337,6 +311,32 @@ const filteredDrafts = useMemo(() => {
               <div className="flex items-center justify-center h-64 bg-muted rounded-lg text-muted-foreground">
                 <p>No assets uploaded yet. Click + to add your first asset.</p>
               </div>
+            )}
+
+            {/* Action Buttons - BELOW CAROUSEL */}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowUpload(!showUpload)}
+                variant="outline"
+                size="icon"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={() => handleCreatePosts()}
+                className="flex-1"
+                disabled={!assets || assets.length === 0}
+              >
+                {generateDrafts.isPending ? "Creating..." : "Create"}
+              </Button>
+            </div>
+
+            {/* Upload Section - BELOW BUTTONS */}
+            {showUpload && selectedBrandId && (
+              <AssetUpload
+                brandId={selectedBrandId}
+                onUploadSuccess={() => setShowUpload(false)}
+              />
             )}
 
           </CardContent>
