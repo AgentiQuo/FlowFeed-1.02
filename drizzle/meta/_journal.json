@@ -57,6 +57,13 @@
       "when": 1775307108696,
       "tag": "0007_clean_lady_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1775398617108,
+      "tag": "0008_loving_millenium_guard",
+      "breakpoints": true
     }
   ]
 }

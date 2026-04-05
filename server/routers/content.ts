@@ -404,6 +404,10 @@ export const contentRouter = router({
         input.feedback
       );
 
+      // Store feedback as a brand learning
+      const { appendBrandLearning } = await import("../_core/brandLearnings");
+      await appendBrandLearning(draftData.brandId, input.feedback);
+
       // Update draft with new content
       await db
         .update(drafts)
@@ -459,6 +463,10 @@ async function generateContentForPlatform(
     prompt += `\n\nUser feedback for improvement: ${feedback}\n\nPlease rewrite the content incorporating this feedback.`;
   }
 
+  // Load brand learnings from file
+  const { getFormattedLearnings } = await import("../_core/brandLearnings");
+  const learnings = await getFormattedLearnings(brand.id);
+
   // Call Claude via LLM helper
   const response = await invokeLLM({
     messages: [
@@ -470,7 +478,9 @@ Brand Description: ${brand.description || "A professional brand."}
 
 Copywriting Guide:\n${brand.copywritingGuide || "Generate professional, engaging content that resonates with the target audience."}
 
-Create content that reflects this brand's voice, values, and industry. Follow the copywriting guide closely to ensure consistency with the brand's established tone, language style, and messaging focus. Do NOT assume real estate - adapt your tone and messaging to match the brand's actual business.`,
+Brand Learnings (feedback from previous content):\n${learnings}
+
+Create content that reflects this brand's voice, values, and industry. Follow the copywriting guide closely to ensure consistency with the brand's established tone, language style, and messaging focus. Incorporate the brand learnings to improve content quality based on past feedback. Do NOT assume real estate - adapt your tone and messaging to match the brand's actual business.`,
       },
       {
         role: "user",
