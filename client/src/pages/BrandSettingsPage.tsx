@@ -285,8 +285,21 @@ export default function BrandSettingsPage() {
   const handleSaveCredentials = async (platform: "instagram" | "x" | "linkedin" | "facebook" | "website") => {
     setIsSaving(true);
     const cred = credentials[platform];
-    if (!cred || !cred.accessToken) {
-      toast.error("Please fill in all required fields");
+    
+    // Validate required fields based on platform
+    const requiredFields: Record<string, string[]> = {
+      instagram: ["accessToken"],
+      x: ["apiKey", "apiSecret", "accessToken", "accessTokenSecret"],
+      linkedin: ["accessToken"],
+      facebook: ["accessToken"],
+      website: [],
+    };
+    
+    const required = requiredFields[platform] || [];
+    const missing = required.filter(field => !cred?.[field as keyof typeof cred]);
+    
+    if (!cred || missing.length > 0) {
+      toast.error(`Please fill in all required fields: ${missing.join(", ")}`);
       setIsSaving(false);
       return;
     }
@@ -610,38 +623,53 @@ export default function BrandSettingsPage() {
                         {platform.id === "x" && (
                           <div className="space-y-4 border-t pt-4">
                             <div className="space-y-2">
-                              <Label htmlFor={`${platform.id}-apiKey`}>API Key *</Label>
+                              <Label htmlFor={`${platform.id}-apiKey`}>Consumer Key *</Label>
                               <Input
                                 id={`${platform.id}-apiKey`}
                                 type="password"
-                                placeholder="X API Key"
+                                placeholder="Your Consumer Key"
                                 value={credentials[platform.id]?.apiKey || ""}
                                 onChange={(e) =>
                                   handleInputChange(platform.id, "apiKey", e.target.value)
                                 }
                               />
                             </div>
+                            
                             <div className="space-y-2">
-                              <Label htmlFor={`${platform.id}-apiSecret`}>API Secret *</Label>
+                              <Label htmlFor={`${platform.id}-apiSecret`}>Consumer Secret *</Label>
                               <Input
                                 id={`${platform.id}-apiSecret`}
                                 type="password"
-                                placeholder="X API Secret"
+                                placeholder="Your Consumer Secret"
                                 value={credentials[platform.id]?.apiSecret || ""}
                                 onChange={(e) =>
                                   handleInputChange(platform.id, "apiSecret", e.target.value)
                                 }
                               />
                             </div>
+                            
                             <div className="space-y-2">
-                              <Label htmlFor={`${platform.id}-bearerToken`}>Bearer Token *</Label>
+                              <Label htmlFor={`${platform.id}-accessToken`}>Access Token *</Label>
                               <Input
-                                id={`${platform.id}-bearerToken`}
+                                id={`${platform.id}-accessToken`}
                                 type="password"
-                                placeholder="X Bearer Token"
-                                value={credentials[platform.id]?.bearerToken || ""}
+                                placeholder="Your Access Token"
+                                value={credentials[platform.id]?.accessToken || ""}
                                 onChange={(e) =>
-                                  handleInputChange(platform.id, "bearerToken", e.target.value)
+                                  handleInputChange(platform.id, "accessToken", e.target.value)
+                                }
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor={`${platform.id}-accessTokenSecret`}>Access Token Secret *</Label>
+                              <Input
+                                id={`${platform.id}-accessTokenSecret`}
+                                type="password"
+                                placeholder="Your Access Token Secret"
+                                value={credentials[platform.id]?.accessTokenSecret || ""}
+                                onChange={(e) =>
+                                  handleInputChange(platform.id, "accessTokenSecret", e.target.value)
                                 }
                               />
                             </div>
