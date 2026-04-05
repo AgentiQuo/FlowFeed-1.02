@@ -45,6 +45,91 @@ interface BrandGuides {
   imageGenerationGuide: string;
 }
 
+function LearningsSection({ brandId }: { brandId: string }) {
+  const [learnings, setLearnings] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const getLearningsQuery = trpc.learnings.get.useQuery({ brandId });
+  const updateLearningsMutation = trpc.learnings.update.useMutation({
+    onSuccess: () => {
+      toast.success("Learnings saved successfully");
+      setIsSaving(false);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to save: ${error.message}`);
+      setIsSaving(false);
+    },
+  });
+
+  useEffect(() => {
+    if (getLearningsQuery.data) {
+      setLearnings(getLearningsQuery.data.learnings);
+      setIsLoading(false);
+    }
+  }, [getLearningsQuery.data]);
+
+  const handleSaveLearnings = async () => {
+    setIsSaving(true);
+    try {
+      await updateLearningsMutation.mutateAsync({
+        brandId,
+        learnings,
+      });
+    } catch (error) {
+      console.error("Save error:", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center">
+            <Loader className="h-5 w-5 animate-spin" />
+            <span className="ml-2">Loading learnings...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Brand Learnings</CardTitle>
+        <CardDescription>
+          Accumulated feedback from content generation. Edit to refine how the AI generates content for this brand.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="learnings">Learnings (Markdown)</Label>
+          <Textarea
+            id="learnings"
+            value={learnings}
+            onChange={(e) => setLearnings(e.target.value)}
+            placeholder="- Use more emojis\n- Keep captions under 150 characters\n- Include call-to-action"
+            className="font-mono text-sm min-h-64"
+          />
+        </div>
+        <div className="text-sm text-gray-600">
+          <p>💡 Tip: Edit this file to manually add or refine learnings. These will be included in all future content generation for this brand.</p>
+        </div>
+        <div className="flex gap-2 pt-4 border-t">
+          <Button
+            onClick={handleSaveLearnings}
+            disabled={isSaving}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isSaving ? "Saving..." : "Save Learnings"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function BrandSettingsPage() {
   const { brandId } = useParams<{ brandId: string }>();
   const [, setLocation] = useLocation();
@@ -339,9 +424,10 @@ export default function BrandSettingsPage() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="credentials" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="credentials">Social Media Accounts</TabsTrigger>
             <TabsTrigger value="guides">Brand Guides</TabsTrigger>
+            <TabsTrigger value="learnings">Learnings</TabsTrigger>
           </TabsList>
 
           {/* Credentials Tab */}
@@ -713,6 +799,11 @@ export default function BrandSettingsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Learnings Tab */}
+          <TabsContent value="learnings" className="space-y-4">
+            <LearningsSection brandId={brandId || ""} />
           </TabsContent>
         </Tabs>
       </div>
