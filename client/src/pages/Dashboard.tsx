@@ -236,7 +236,25 @@ const filteredDrafts = useMemo(() => {
               </Tabs>
             </div>
 
-            {/* Upload Section */}
+            {/* Action Buttons - Always visible */}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowUpload(!showUpload)}
+                variant="outline"
+                size="icon"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={() => handleCreatePosts()}
+                className="flex-1"
+                disabled={!assets || assets.length === 0}
+              >
+                {generateDrafts.isPending ? "Creating..." : "Create"}
+              </Button>
+            </div>
+
+            {/* Upload Section - appears directly under + button */}
             {showUpload && selectedBrandId && (
               <AssetUpload
                 brandId={selectedBrandId}
@@ -321,23 +339,6 @@ const filteredDrafts = useMemo(() => {
               </div>
             )}
 
-            {/* Action Buttons - Always visible */}
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setShowUpload(!showUpload)}
-                variant="outline"
-                size="icon"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-              <Button
-                onClick={() => handleCreatePosts()}
-                className="flex-1"
-                disabled={!assets || assets.length === 0}
-              >
-                {generateDrafts.isPending ? "Creating..." : "Create"}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
