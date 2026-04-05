@@ -353,12 +353,17 @@ export default function BrandSettingsPage() {
         }
       });
 
+      // Only send optional fields if they have actual values (not placeholders)
+      const accountEmail = cred.accountEmail && cred.accountEmail !== "account@example.com" ? cred.accountEmail : undefined;
+      const accountId = cred.accountId && cred.accountId !== "e.g., 123456789" ? cred.accountId : undefined;
+      const accountName = cred.accountName && cred.accountName !== "e.g., @myaccount" ? cred.accountName : undefined;
+
       await saveCredentialsMutation.mutateAsync({
         brandId: brandId || "",
         platform,
-        accountId: cred.accountId,
-        accountName: cred.accountName,
-        accountEmail: cred.accountEmail,
+        accountId,
+        accountName,
+        accountEmail,
         credentials: credentialsToSend,
       });
     } catch (error) {
