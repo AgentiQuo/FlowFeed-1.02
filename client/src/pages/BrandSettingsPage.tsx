@@ -203,10 +203,12 @@ export default function BrandSettingsPage() {
           accountId: cred.accountId || "",
           accountName: cred.accountName || "",
           accountEmail: cred.accountEmail || "",
-          accessToken: credData.accessToken ? "••••••••••••••••••••" : "",
-          accessTokenSecret: credData.accessTokenSecret ? "••••••••••••••••••••" : "",
-          apiKey: credData.apiKey ? "••••••••••••••••••••" : "",
-          apiSecret: credData.apiSecret ? "••••••••••••••••••••" : "",
+          // For X platform, show required fields unmasked until saved
+          // For other platforms, show masked values
+          accessToken: cred.platform === "x" ? "" : (credData.accessToken ? "••••••••••••••••••••" : ""),
+          accessTokenSecret: cred.platform === "x" ? "" : (credData.accessTokenSecret ? "••••••••••••••••••••" : ""),
+          apiKey: cred.platform === "x" ? "" : (credData.apiKey ? "••••••••••••••••••••" : ""),
+          apiSecret: cred.platform === "x" ? "" : (credData.apiSecret ? "••••••••••••••••••••" : ""),
           bearerToken: credData.bearerToken ? "••••••••••••••••••••" : "",
           businessAccountId: credData.businessAccountId || "",
         };
