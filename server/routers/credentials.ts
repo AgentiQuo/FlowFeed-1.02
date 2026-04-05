@@ -71,14 +71,25 @@ export const credentialsRouter = router({
       const encryptedCredentials = JSON.stringify(input.credentials);
 
       if (existing.length > 0) {
-        // Update existing
+        // Update existing: merge new credentials with existing ones
+        const existingCredData = JSON.parse(existing[0].credentials || "{}");
+        const newCredData = input.credentials;
+
+        // Merge: only update fields that were provided (not undefined)
+        const mergedCredentials: any = { ...existingCredData };
+        Object.keys(newCredData).forEach(key => {
+          if (newCredData[key as keyof typeof newCredData] !== undefined) {
+            mergedCredentials[key] = newCredData[key as keyof typeof newCredData];
+          }
+        });
+
         await db
           .update(brandCredentials)
           .set({
             accountId: input.accountId,
             accountName: input.accountName,
             accountEmail: input.accountEmail,
-            credentials: encryptedCredentials,
+            credentials: JSON.stringify(mergedCredentials),
             verificationStatus: "pending",
             updatedAt: now,
           })
