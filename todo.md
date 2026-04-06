@@ -415,8 +415,10 @@
 
 
 ## WordPress Publishing Issues
-- [ ] WordPress "send now" publishing failed - need to check server logs for error details
-- [ ] Masked credentials display shows wrong length - 20 dots for 8-character username suggests fixed-length mask instead of actual credential length
+- [x] WordPress "send now" publishing failed - FIXED: Two root causes found and fixed:
+  1. Site URL was `https://modern-villas.com` (no www) causing 301 redirect that lost Authorization header
+  2. Username must be lowercase `flowfeed` (not `FlowFeed`) - WordPress usernames are case-sensitive for app password auth
+- [x] Masked credentials display shows wrong length - FIXED: Changed to consistent 32-dot mask
 
 
 ## Cleanup Tasks

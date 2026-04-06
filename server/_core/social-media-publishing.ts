@@ -398,7 +398,7 @@ export async function publishToWordPress(
   categories?: string[]
 ): Promise<PublishResult> {
   try {
-    const wpSiteUrl = process.env.WORDPRESS_SITE_URL || "https://modern-villas.com";
+    const wpSiteUrl = process.env.WORDPRESS_SITE_URL || "https://www.modern-villas.com";
     const apiUrl = `${wpSiteUrl}/wp-json/wp/v2/posts`;
 
     // Prepare post data
