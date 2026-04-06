@@ -104,6 +104,10 @@
 
 ## Bug Fixes
 - [x] Queue button grayed out after draft approval - FIXED: Updated brandId extraction regex to work from any dashboard page, not just /dashboard/brands/[brandId]
+- [ ] Website/MV Post drafts not showing in Review tab after generation
+
+## UI Improvements
+- [x] Add platform name abbreviations (IG, FB, LI, MV, X) throughout the UI
 
 
 ## Move to Queue Feature (Complete)
@@ -397,3 +401,7 @@
 - [ ] Test WordPress posting with real credentials
 - [ ] Show WordPress post link in post confirmation
 - [x] Auto-assign DESIGN/ARCHITECTURE categories to WordPress posts
+
+
+## Bug Fixes
+- [ ] Website/MV Post drafts not showing in media tabs after generation

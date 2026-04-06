@@ -1,5 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { getPlatformAbbr } from "@/lib/platformNames";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -232,7 +233,7 @@ export default function QueuePage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className={getPlatformColor(post.platform)}>
-                          {post.platform}
+                          {getPlatformAbbr(post.platform)}
                         </Badge>
                       </div>
                       <p className="text-sm line-clamp-2 text-foreground">

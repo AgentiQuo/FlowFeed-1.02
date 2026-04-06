@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert";
 import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { getPlatformAbbr } from "@/lib/platformNames";
 
 const PLATFORMS = [
   { id: "instagram" as const, name: "Instagram", icon: "📷", color: "bg-pink-100 text-pink-800" },
@@ -532,7 +533,7 @@ export default function BrandSettingsPage() {
                     {PLATFORMS.map((platform) => (
                       <TabsTrigger key={platform.id} value={platform.id}>
                         <span className="mr-1">{platform.icon}</span>
-                        <span className="hidden sm:inline">{platform.name}</span>
+                        <span className="hidden sm:inline">{getPlatformAbbr(platform.id)}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>

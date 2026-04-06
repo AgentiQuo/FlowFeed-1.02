@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle, Download, Copy, Send, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { DraftPreview } from "@/components/DraftPreview";
+import { getPlatformAbbr } from "@/lib/platformNames";
 
 export default function DraftsPage() {
   const { brandId } = useParams();
@@ -384,7 +385,7 @@ export default function DraftsPage() {
                               size="sm"
                               className="capitalize"
                             >
-                              {platform === "x" ? "X" : platform}
+                              {getPlatformAbbr(platform)}
                             </Button>
                           ))}
                         </div>
@@ -449,7 +450,7 @@ export default function DraftsPage() {
                             onClick={() => setDraftPlatformFilter(platform)}
                             className="capitalize"
                           >
-                            {platform} ({drafts.filter((d: any) => d.platform === platform).length})
+                            {getPlatformAbbr(platform)} ({drafts.filter((d: any) => d.platform === platform).length})
                           </Button>
                         ))}
                       </div>
