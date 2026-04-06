@@ -368,7 +368,7 @@ export default function Dashboard() {
             </div>
 
             {/* Platform Selection Toggles - Option C: pill toggles with full names */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap justify-end">
               {ALL_PLATFORMS.map(platform => {
                 const isActive = selectedPlatforms.includes(platform);
                 return (
