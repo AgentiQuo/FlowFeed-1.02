@@ -45,6 +45,8 @@ export const credentialsRouter = router({
           apiSecret: z.string().optional(),
           bearerToken: z.string().optional(),
           businessAccountId: z.string().optional(),
+          wpUsername: z.string().optional(),
+          wpAppPassword: z.string().optional(),
         }),
       })
     )
