@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { getPlatformAbbr } from "@/lib/platformNames";
 
 export default function DraftsPage() {
   const { brandId } = useParams();
+  const [, setLocation] = useLocation();
   const [selectedAssetId, setSelectedAssetId] = useState<string>("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["instagram"]);
 
@@ -434,7 +435,7 @@ export default function DraftsPage() {
                   ) : (
                     <div className="space-y-4">
                       {/* Platform Filter Buttons */}
-                      <div className="flex gap-2 flex-wrap">
+                      <div className="flex gap-2 flex-wrap items-center">
                         <Button
                           size="sm"
                           variant={draftPlatformFilter === null ? "default" : "outline"}
@@ -442,17 +443,29 @@ export default function DraftsPage() {
                         >
                           All ({drafts.length})
                         </Button>
-                        {Array.from(new Set(drafts.map((d: any) => d.platform))).map((platform: any) => (
-                          <Button
-                            key={platform}
-                            size="sm"
-                            variant={draftPlatformFilter === platform ? "default" : "outline"}
-                            onClick={() => setDraftPlatformFilter(platform)}
-                            className="capitalize"
-                          >
-                            {getPlatformAbbr(platform)} ({drafts.filter((d: any) => d.platform === platform).length})
-                          </Button>
-                        ))}
+                        {["instagram", "x", "linkedin", "facebook", "website"].map((platform: string) => {
+                          const count = drafts.filter((d: any) => d.platform === platform).length;
+                          return (
+                            <Button
+                              key={platform}
+                              size="sm"
+                              variant={draftPlatformFilter === platform ? "default" : "outline"}
+                              onClick={() => setDraftPlatformFilter(platform)}
+                              className="capitalize"
+                            >
+                              {getPlatformAbbr(platform)} {count > 0 && `(${count})`}
+                            </Button>
+                          );
+                        })}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setLocation(`/dashboard/brand/${brandId}/settings`)}
+                          title="Brand Settings"
+                          className="ml-auto"
+                        >
+                          ⚙️
+                        </Button>
                       </div>
 
                       {/* Filtered Drafts */}
