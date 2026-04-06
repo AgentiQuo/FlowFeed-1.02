@@ -426,7 +426,12 @@ export async function publishToWordPress(
 
         if (mediaResponse.ok) {
           const mediaData = (await mediaResponse.json()) as any;
-          postData.featured_media = mediaData.id;
+          if (mediaData.id) {
+            postData.featured_media = mediaData.id;
+          }
+        } else {
+          const errorData = await mediaResponse.json();
+          console.warn("[WordPress] Media upload failed:", errorData);
         }
       } catch (e) {
         console.warn("[WordPress] Failed to upload featured image:", e);
@@ -484,6 +489,16 @@ export async function publishToWordPress(
     }
 
     const data = (await response.json()) as any;
+    
+    if (!data.id) {
+      console.error("[WordPress] No post ID in response:", data);
+      return {
+        success: false,
+        platform: "website",
+        error: "Failed to create post: No ID returned from WordPress",
+      };
+    }
+    
     return {
       success: true,
       postId: data.id.toString(),
