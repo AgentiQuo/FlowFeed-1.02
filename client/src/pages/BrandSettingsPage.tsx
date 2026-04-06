@@ -220,8 +220,8 @@ export default function BrandSettingsPage() {
           apiSecret: credData.apiSecret || "",
           bearerToken: credData.bearerToken || "",
           businessAccountId: credData.businessAccountId || "",
-          wpUsername: credData.wpUsername ? "••••••••••••••••••••" : "",
-          wpAppPassword: credData.wpAppPassword ? "••••••••••••••••••••" : "",
+          wpUsername: credData.wpUsername ? "••••••••••••••••••••••••••••••••" : "",
+          wpAppPassword: credData.wpAppPassword ? "••••••••••••••••••••••••••••••••" : "",
         };
 
         // Mark fields with saved values as "masked" (not edited)
@@ -281,8 +281,8 @@ export default function BrandSettingsPage() {
 
   const verifyCredentialsMutation = trpc.brandCredentials.verify.useMutation({
     onSuccess: (result: any) => {
+      const platform = isVerifying || result.platform; // Use the platform we're currently verifying
       setIsVerifying(null);
-      const platform = result.platform || Object.keys(credentials)[0];
       setVerificationStatus((prev) => ({
         ...prev,
         [platform]: { verified: result.verified, error: result.error },
@@ -300,7 +300,7 @@ export default function BrandSettingsPage() {
   });
 
   const handleVerifyCredentials = async (platform: "instagram" | "x" | "linkedin" | "facebook" | "website") => {
-    setIsVerifying(platform);
+    setIsVerifying(platform); // Store the platform being verified
     try {
       await verifyCredentialsMutation.mutateAsync({
         brandId: brandId || "",
@@ -330,7 +330,7 @@ export default function BrandSettingsPage() {
       const value = cred?.[field as keyof typeof cred];
       // If value is masked and was NOT edited, it means it's already saved - don't require re-entry
       const wasEdited = editedCredentialFields[platform]?.[field];
-      const isMasked = value === "••••••••••••••••••••";
+      const isMasked = value === "••••••••••••••••••••••••••••••••";
       if (isMasked && !wasEdited) {
         // Already saved, no need to re-enter
         return false;

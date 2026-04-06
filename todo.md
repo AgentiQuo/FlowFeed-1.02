@@ -424,3 +424,17 @@
 - [ ] Clean up database schema to remove unused credential columns for website platform (optional - not breaking)
 - [ ] Update credentials router to only handle wpUsername and wpAppPassword for website platform (optional - already working)
 
+
+## Credential Field Naming Standardization
+- [ ] Standardize credential field labels to match each platform's official terminology
+  - Instagram: Access Token, Business Account ID, App Secret
+  - X (Twitter): Consumer Key, Consumer Secret, Access Token, Access Token Secret
+  - LinkedIn: Access Token
+  - Facebook: Access Token
+  - WordPress: Username, Application Password
+
+
+## Critical Bugs - Credential Display & Verification
+- [x] Fix fixed-length credential mask (always 20 dots) - FIXED: Changed to 32-dot consistent mask that doesn't reveal credential length
+- [x] Fix wrong verification message - "X credentials verified" showing on WordPress (MV) tab - FIXED: Now uses isVerifying state to track correct platform
+
