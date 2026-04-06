@@ -441,3 +441,14 @@
 - [x] Fix fixed-length credential mask (always 20 dots) - FIXED: Changed to 32-dot consistent mask that doesn't reveal credential length
 - [x] Fix wrong verification message - "X credentials verified" showing on WordPress (MV) tab - FIXED: Now uses isVerifying state to track correct platform
 
+
+## WordPress Post Quality Improvements
+- [x] Fix WordPress post title - FIXED: Now uses AI (invokeLLM) to generate a short standalone title (max 8 words); falls back to first 80 chars if AI fails
+- [x] Fix WordPress featured image upload - FIXED: Now downloads image bytes and uploads as binary (Content-Type: image/jpeg) instead of source_url JSON; confirmed working (HTTP 201)
+
+## Future: Platform Selection for Draft Generation
+- [ ] Add platform toggle buttons below the Create button so users can choose which platforms to generate drafts for (instead of always generating all 5)
+  - Buttons should be small platform icons (IG, X, LI, FB, MV) or styled like tab headers
+  - Selection should be persistent (remembered across sessions, stored in localStorage or user preferences)
+  - Default: all platforms selected
+  - Only generate drafts for the selected platforms when Create is pressed

@@ -411,27 +411,35 @@ export async function publishToWordPress(
     // Add featured image if provided
     if (imageUrl) {
       try {
-        // Upload image to WordPress media library first
-        const mediaResponse = await fetch(`${wpSiteUrl}/wp-json/wp/v2/media`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Basic ${Buffer.from(`${wpUsername}:${wpAppPassword}`).toString("base64")}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title: title,
-            source_url: imageUrl,
-          }),
-        });
+        // Download the image bytes first, then upload as binary to WordPress media library
+        const imgResponse = await fetch(imageUrl);
+        if (imgResponse.ok) {
+          const imgBuffer = await imgResponse.arrayBuffer();
+          const contentType = imgResponse.headers.get("content-type") || "image/jpeg";
+          const filename = imageUrl.split("/").pop()?.split("?")[0] || "image.jpg";
 
-        if (mediaResponse.ok) {
-          const mediaData = (await mediaResponse.json()) as any;
-          if (mediaData.id) {
-            postData.featured_media = mediaData.id;
+          const mediaResponse = await fetch(`${wpSiteUrl}/wp-json/wp/v2/media`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Basic ${Buffer.from(`${wpUsername}:${wpAppPassword}`).toString("base64")}`,
+              "Content-Disposition": `attachment; filename="${filename}"`,
+              "Content-Type": contentType,
+            },
+            body: imgBuffer,
+          });
+
+          if (mediaResponse.ok) {
+            const mediaData = (await mediaResponse.json()) as any;
+            if (mediaData.id) {
+              postData.featured_media = mediaData.id;
+              console.log("[WordPress] Featured image uploaded, media ID:", mediaData.id);
+            }
+          } else {
+            const errorData = await mediaResponse.json().catch(() => ({}));
+            console.warn("[WordPress] Media upload failed:", errorData);
           }
         } else {
-          const errorData = await mediaResponse.json();
-          console.warn("[WordPress] Media upload failed:", errorData);
+          console.warn("[WordPress] Could not download image from URL:", imageUrl);
         }
       } catch (e) {
         console.warn("[WordPress] Failed to upload featured image:", e);
