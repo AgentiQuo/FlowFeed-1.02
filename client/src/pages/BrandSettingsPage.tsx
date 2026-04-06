@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, AlertCircle, CheckCircle, XCircle, Loader } from "lucide-react";
-import { toast } from "soner";
+import { toast } from "sonner";
 import {
   Tabs,
   TabsContent,
@@ -147,6 +147,7 @@ export default function BrandSettingsPage() {
   const [checkingScopesPlatform, setCheckingScopesPlatform] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<Record<string, CredentialForm>>({});
   const [hasInitializedCredentials, setHasInitializedCredentials] = useState(false);
+  const [editedCredentialFields, setEditedCredentialFields] = useState<Record<string, Record<string, boolean>>>({});
   const [guides, setGuides] = useState<BrandGuides>({
     copywritingGuide: "",
     imageGenerationGuide: "",
@@ -219,24 +220,23 @@ export default function BrandSettingsPage() {
           apiSecret: credData.apiSecret || "",
           bearerToken: credData.bearerToken || "",
           businessAccountId: credData.businessAccountId || "",
-<<<<<<< Updated upstream
-          wpUsername: credData.wpUsername || "",
-          wpAppPassword: credData.wpAppPassword || "",
-        };
-=======
           wpUsername: credData.wpUsername ? "••••••••••••••••••••" : "",
           wpAppPassword: credData.wpAppPassword ? "••••••••••••••••••••" : "",
         };
 
         // Mark fields with saved values as "masked" (not edited)
-        maskedFieldsMap[platform].accessToken = !!credData.accessToken;
-        maskedFieldsMap[platform].accessTokenSecret = !!credData.accessTokenSecret;
-        maskedFieldsMap[platform].apiKey = !!credData.apiKey;
-        maskedFieldsMap[platform].apiSecret = !!credData.apiSecret;
-        maskedFieldsMap[platform].bearerToken = !!credData.bearerToken;
-        maskedFieldsMap[platform].wpUsername = !!credData.wpUsername;
-        maskedFieldsMap[platform].wpAppPassword = !!credData.wpAppPassword;
->>>>>>> Stashed changes
+        setEditedCredentialFields(prev => ({
+          ...prev,
+          [platform]: {
+            accessToken: false,
+            accessTokenSecret: false,
+            apiKey: false,
+            apiSecret: false,
+            bearerToken: false,
+            wpUsername: false,
+            wpAppPassword: false,
+          }
+        }));
       });
 
       setCredentials(credentialsMap);
@@ -328,9 +328,6 @@ export default function BrandSettingsPage() {
     const required = requiredFields[platform] || [];
     const missing = required.filter(field => {
       const value = cred?.[field as keyof typeof cred];
-<<<<<<< Updated upstream
-      return !value || value === "";
-=======
       // If value is masked and was NOT edited, it means it's already saved - don't require re-entry
       const wasEdited = editedCredentialFields[platform]?.[field];
       const isMasked = value === "••••••••••••••••••••";
@@ -340,7 +337,6 @@ export default function BrandSettingsPage() {
       }
       // Otherwise, require the field to have a non-empty value
       return !value;
->>>>>>> Stashed changes
     });
     
     if (!cred || missing.length > 0) {
