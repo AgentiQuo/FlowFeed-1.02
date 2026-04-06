@@ -410,31 +410,8 @@ export const queueRouter = router({
           if (!credData.wpUsername || !credData.wpAppPassword) {
             throw new Error("WordPress credentials incomplete");
           }
-          // Generate a short, standalone title using AI
-          let wpTitle = "New Post";
-          try {
-            const { invokeLLM } = await import("../_core/llm");
-            const titleResponse = await invokeLLM({
-              messages: [
-                {
-                  role: "system",
-                  content: "You are a copywriter. Generate a short, compelling blog post title (max 8 words, no quotes). Return ONLY the title text, nothing else.",
-                },
-                {
-                  role: "user",
-                  content: `Generate a blog post title for this content:\n\n${post.content.substring(0, 500)}`,
-                },
-              ],
-            });
-            const rawContent = titleResponse?.choices?.[0]?.message?.content;
-            const aiTitle = typeof rawContent === "string" ? rawContent.trim() : undefined;
-            if (aiTitle && aiTitle.length > 0 && aiTitle.length < 120) {
-              wpTitle = aiTitle.replace(/^["']|["']$/g, ""); // strip surrounding quotes if any
-            }
-          } catch (e) {
-            console.warn("[WordPress] AI title generation failed, using fallback:", e);
-            wpTitle = post.content.split("\n")[0].substring(0, 80) || "New Post";
-          }
+          // Use the title stored at draft creation time; fall back to first line of content
+          const wpTitle = post.title || post.content.split("\n")[0].substring(0, 80) || "New Post";
           result = await publishToWordPress(
             credData.wpUsername,
             credData.wpAppPassword,

@@ -64,6 +64,20 @@
       "when": 1775398617108,
       "tag": "0008_loving_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1775486288100,
+      "tag": "0009_high_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1775486500136,
+      "tag": "0010_slim_alice",
+      "breakpoints": true
     }
   ]
 }

@@ -448,3 +448,9 @@
 
 ## Future: Platform Selection for Draft Generation
 - [x] Add platform toggle buttons below the Create button - DONE: IG, X, LI, FB, MV toggle buttons below Create; active = filled, inactive = outlined; selection persisted in localStorage (flowfeed_selected_platforms); generateDrafts only called for selected platforms
+
+## MV Post Title in Draft Preview
+- [x] Add `title` column to drafts table (nullable varchar) - DONE
+- [x] Generate AI title for website platform at draft creation time - DONE: invokeLLM in content.ts generateDrafts
+- [x] Display title above content body in DraftPreview for website platform - DONE: bold title shown above content
+- [x] Use stored title at publish time instead of re-generating it - DONE: removed duplicate AI call in queue.ts, uses post.title with fallback

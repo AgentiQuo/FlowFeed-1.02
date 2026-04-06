@@ -45,6 +45,12 @@ export function DraftPreview({
                 </div>
                 {/* Text below image */}
                 <div className={`${previewConfig.padding} ${previewConfig.textColor} overflow-hidden`}>
+                  {/* Show title for MV Post (website) drafts */}
+                  {draft.platform === "website" && draft.title && (
+                    <p className="text-sm font-bold mb-1 break-words">
+                      {draft.title}
+                    </p>
+                  )}
                   <p className={`${previewConfig.fontSize} font-medium break-words whitespace-pre-wrap`}>
                     {draft.content}
                   </p>

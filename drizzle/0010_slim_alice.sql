@@ -1,0 +1,1 @@
+ALTER TABLE `posts` ADD `title` varchar(500);

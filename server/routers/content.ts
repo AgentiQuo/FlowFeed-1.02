@@ -94,6 +94,34 @@ export const contentRouter = router({
       const savedDrafts = await Promise.all(
         generatedDrafts.map(async (draft) => {
           const draftId = nanoid();
+
+          // Generate AI title for website (MV Post) drafts at creation time
+          let draftTitle: string | null = null;
+          if (draft.platform === "website") {
+            try {
+              const titleResponse = await invokeLLM({
+                messages: [
+                  {
+                    role: "system",
+                    content: "You are a copywriter. Generate a short, compelling blog post title (max 8 words, no quotes). Return ONLY the title text, nothing else.",
+                  },
+                  {
+                    role: "user",
+                    content: `Generate a blog post title for this content:\n\n${draft.content.substring(0, 500)}`,
+                  },
+                ],
+              });
+              const rawContent = titleResponse?.choices?.[0]?.message?.content;
+              const aiTitle = typeof rawContent === "string" ? rawContent.trim() : undefined;
+              if (aiTitle && aiTitle.length > 0 && aiTitle.length < 120) {
+                draftTitle = aiTitle.replace(/^["']|["']$/g, "");
+              }
+            } catch (e) {
+              console.warn("[Content] AI title generation failed, using fallback:", e);
+              draftTitle = draft.content.split("\n")[0].substring(0, 80) || "New Post";
+            }
+          }
+
           await db.insert(drafts).values({
             id: draftId,
             brandId: input.brandId,
@@ -101,12 +129,14 @@ export const contentRouter = router({
             categoryId: assetData.categoryId,
             platform: draft.platform,
             content: draft.content,
+            title: draftTitle,
             status: "draft",
             createdAt: new Date(),
             updatedAt: new Date(),
           });
           return {
             id: draftId,
+            title: draftTitle,
             ...draft,
           };
         })
@@ -322,6 +352,7 @@ export const contentRouter = router({
           platform: draft.platform,
           brandId: draft.brandId,
           content: draft.content,
+          title: draft.title ?? null,
           thumbnailUrl: thumbnailUrl,
           scheduledFor: nextScheduledTime,
           status: "scheduled",
