@@ -107,11 +107,11 @@ export default function Dashboard() {
   const ALL_PLATFORMS: Array<"instagram" | "x" | "linkedin" | "facebook" | "website"> = ["instagram", "x", "linkedin", "facebook", "website"];
 
   const PLATFORM_LABELS: Record<string, string> = {
-    instagram: "IG",
+    instagram: "Instagram",
     x: "X",
-    linkedin: "LI",
-    facebook: "FB",
-    website: "MV",
+    linkedin: "LinkedIn",
+    facebook: "Facebook",
+    website: "MV Post",
   };
 
   // Persistent platform selection via localStorage
@@ -367,8 +367,8 @@ export default function Dashboard() {
               </Button>
             </div>
 
-            {/* Platform Selection Toggles */}
-            <div className="flex gap-1.5 flex-wrap">
+            {/* Platform Selection Toggles - Option C: pill toggles with full names */}
+            <div className="flex gap-2 flex-wrap">
               {ALL_PLATFORMS.map(platform => {
                 const isActive = selectedPlatforms.includes(platform);
                 return (
@@ -376,12 +376,11 @@ export default function Dashboard() {
                     key={platform}
                     onClick={() => togglePlatform(platform)}
                     className={[
-                      "px-2.5 py-1 rounded text-xs font-semibold border transition-all",
+                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-all select-none",
                       isActive
-                        ? "bg-foreground text-background border-foreground"
-                        : "bg-transparent text-muted-foreground border-border hover:border-foreground/40",
+                        ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
+                        : "bg-transparent text-muted-foreground border-border hover:border-muted-foreground/60",
                     ].join(" ")}
-                    title={platform === "website" ? "MV Post" : platform.charAt(0).toUpperCase() + platform.slice(1)}
                   >
                     {PLATFORM_LABELS[platform]}
                   </button>
