@@ -373,9 +373,6 @@ export default function BrandSettingsPage() {
       await saveCredentialsMutation.mutateAsync({
         brandId: brandId || "",
         platform,
-        accountId,
-        accountName,
-        accountEmail,
         credentials: credentialsToSend,
       });
     } catch (error) {

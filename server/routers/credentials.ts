@@ -35,9 +35,6 @@ export const credentialsRouter = router({
       z.object({
         brandId: z.string(),
         platform: z.enum(["instagram", "linkedin", "facebook", "x", "website"]),
-        accountId: z.string().optional(),
-        accountName: z.string().optional(),
-        accountEmail: z.string().email().optional(),
         credentials: z.object({
           accessToken: z.string().optional(),
           accessTokenSecret: z.string().optional(),
@@ -88,9 +85,6 @@ export const credentialsRouter = router({
         await db
           .update(brandCredentials)
           .set({
-            accountId: input.accountId,
-            accountName: input.accountName,
-            accountEmail: input.accountEmail,
             credentials: JSON.stringify(mergedCredentials),
             verificationStatus: "pending",
             updatedAt: now,
@@ -103,9 +97,6 @@ export const credentialsRouter = router({
           id: nanoid(),
           brandId: input.brandId,
           platform: input.platform,
-          accountId: input.accountId,
-          accountName: input.accountName,
-          accountEmail: input.accountEmail,
           credentials: encryptedCredentials,
           isActive: true,
           verificationStatus: "pending",

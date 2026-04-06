@@ -421,8 +421,8 @@
 
 ## Cleanup Tasks
 - [x] Remove unnecessary credential fields from MV Post form (Account ID, Account Name, Account Email) - FIXED: Hidden Account Info Fields for website platform in UI
-- [ ] Clean up database schema to remove unused credential columns for website platform (optional - not breaking)
-- [ ] Update credentials router to only handle wpUsername and wpAppPassword for website platform (optional - already working)
+- [x] Remove Account ID, Account Name, Account Email from credentials save call - FIXED: Removed from BrandSettingsPage mutation (not used by any platform API)
+- [ ] Clean up database schema to remove unused credential columns (optional - can be done later)
 
 
 ## Credential Field Naming Standardization
