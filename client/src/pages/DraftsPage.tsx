@@ -434,43 +434,9 @@ export default function DraftsPage() {
                     </Card>
                   ) : (
                     <div className="space-y-4">
-                      {/* Platform Filter Buttons */}
-                      <div className="flex gap-2 flex-wrap items-center">
-                        <Button
-                          size="sm"
-                          variant={draftPlatformFilter === null ? "default" : "outline"}
-                          onClick={() => setDraftPlatformFilter(null)}
-                        >
-                          All ({drafts.length})
-                        </Button>
-                        {["instagram", "x", "linkedin", "facebook", "website"].map((platform: string) => {
-                          const count = drafts.filter((d: any) => d.platform === platform).length;
-                          return (
-                            <Button
-                              key={platform}
-                              size="sm"
-                              variant={draftPlatformFilter === platform ? "default" : "outline"}
-                              onClick={() => setDraftPlatformFilter(platform)}
-                              className="capitalize"
-                            >
-                              {getPlatformAbbr(platform)} {count > 0 && `(${count})`}
-                            </Button>
-                          );
-                        })}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setLocation(`/dashboard/brand/${brandId}/settings`)}
-                          title="Brand Settings"
-                          className="ml-auto"
-                        >
-                          ⚙️
-                        </Button>
-                      </div>
-
-                      {/* Filtered Drafts */}
+                      {/* All Drafts List */}
                       <div className="space-y-3">
-                        {drafts.filter((d: any) => draftPlatformFilter === null || d.platform === draftPlatformFilter).map((draft: any) => {
+                        {drafts.map((draft: any) => {
                         const assetImage = getAssetImageUrl(draft.assetId);
                         return (
 <div className="space-y-4">

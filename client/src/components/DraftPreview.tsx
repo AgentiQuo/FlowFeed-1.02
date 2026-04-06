@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getPlatformPreviewConfig } from "@/lib/platformPreview";
+import { getPlatformLogo } from "@/lib/platformLogos";
 
 interface DraftPreviewProps {
   draft: any;
@@ -86,6 +87,9 @@ export function DraftPreview({
           {/* Draft Header with Platform and Status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-muted-foreground">
+                {getPlatformLogo(draft.platform, 18)}
+              </div>
               <Badge className="capitalize">{draft.platform}</Badge>
               <Badge variant={draft.status === "reviewed" ? "default" : "secondary"}>
                 {draft.status === "draft" && "Draft"}
