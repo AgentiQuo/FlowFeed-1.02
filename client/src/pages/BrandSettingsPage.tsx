@@ -748,7 +748,7 @@ export default function BrandSettingsPage() {
                         <div className="space-y-4 border-t pt-4">
                           <div>
                             <Label htmlFor={`${platform.id}-wpUsername`}>
-                              WordPress Username <span className="text-red-500">*</span>
+                              Username <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`${platform.id}-wpUsername`}
@@ -758,7 +758,7 @@ export default function BrandSettingsPage() {
                               onChange={(e) => handleInputChange(platform.id, "wpUsername", e.target.value)}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                              Your WordPress admin username
+                              WordPress user with Editor role or higher (e.g., FlowFeed user)
                             </p>
                           </div>
                           <div>
