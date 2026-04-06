@@ -470,6 +470,9 @@ export async function publishToWordPress(
     }
 
     // Create the post
+    console.log("[WordPress] Publishing post to:", apiUrl);
+    console.log("[WordPress] Post data:", { title, contentLength: content.length, hasImage: !!imageUrl });
+    
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -479,17 +482,26 @@ export async function publishToWordPress(
       body: JSON.stringify(postData),
     });
 
+    console.log("[WordPress] Response status:", response.status, response.statusText);
+
     if (!response.ok) {
-      const error = await response.json();
+      let error: any;
+      try {
+        error = await response.json();
+      } catch (e) {
+        error = { message: await response.text() };
+      }
+      console.error("[WordPress] API error response:", { status: response.status, statusText: response.statusText, error });
       return {
         success: false,
         platform: "website",
-        error: (error as any).message || `Failed to post to WordPress (${response.status})`,
+        error: (error as any).message || `Failed to post to WordPress (${response.status}: ${response.statusText})`,
       };
     }
 
     const data = (await response.json()) as any;
     
+    console.log("[WordPress] Success response:", { id: data.id, link: data.link, status: data.status });
     if (!data.id) {
       console.error("[WordPress] No post ID in response:", data);
       return {

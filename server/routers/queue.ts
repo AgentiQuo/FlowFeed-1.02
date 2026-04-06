@@ -336,11 +336,15 @@ export const queueRouter = router({
 
       const credRecord = credResult[0];
       
+      console.log(`[Queue] Retrieved credentials for ${post.platform}:`, { platform: post.platform, credentialsLength: credRecord.credentials?.length });
+      
       // Parse encrypted credentials JSON
       let credData: any;
       try {
         credData = JSON.parse(credRecord.credentials);
+        console.log(`[Queue] Parsed credentials:`, { wpUsername: credData.wpUsername ? 'set' : 'missing', wpAppPassword: credData.wpAppPassword ? 'set' : 'missing' });
       } catch (e) {
+        console.error(`[Queue] Failed to parse credentials:`, e);
         throw new Error("Failed to parse credentials");
       }
 

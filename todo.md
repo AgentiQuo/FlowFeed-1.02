@@ -411,3 +411,5 @@
 - [ ] Website/MV Post drafts not showing in media tabs after generation
 - [x] Fix "Cannot read properties of undefined (reading 'toString')" error when publishing WordPress posts - FIXED: Added null check for data.id before calling toString()
 
+- [x] Fix WordPress API "No ID returned from WordPress" error - FIXED: Added detailed logging to WordPress publishing function. WordPress credentials now stored and ready for testing
+
