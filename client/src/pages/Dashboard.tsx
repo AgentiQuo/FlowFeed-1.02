@@ -376,10 +376,10 @@ export default function Dashboard() {
                     key={platform}
                     onClick={() => togglePlatform(platform)}
                     className={[
-                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-all select-none",
+                      "px-3 py-1.5 rounded-md text-xs font-medium border transition-all select-none",
                       isActive
-                        ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
-                        : "bg-transparent text-muted-foreground border-border hover:border-muted-foreground/60",
+                        ? "bg-muted text-foreground border-muted-foreground/30"
+                        : "bg-transparent text-muted-foreground border-border hover:border-muted-foreground/50 hover:text-foreground",
                     ].join(" ")}
                   >
                     {PLATFORM_LABELS[platform]}
