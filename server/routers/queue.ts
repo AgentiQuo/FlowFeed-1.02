@@ -349,6 +349,7 @@ export const queueRouter = router({
         publishToX,
         publishToLinkedIn,
         publishToFacebook,
+        publishToWordPress,
       } = await import("../_core/social-media-publishing");
 
       let result;
@@ -398,6 +399,22 @@ export const queueRouter = router({
             credData.facebookPageId,
             post.content,
             (post.thumbnailUrl || undefined)
+          );
+          break;
+
+        case "website":
+          if (!credData.wpUsername || !credData.wpAppPassword) {
+            throw new Error("WordPress credentials incomplete");
+          }
+          // Extract first line of content as title (up to 100 chars)
+          const wpTitle = post.content.split('\n')[0].substring(0, 100) || "New Post";
+          result = await publishToWordPress(
+            credData.wpUsername,
+            credData.wpAppPassword,
+            wpTitle,
+            post.content,
+            (post.thumbnailUrl || undefined),
+            ["DESIGN", "ARCHITECTURE"]
           );
           break;
 

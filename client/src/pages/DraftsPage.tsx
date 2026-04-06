@@ -230,7 +230,7 @@ export default function DraftsPage() {
     moveToQueueMutation.mutate({
       brandId,
       draftId,
-      platforms: ["instagram", "x", "linkedin", "facebook"],
+      platforms: ["instagram", "x", "linkedin", "facebook", "website"],
     });
   };
 

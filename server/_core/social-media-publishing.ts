@@ -383,3 +383,117 @@ export async function publishToFacebook(
     };
   }
 }
+
+
+/**
+ * WordPress REST API publishing
+ * Requires: wpUsername, wpAppPassword, wpSiteUrl (from environment or config)
+ */
+export async function publishToWordPress(
+  wpUsername: string,
+  wpAppPassword: string,
+  title: string,
+  content: string,
+  imageUrl?: string,
+  categories?: string[]
+): Promise<PublishResult> {
+  try {
+    const wpSiteUrl = process.env.WORDPRESS_SITE_URL || "https://modern-villas.com";
+    const apiUrl = `${wpSiteUrl}/wp-json/wp/v2/posts`;
+
+    // Prepare post data
+    const postData: any = {
+      title,
+      content,
+      status: "publish",
+    };
+
+    // Add featured image if provided
+    if (imageUrl) {
+      try {
+        // Upload image to WordPress media library first
+        const mediaResponse = await fetch(`${wpSiteUrl}/wp-json/wp/v2/media`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Basic ${Buffer.from(`${wpUsername}:${wpAppPassword}`).toString("base64")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: title,
+            source_url: imageUrl,
+          }),
+        });
+
+        if (mediaResponse.ok) {
+          const mediaData = (await mediaResponse.json()) as any;
+          postData.featured_media = mediaData.id;
+        }
+      } catch (e) {
+        console.warn("[WordPress] Failed to upload featured image:", e);
+        // Continue without featured image
+      }
+    }
+
+    // Add categories if provided (default: DESIGN and ARCHITECTURE)
+    if (categories && categories.length > 0) {
+      try {
+        // Get category IDs from names
+        const categoryIds: number[] = [];
+        for (const categoryName of categories) {
+          const catResponse = await fetch(
+            `${wpSiteUrl}/wp-json/wp/v2/categories?search=${encodeURIComponent(categoryName)}`,
+            {
+              headers: {
+                "Authorization": `Basic ${Buffer.from(`${wpUsername}:${wpAppPassword}`).toString("base64")}`,
+              },
+            }
+          );
+          if (catResponse.ok) {
+            const catData = (await catResponse.json()) as any[];
+            if (catData.length > 0) {
+              categoryIds.push(catData[0].id);
+            }
+          }
+        }
+        if (categoryIds.length > 0) {
+          postData.categories = categoryIds;
+        }
+      } catch (e) {
+        console.warn("[WordPress] Failed to add categories:", e);
+        // Continue without categories
+      }
+    }
+
+    // Create the post
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${Buffer.from(`${wpUsername}:${wpAppPassword}`).toString("base64")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return {
+        success: false,
+        platform: "website",
+        error: (error as any).message || `Failed to post to WordPress (${response.status})`,
+      };
+    }
+
+    const data = (await response.json()) as any;
+    return {
+      success: true,
+      postId: data.id.toString(),
+      platform: "website",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      platform: "website",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}

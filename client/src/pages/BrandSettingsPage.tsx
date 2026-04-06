@@ -25,6 +25,7 @@ const PLATFORMS = [
   { id: "x" as const, name: "X (Twitter)", icon: "𝕏", color: "bg-gray-100 text-gray-800" },
   { id: "linkedin" as const, name: "LinkedIn", icon: "💼", color: "bg-blue-100 text-blue-800" },
   { id: "facebook" as const, name: "Facebook", icon: "f", color: "bg-blue-50 text-blue-700" },
+  { id: "website" as const, name: "MV Post", icon: "🌐", color: "bg-purple-100 text-purple-800" },
 ];
 
 interface CredentialForm {
@@ -38,6 +39,8 @@ interface CredentialForm {
   apiSecret?: string;
   bearerToken?: string;
   businessAccountId?: string;
+  wpUsername?: string;
+  wpAppPassword?: string;
 }
 
 interface BrandGuides {
@@ -317,7 +320,7 @@ export default function BrandSettingsPage() {
       x: ["apiKey", "apiSecret", "accessToken", "accessTokenSecret"],
       linkedin: ["accessToken"],
       facebook: ["accessToken"],
-      website: [],
+      website: ["wpUsername", "wpAppPassword"],
     };
     
     const required = requiredFields[platform] || [];
@@ -344,6 +347,8 @@ export default function BrandSettingsPage() {
         apiSecret: editedFields.apiSecret ? cred.apiSecret : undefined,
         bearerToken: editedFields.bearerToken ? cred.bearerToken : undefined,
         businessAccountId: cred.businessAccountId,
+        wpUsername: editedFields.wpUsername ? cred.wpUsername : undefined,
+        wpAppPassword: editedFields.wpAppPassword ? cred.wpAppPassword : undefined,
       };
 
       // Remove undefined values
@@ -523,7 +528,7 @@ export default function BrandSettingsPage() {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="instagram" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     {PLATFORMS.map((platform) => (
                       <TabsTrigger key={platform.id} value={platform.id}>
                         <span className="mr-1">{platform.icon}</span>
@@ -735,6 +740,41 @@ export default function BrandSettingsPage() {
                               value={credentials[platform.id]?.accessToken || ""}
                               onChange={(e) => handleInputChange(platform.id, "accessToken", e.target.value)}
                             />
+                          </div>
+                        </div>
+                      )}
+
+                      {platform.id === "website" && (
+                        <div className="space-y-4 border-t pt-4">
+                          <div>
+                            <Label htmlFor={`${platform.id}-wpUsername`}>
+                              WordPress Username <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id={`${platform.id}-wpUsername`}
+                              type="text"
+                              placeholder="Your WordPress username"
+                              value={credentials[platform.id]?.wpUsername || ""}
+                              onChange={(e) => handleInputChange(platform.id, "wpUsername", e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Your WordPress admin username
+                            </p>
+                          </div>
+                          <div>
+                            <Label htmlFor={`${platform.id}-wpAppPassword`}>
+                              Application Password <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id={`${platform.id}-wpAppPassword`}
+                              type="password"
+                              placeholder="Your WordPress application password"
+                              value={credentials[platform.id]?.wpAppPassword || ""}
+                              onChange={(e) => handleInputChange(platform.id, "wpAppPassword", e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Generate in WordPress: Users → Your Profile → Application Passwords
+                            </p>
                           </div>
                         </div>
                       )}

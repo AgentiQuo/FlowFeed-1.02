@@ -388,3 +388,12 @@
 - [x] Now works with instagram_business_basic scope instead of requiring non-existent scope
 - [x] Improved error messages to show required scopes
 - [x] All 152 tests passing
+
+
+## WordPress Integration (In Progress)
+- [x] Add WordPress credentials storage in Brand Settings (username + app password)
+- [x] Create WordPress posting procedure in backend (REST API integration)
+- [x] Add MV Post platform to Create Posts form
+- [ ] Test WordPress posting with real credentials
+- [ ] Show WordPress post link in post confirmation
+- [x] Auto-assign DESIGN/ARCHITECTURE categories to WordPress posts
