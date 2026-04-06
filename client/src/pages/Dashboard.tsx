@@ -99,12 +99,12 @@ export default function Dashboard() {
 
   // Derived state
   const activeBrand = brands?.find((b: any) => b.id === selectedBrandId);
-const filteredDrafts = useMemo(() => {
+  const filteredDrafts = useMemo(() => {
     if (!drafts || !currentAsset) return [];
-    return drafts.filter((d: any) => d.platform === selectedPlatform && d.assetId === currentAsset.id);
-  }, [drafts, selectedPlatform, currentAsset]);
+    return drafts.filter((d: any) => d.assetId === currentAsset.id);
+  }, [drafts, currentAsset]);
 
-  const platforms: Array<"instagram" | "x" | "linkedin" | "facebook"> = ["instagram", "x", "linkedin", "facebook"];
+  const platforms: Array<"instagram" | "x" | "linkedin" | "facebook" | "website"> = ["instagram", "x", "linkedin", "facebook", "website"];
 
   const handleCreatePosts = async () => {
     if (!currentAsset || !selectedBrandId) return;
@@ -351,21 +351,9 @@ const filteredDrafts = useMemo(() => {
             <CardDescription>Review and approve posts for each platform</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Platform Tabs */}
+            {/* Drafts Label */}
             <div>
-              <h3 className="text-sm font-semibold mb-3">Platform</h3>
-              <Tabs value={selectedPlatform} onValueChange={setSelectedPlatform}>
-                <TabsList className="w-full justify-start overflow-x-auto">
-                  {platforms.map((platform) => (
-                    <TabsTrigger key={platform} value={platform} className="flex-shrink-0 capitalize">
-                      {platform}
-                    </TabsTrigger>
-                  ))}
-                  <TabsTrigger value="new" className="flex-shrink-0">
-                    <Plus className="w-4 h-4" />
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <h3 className="text-sm font-semibold mb-3">Drafts</h3>
             </div>
 
             {/* Draft Preview */}
@@ -399,6 +387,17 @@ const filteredDrafts = useMemo(() => {
                         onClick={() => handleEditDraft(draft)}
                       >
                         Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => {
+                          toast.info("Delete draft feature coming soon");
+                        }}
+                        title="Delete draft"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                     {editingDraftId === draft.id && (

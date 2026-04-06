@@ -105,8 +105,9 @@
 ## Bug Fixes
 - [x] Queue button grayed out after draft approval - FIXED: Updated brandId extraction regex to work from any dashboard page, not just /dashboard/brands/[brandId]
 - [ ] Website/MV Post drafts not showing in Review tab after generation
-- [ ] Platform tabs not showing all 5 platforms (MV tab hidden, abbreviations not displaying)
-- [ ] Replace + button with settings icon in platform tabs
+- [x] Create Posts panel on brand dashboard still showing old platform tabs layout instead of vertical draft list - FIXED: Removed platform tabs, now shows vertical draft list
+- [x] Platform tabs not showing all 5 platforms (MV tab hidden, abbreviations not displaying) - FIXED: Replaced tabs with vertical list
+- [x] Replace + button with settings icon in platform tabs - FIXED: Settings icon already in place, tabs removed
 
 ## UI Improvements
 - [x] Add platform name abbreviations (IG, FB, LI, MV, X) throughout the UI
