@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, AlertCircle, CheckCircle, XCircle, Loader } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "soner";
 import {
   Tabs,
   TabsContent,
@@ -147,9 +147,6 @@ export default function BrandSettingsPage() {
   const [checkingScopesPlatform, setCheckingScopesPlatform] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<Record<string, CredentialForm>>({});
   const [hasInitializedCredentials, setHasInitializedCredentials] = useState(false);
-  // Track which credential fields have been edited by the user
-  // Structure: { platform: { field: true, ... }, ... }
-  const [editedCredentialFields, setEditedCredentialFields] = useState<Record<string, Record<string, boolean>>>({});
   const [guides, setGuides] = useState<BrandGuides>({
     copywritingGuide: "",
     imageGenerationGuide: "",
@@ -172,8 +169,6 @@ export default function BrandSettingsPage() {
       setHasInitializedCredentials(false);
     }
   }, [brand?.id]);
-
-
 
   // Check Instagram token scopes
   const checkInstagramScopes = async (platform: string) => {
@@ -203,53 +198,42 @@ export default function BrandSettingsPage() {
     { brandId: brandId || "" }
   );
 
-  // Initialize credentials from existing data - only once on first load
+  // Initialize credentials from existing data - SIMPLIFIED (no masking)
   useEffect(() => {
     if (!hasInitializedCredentials && existingCredentials && existingCredentials.length > 0) {
       const credentialsMap: Record<string, CredentialForm> = {};
-      const maskedFieldsMap: Record<string, Record<string, boolean>> = {};
 
       existingCredentials.forEach((cred: any) => {
         const credData = JSON.parse(cred.credentials || "{}");
         const platform = cred.platform;
-        maskedFieldsMap[platform] = {};
 
-        // Show masked values for all saved fields
+        // Show REAL values directly (no masking)
         credentialsMap[platform] = {
           platform,
           accountId: cred.accountId || "",
           accountName: cred.accountName || "",
           accountEmail: cred.accountEmail || "",
-          accessToken: credData.accessToken ? "••••••••••••••••••••" : "",
-          accessTokenSecret: credData.accessTokenSecret ? "••••••••••••••••••••" : "",
-          apiKey: credData.apiKey ? "••••••••••••••••••••" : "",
-          apiSecret: credData.apiSecret ? "••••••••••••••••••••" : "",
-          bearerToken: credData.bearerToken ? "••••••••••••••••••••" : "",
+          accessToken: credData.accessToken || "",
+          accessTokenSecret: credData.accessTokenSecret || "",
+          apiKey: credData.apiKey || "",
+          apiSecret: credData.apiSecret || "",
+          bearerToken: credData.bearerToken || "",
           businessAccountId: credData.businessAccountId || "",
+          wpUsername: credData.wpUsername || "",
+          wpAppPassword: credData.wpAppPassword || "",
         };
-
-        // Mark fields with saved values as "masked" (not edited)
-        maskedFieldsMap[platform].accessToken = !!credData.accessToken;
-        maskedFieldsMap[platform].accessTokenSecret = !!credData.accessTokenSecret;
-        maskedFieldsMap[platform].apiKey = !!credData.apiKey;
-        maskedFieldsMap[platform].apiSecret = !!credData.apiSecret;
-        maskedFieldsMap[platform].bearerToken = !!credData.bearerToken;
       });
 
       setCredentials(credentialsMap);
-      setEditedCredentialFields(maskedFieldsMap);
       setHasInitializedCredentials(true);
     }
-  }, [hasInitializedCredentials]);
-
+  }, [hasInitializedCredentials, existingCredentials]);
 
   // Mutations
   const saveCredentialsMutation = trpc.brandCredentials.save.useMutation({
     onSuccess: () => {
       toast.success("Credentials saved successfully");
       setIsSaving(false);
-      // Clear edited fields after successful save
-      setEditedCredentialFields({});
     },
     onError: (error: any) => {
       toast.error(`Failed to save: ${error.message}`);
@@ -311,6 +295,7 @@ export default function BrandSettingsPage() {
     }
   };
 
+  // SIMPLIFIED handleSaveCredentials - sends ALL non-empty fields
   const handleSaveCredentials = async (platform: "instagram" | "x" | "linkedin" | "facebook" | "website") => {
     setIsSaving(true);
     const cred = credentials[platform];
@@ -327,9 +312,7 @@ export default function BrandSettingsPage() {
     const required = requiredFields[platform] || [];
     const missing = required.filter(field => {
       const value = cred?.[field as keyof typeof cred];
-      // Check if field is masked (not edited) - if so, it's already saved
-      const isMasked = editedCredentialFields[platform]?.[field];
-      return !value || (value === "••••••••••••••••••••" && !isMasked);
+      return !value || value === "";
     });
     
     if (!cred || missing.length > 0) {
@@ -339,22 +322,21 @@ export default function BrandSettingsPage() {
     }
 
     try {
-      // Only send edited fields to backend
-      const editedFields = editedCredentialFields[platform] || {};
+      // Send ALL credential fields with values
       const credentialsToSend: any = {
-        accessToken: editedFields.accessToken ? cred.accessToken : undefined,
-        accessTokenSecret: editedFields.accessTokenSecret ? cred.accessTokenSecret : undefined,
-        apiKey: editedFields.apiKey ? cred.apiKey : undefined,
-        apiSecret: editedFields.apiSecret ? cred.apiSecret : undefined,
-        bearerToken: editedFields.bearerToken ? cred.bearerToken : undefined,
-        businessAccountId: cred.businessAccountId,
-        wpUsername: editedFields.wpUsername ? cred.wpUsername : undefined,
-        wpAppPassword: editedFields.wpAppPassword ? cred.wpAppPassword : undefined,
+        accessToken: cred.accessToken || undefined,
+        accessTokenSecret: cred.accessTokenSecret || undefined,
+        apiKey: cred.apiKey || undefined,
+        apiSecret: cred.apiSecret || undefined,
+        bearerToken: cred.bearerToken || undefined,
+        businessAccountId: cred.businessAccountId || undefined,
+        wpUsername: cred.wpUsername || undefined,
+        wpAppPassword: cred.wpAppPassword || undefined,
       };
 
-      // Remove undefined values
+      // Remove undefined/empty values
       Object.keys(credentialsToSend).forEach(key => {
-        if (credentialsToSend[key] === undefined) {
+        if (!credentialsToSend[key]) {
           delete credentialsToSend[key];
         }
       });
@@ -410,16 +392,8 @@ export default function BrandSettingsPage() {
     }
   };
 
+  // SIMPLIFIED handleInputChange - no editedCredentialFields tracking
   const handleInputChange = (platform: string, field: string, value: string) => {
-    // Mark this field as edited by the user
-    setEditedCredentialFields((prev) => ({
-      ...prev,
-      [platform]: {
-        ...prev[platform],
-        [field]: true, // Mark as edited
-      },
-    }));
-
     setCredentials((prev) => {
       // Ensure platform object exists with all required fields
       const platformCreds = prev[platform] || {
@@ -433,6 +407,8 @@ export default function BrandSettingsPage() {
         apiSecret: "",
         bearerToken: "",
         businessAccountId: "",
+        wpUsername: "",
+        wpAppPassword: "",
       };
       return {
         ...prev,
