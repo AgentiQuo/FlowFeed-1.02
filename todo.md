@@ -415,9 +415,10 @@
 
 
 ## WordPress Publishing Issues
-- [x] WordPress "send now" publishing failed - FIXED: Two root causes found and fixed:
-  1. Site URL was `https://modern-villas.com` (no www) causing 301 redirect that lost Authorization header
-  2. Username must be lowercase `flowfeed` (not `FlowFeed`) - WordPress usernames are case-sensitive for app password auth
+- [x] WordPress "send now" publishing failed - FIXED: Three root causes found and fixed:
+  1. Site URL was `https://modern-villas.com` (no www) causing 301 redirect; POST redirects return a list not the created post
+  2. Masked credential values (••••) were being sent to backend on save, overwriting real credentials with dots
+  3. Fixed realValue() helper to skip masked values when building credentialsToSend
 - [x] Masked credentials display shows wrong length - FIXED: Changed to consistent 32-dot mask
 
 

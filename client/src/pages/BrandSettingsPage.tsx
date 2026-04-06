@@ -346,16 +346,25 @@ export default function BrandSettingsPage() {
     }
 
     try {
-      // Send ALL credential fields with values
+      const MASK = "••••••••••••••••••••••••••••••••";
+
+      // Helper: only send a field if it has a real value (not masked, not empty)
+      // If the field is masked AND was NOT edited by the user, skip it (keep existing DB value via merge)
+      const realValue = (field: string, value: string | undefined) => {
+        if (!value || value === MASK) return undefined;
+        return value;
+      };
+
+      // Send ALL credential fields with real (non-masked) values
       const credentialsToSend: any = {
-        accessToken: cred.accessToken || undefined,
-        accessTokenSecret: cred.accessTokenSecret || undefined,
-        apiKey: cred.apiKey || undefined,
-        apiSecret: cred.apiSecret || undefined,
-        bearerToken: cred.bearerToken || undefined,
-        businessAccountId: cred.businessAccountId || undefined,
-        wpUsername: cred.wpUsername || undefined,
-        wpAppPassword: cred.wpAppPassword || undefined,
+        accessToken: realValue("accessToken", cred.accessToken),
+        accessTokenSecret: realValue("accessTokenSecret", cred.accessTokenSecret),
+        apiKey: realValue("apiKey", cred.apiKey),
+        apiSecret: realValue("apiSecret", cred.apiSecret),
+        bearerToken: realValue("bearerToken", cred.bearerToken),
+        businessAccountId: realValue("businessAccountId", cred.businessAccountId),
+        wpUsername: realValue("wpUsername", cred.wpUsername),
+        wpAppPassword: realValue("wpAppPassword", cred.wpAppPassword),
       };
 
       // Remove undefined/empty values
