@@ -447,8 +447,4 @@
 - [x] Fix WordPress featured image upload - FIXED: Now downloads image bytes and uploads as binary (Content-Type: image/jpeg) instead of source_url JSON; confirmed working (HTTP 201)
 
 ## Future: Platform Selection for Draft Generation
-- [ ] Add platform toggle buttons below the Create button so users can choose which platforms to generate drafts for (instead of always generating all 5)
-  - Buttons should be small platform icons (IG, X, LI, FB, MV) or styled like tab headers
-  - Selection should be persistent (remembered across sessions, stored in localStorage or user preferences)
-  - Default: all platforms selected
-  - Only generate drafts for the selected platforms when Create is pressed
+- [x] Add platform toggle buttons below the Create button - DONE: IG, X, LI, FB, MV toggle buttons below Create; active = filled, inactive = outlined; selection persisted in localStorage (flowfeed_selected_platforms); generateDrafts only called for selected platforms

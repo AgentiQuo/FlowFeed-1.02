@@ -104,14 +104,50 @@ export default function Dashboard() {
     return drafts.filter((d: any) => d.assetId === currentAsset.id);
   }, [drafts, currentAsset]);
 
-  const platforms: Array<"instagram" | "x" | "linkedin" | "facebook" | "website"> = ["instagram", "x", "linkedin", "facebook", "website"];
+  const ALL_PLATFORMS: Array<"instagram" | "x" | "linkedin" | "facebook" | "website"> = ["instagram", "x", "linkedin", "facebook", "website"];
+
+  const PLATFORM_LABELS: Record<string, string> = {
+    instagram: "IG",
+    x: "X",
+    linkedin: "LI",
+    facebook: "FB",
+    website: "MV",
+  };
+
+  // Persistent platform selection via localStorage
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Array<"instagram" | "x" | "linkedin" | "facebook" | "website">>(() => {
+    try {
+      const saved = localStorage.getItem("flowfeed_selected_platforms");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [...ALL_PLATFORMS];
+  });
+
+  const togglePlatform = (platform: "instagram" | "x" | "linkedin" | "facebook" | "website") => {
+    setSelectedPlatforms(prev => {
+      const next = prev.includes(platform)
+        ? prev.filter(p => p !== platform)
+        : [...prev, platform];
+      // Always keep at least one selected
+      const result = next.length > 0 ? next : prev;
+      localStorage.setItem("flowfeed_selected_platforms", JSON.stringify(result));
+      return result;
+    });
+  };
 
   const handleCreatePosts = async () => {
     if (!currentAsset || !selectedBrandId) return;
+    if (selectedPlatforms.length === 0) {
+      toast.error("Select at least one platform");
+      return;
+    }
     await generateDrafts.mutateAsync({
       brandId: selectedBrandId,
       assetId: currentAsset.id,
-      platforms: platforms as any,
+      platforms: selectedPlatforms as any,
     });
   };
 
@@ -329,6 +365,28 @@ export default function Dashboard() {
               >
                 {generateDrafts.isPending ? "Creating..." : "Create"}
               </Button>
+            </div>
+
+            {/* Platform Selection Toggles */}
+            <div className="flex gap-1.5 flex-wrap">
+              {ALL_PLATFORMS.map(platform => {
+                const isActive = selectedPlatforms.includes(platform);
+                return (
+                  <button
+                    key={platform}
+                    onClick={() => togglePlatform(platform)}
+                    className={[
+                      "px-2.5 py-1 rounded text-xs font-semibold border transition-all",
+                      isActive
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-transparent text-muted-foreground border-border hover:border-foreground/40",
+                    ].join(" ")}
+                    title={platform === "website" ? "MV Post" : platform.charAt(0).toUpperCase() + platform.slice(1)}
+                  >
+                    {PLATFORM_LABELS[platform]}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Upload Section - BELOW BUTTONS */}
