@@ -583,37 +583,39 @@ export default function BrandSettingsPage() {
                         </div>
                       )}
 
-                      {/* Account Info Fields */}
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <Label htmlFor={`${platform.id}-accountId`}>Account ID</Label>
-                          <Input
-                            id={`${platform.id}-accountId`}
-                            placeholder="e.g., 123456789"
-                            value={credentials[platform.id]?.accountId || ""}
-                            onChange={(e) => handleInputChange(platform.id, "accountId", e.target.value)}
-                          />
+                      {/* Account Info Fields - Not needed for website platform */}
+                      {platform.id !== "website" && (
+                        <div className="grid grid-cols-1 gap-4">
+                          <div>
+                            <Label htmlFor={`${platform.id}-accountId`}>Account ID</Label>
+                            <Input
+                              id={`${platform.id}-accountId`}
+                              placeholder="e.g., 123456789"
+                              value={credentials[platform.id]?.accountId || ""}
+                              onChange={(e) => handleInputChange(platform.id, "accountId", e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`${platform.id}-accountName`}>Account Name</Label>
+                            <Input
+                              id={`${platform.id}-accountName`}
+                              placeholder="e.g., @myaccount"
+                              value={credentials[platform.id]?.accountName || ""}
+                              onChange={(e) => handleInputChange(platform.id, "accountName", e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`${platform.id}-accountEmail`}>Account Email</Label>
+                            <Input
+                              id={`${platform.id}-accountEmail`}
+                              type="email"
+                              placeholder="account@example.com"
+                              value={credentials[platform.id]?.accountEmail || ""}
+                              onChange={(e) => handleInputChange(platform.id, "accountEmail", e.target.value)}
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <Label htmlFor={`${platform.id}-accountName`}>Account Name</Label>
-                          <Input
-                            id={`${platform.id}-accountName`}
-                            placeholder="e.g., @myaccount"
-                            value={credentials[platform.id]?.accountName || ""}
-                            onChange={(e) => handleInputChange(platform.id, "accountName", e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`${platform.id}-accountEmail`}>Account Email</Label>
-                          <Input
-                            id={`${platform.id}-accountEmail`}
-                            type="email"
-                            placeholder="account@example.com"
-                            value={credentials[platform.id]?.accountEmail || ""}
-                            onChange={(e) => handleInputChange(platform.id, "accountEmail", e.target.value)}
-                          />
-                        </div>
-                      </div>
+                      )}
 
                       {/* Platform-specific credential fields */}
                       {platform.id === "instagram" && (

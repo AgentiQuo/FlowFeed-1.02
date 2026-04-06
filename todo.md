@@ -413,3 +413,14 @@
 
 - [x] Fix WordPress API "No ID returned from WordPress" error - FIXED: Added detailed logging to WordPress publishing function. WordPress credentials now stored and ready for testing
 
+
+## WordPress Publishing Issues
+- [ ] WordPress "send now" publishing failed - need to check server logs for error details
+- [ ] Masked credentials display shows wrong length - 20 dots for 8-character username suggests fixed-length mask instead of actual credential length
+
+
+## Cleanup Tasks
+- [x] Remove unnecessary credential fields from MV Post form (Account ID, Account Name, Account Email) - FIXED: Hidden Account Info Fields for website platform in UI
+- [ ] Clean up database schema to remove unused credential columns for website platform (optional - not breaking)
+- [ ] Update credentials router to only handle wpUsername and wpAppPassword for website platform (optional - already working)
+
