@@ -96,6 +96,11 @@ export default function Dashboard() {
       utils.ingestion.listAssets.invalidate();
     },
   });
+  const deleteDraftMutation = trpc.content.deleteDraft.useMutation({
+    onSuccess: () => {
+      utils.content.getDrafts.invalidate();
+    },
+  });
 
   // Derived state
   const activeBrand = brands?.find((b: any) => b.id === selectedBrandId);
@@ -449,8 +454,15 @@ export default function Dashboard() {
                         variant="outline"
                         size="icon"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => {
-                          toast.info("Delete draft feature coming soon");
+                        disabled={deleteDraftMutation.isPending}
+                        onClick={async () => {
+                          if (!confirm("Are you sure you want to delete this draft? This action cannot be undone.")) return;
+                          try {
+                            await deleteDraftMutation.mutateAsync({ draftId: draft.id });
+                            toast.success("Draft deleted successfully");
+                          } catch (error: any) {
+                            toast.error(`Failed to delete draft: ${error.message}`);
+                          }
                         }}
                         title="Delete draft"
                       >
