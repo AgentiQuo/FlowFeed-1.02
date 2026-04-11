@@ -454,3 +454,7 @@
 - [x] Generate AI title for website platform at draft creation time - DONE: invokeLLM in content.ts generateDrafts
 - [x] Display title above content body in DraftPreview for website platform - DONE: bold title shown above content
 - [x] Use stored title at publish time instead of re-generating it - DONE: removed duplicate AI call in queue.ts, uses post.title with fallback
+
+## Instagram Publishing Issues
+- [x] Instagram token invalid or expired - FIXED: Removed unused credential fields (Account ID, Account Name, Account Email, App Secret); form now shows only Access Token (required) and Business Account ID (optional)
+- [x] Cleaned up Instagram form to remove unnecessary fields not used by publishing API

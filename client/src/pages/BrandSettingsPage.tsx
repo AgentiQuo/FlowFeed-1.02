@@ -589,8 +589,8 @@ export default function BrandSettingsPage() {
                         </div>
                       )}
 
-                      {/* Account Info Fields - Not needed for website platform */}
-                      {platform.id !== "website" && (
+                      {/* Account Info Fields - Not needed for website or instagram platform */}
+                      {platform.id !== "website" && platform.id !== "instagram" && (
                         <div className="grid grid-cols-1 gap-4">
                           <div>
                             <Label htmlFor={`${platform.id}-accountId`}>Account ID</Label>
@@ -648,19 +648,6 @@ export default function BrandSettingsPage() {
                             />
                             <p className="text-xs text-muted-foreground mt-1">
                               Find this in Instagram Settings → Apps and Websites → Business Account
-                            </p>
-                          </div>
-                          <div>
-                            <Label htmlFor={`${platform.id}-apiSecret`}>App Secret</Label>
-                            <Input
-                              id={`${platform.id}-apiSecret`}
-                              type="password"
-                              placeholder="Your Instagram App Secret"
-                              value={credentials[platform.id]?.apiSecret || ""}
-                              onChange={(e) => handleInputChange(platform.id, "apiSecret", e.target.value)}
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Optional - used for token refresh
                             </p>
                           </div>
                         </div>
