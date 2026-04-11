@@ -632,7 +632,6 @@ export default function BrandSettingsPage() {
                             </Label>
                             <Input
                               id={`${platform.id}-accessToken`}
-                              type="password"
                               placeholder="Your Instagram Access Token"
                               value={credentials[platform.id]?.accessToken || ""}
                               onChange={(e) => handleInputChange(platform.id, "accessToken", e.target.value)}
