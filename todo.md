@@ -465,3 +465,7 @@
 - [x] Integrate vision analysis into generateContentForPlatform so all platforms (IG, X, LI, FB, MV) receive visual context
 - [x] Pass vision analysis results to LLM system prompt so Claude writes visually-aware copy
 - [x] All 158 tests passing
+
+
+## Draft Deletion Feature (Complete)
+- [x] Wire up Draft Deletion - DELETE button on draft cards calls deleteDraft mutation with confirmation dialog, loading spinner, and success/error toasts; UI refetches drafts after deletion
