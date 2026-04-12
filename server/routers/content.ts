@@ -485,6 +485,7 @@ async function generateContentForPlatform(
   tone: string,
   feedback?: string
 ) {
+  console.log("[generateContentForPlatform] Starting for platform:", platform, "imageUrl:", asset.imageUrl ? "present" : "MISSING");
   const metadata = asset.extractedMetadata || {};
 
   // Build property description from metadata
@@ -492,9 +493,10 @@ async function generateContentForPlatform(
 
   // Analyze image for visual context
   let visionAnalysis = "";
-  if (asset.imageUrl) {
+  const imageUrl = asset.s3Url || asset.imageUrl;
+  if (imageUrl) {
     try {
-      visionAnalysis = await analyzeImageForCopywriting(asset.imageUrl);
+      visionAnalysis = await analyzeImageForCopywriting(imageUrl);
     } catch (error) {
       console.warn("[Vision Analysis] Failed to analyze image:", error);
       // Continue without vision analysis if it fails
@@ -667,6 +669,7 @@ Provide ONLY the description text, nothing else.`;
  * Uses vision API to extract visual elements, colors, mood, composition, etc.
  */
 async function analyzeImageForCopywriting(imageUrl: string): Promise<string> {
+  console.log("[analyzeImageForCopywriting] Starting vision analysis for URL:", imageUrl);
   try {
     const response = await invokeLLM({
       messages: [
@@ -698,6 +701,7 @@ Keep the analysis to 2-3 sentences, focused on elements that would enhance socia
     });
 
     const messageContent = response.choices[0]?.message?.content;
+    console.log("[analyzeImageForCopywriting] Response:", messageContent);
     if (typeof messageContent === "string") {
       return messageContent;
     } else if (Array.isArray(messageContent)) {
@@ -706,7 +710,7 @@ Keep the analysis to 2-3 sentences, focused on elements that would enhance socia
         return textBlock.text;
       }
     }
-    
+    console.log("[analyzeImageForCopywriting] No text found");
     return "";
   } catch (error) {
     console.warn("[analyzeImageForCopywriting] Vision analysis failed:", error);

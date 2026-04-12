@@ -489,3 +489,9 @@
 - [x] Updated QueuePage success toast to display clickable "View post" link
 - [x] Toast shows post URL with arrow icon, opens in new tab
 - [x] All 158 tests passing
+
+
+## Bug: Image Vision Analysis Not Used in Draft Copy (FIXED)
+- [x] FIXED: imageUrl was undefined because code looked for asset.imageUrl but schema has asset.s3Url
+- [x] Changed to use const imageUrl = asset.s3Url || asset.imageUrl
+- [x] Vision analysis now called and produces image-specific copy (e.g., "travertine island", "Monstera plant", "tree shadows")
