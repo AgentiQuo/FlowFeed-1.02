@@ -495,3 +495,13 @@
 - [x] FIXED: imageUrl was undefined because code looked for asset.imageUrl but schema has asset.s3Url
 - [x] Changed to use const imageUrl = asset.s3Url || asset.imageUrl
 - [x] Vision analysis now called and produces image-specific copy (e.g., "travertine island", "Monstera plant", "tree shadows")
+
+
+## Bug: X Publishing Fails with "Incomplete Credentials" (FIXED)
+- [x] queue.ts checked for credData.xBearerToken but Brand Settings saves as apiKey/apiSecret/accessToken/accessTokenSecret — fixed field mapping
+- [x] Fixed credential field name mapping in publishPost for X platform
+- [x] Rewrote publishToX to use OAuth 1.0a (oauth-1.0a npm package) with all 4 credentials
+- [x] Added real X credential verification (GET /2/users/me with OAuth 1.0a) — was previously a fake stub
+- [x] Added real WordPress credential verification (GET /wp-json/wp/v2/users/me)
+- [x] Updated webhook.ts to use brand DB credentials instead of env vars for X
+- [ ] User needs to verify X tokens are valid/not expired (401 from X API)

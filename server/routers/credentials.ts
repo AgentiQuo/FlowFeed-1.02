@@ -221,8 +221,91 @@ export const credentialsRouter = router({
             errorMessage = "Unexpected response from Instagram API";
             isVerified = false;
           }
+        } else if (cred[0].platform === "x") {
+          const credData = JSON.parse(cred[0].credentials);
+          const { apiKey, apiSecret, accessToken, accessTokenSecret } = credData;
+
+          if (!apiKey || !apiSecret || !accessToken || !accessTokenSecret) {
+            const missing = [
+              !apiKey && "Consumer Key",
+              !apiSecret && "Consumer Secret",
+              !accessToken && "Access Token",
+              !accessTokenSecret && "Access Token Secret",
+            ].filter(Boolean);
+            throw new Error(`Missing required credentials: ${missing.join(", ")}`);
+          }
+
+          // Verify by calling X API v2 /users/me with OAuth 1.0a
+          const OAuth = (await import("oauth-1.0a")).default;
+          const crypto = await import("crypto");
+          const oauth = new OAuth({
+            consumer: { key: apiKey, secret: apiSecret },
+            signature_method: "HMAC-SHA1",
+            hash_function(baseString: string, key: string) {
+              return crypto.createHmac("sha1", key).update(baseString).digest("base64");
+            },
+          });
+          const token = { key: accessToken, secret: accessTokenSecret };
+          const verifyUrl = "https://api.twitter.com/2/users/me";
+          const requestData = { url: verifyUrl, method: "GET" };
+          const authHeader = oauth.toHeader(oauth.authorize(requestData, token));
+
+          const response = await fetch(verifyUrl, {
+            method: "GET",
+            headers: { ...authHeader },
+          });
+
+          if (response.ok) {
+            const data = (await response.json()) as any;
+            if (data.data?.id && data.data?.username) {
+              isVerified = true;
+            } else {
+              errorMessage = "Unexpected response from X API";
+              isVerified = false;
+            }
+          } else {
+            const errorBody = await response.text();
+            let detail: string;
+            try {
+              const errorJson = JSON.parse(errorBody);
+              detail = errorJson.detail || errorJson.errors?.[0]?.message || errorJson.title || errorBody;
+            } catch {
+              detail = errorBody;
+            }
+            errorMessage = `X API returned ${response.status}: ${detail}`;
+            isVerified = false;
+          }
+        } else if (cred[0].platform === "website") {
+          const credData = JSON.parse(cred[0].credentials);
+          const { wpUsername, wpAppPassword } = credData;
+
+          if (!wpUsername || !wpAppPassword) {
+            throw new Error("Missing WordPress username or application password");
+          }
+
+          // Verify by calling WordPress REST API /users/me
+          const wpSiteUrl = process.env.WORDPRESS_SITE_URL || "https://www.modern-villas.com";
+          const response = await fetch(`${wpSiteUrl}/wp-json/wp/v2/users/me`, {
+            headers: {
+              Authorization: `Basic ${Buffer.from(`${wpUsername}:${wpAppPassword}`).toString("base64")}`,
+            },
+          });
+
+          if (response.ok) {
+            const data = (await response.json()) as any;
+            if (data.id) {
+              isVerified = true;
+            } else {
+              errorMessage = "Unexpected response from WordPress API";
+              isVerified = false;
+            }
+          } else {
+            errorMessage = `WordPress API returned ${response.status}: ${response.statusText}`;
+            isVerified = false;
+          }
         } else {
-          // For other platforms, mark as verified (implement verification later)
+          // For LinkedIn and Facebook, mark as verified for now
+          // (these require more complex OAuth2 flows to verify)
           isVerified = true;
         }
       } catch (error) {

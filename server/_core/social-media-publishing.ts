@@ -1,4 +1,6 @@
 // Use native fetch available in Node.js 18+
+import OAuth from "oauth-1.0a";
+import crypto from "crypto";
 
 export interface PublishResult {
   success: boolean;
@@ -152,95 +154,135 @@ export async function publishToInstagram(
 }
 
 /**
+ * Create an OAuth 1.0a instance for X/Twitter API signing
+ */
+function createOAuth(consumerKey: string, consumerSecret: string): OAuth {
+  return new OAuth({
+    consumer: { key: consumerKey, secret: consumerSecret },
+    signature_method: "HMAC-SHA1",
+    hash_function(baseString: string, key: string) {
+      return crypto.createHmac("sha1", key).update(baseString).digest("base64");
+    },
+  });
+}
+
+/**
  * X (Twitter) API v2 publishing
- * Requires: bearerToken
+ * Requires: apiKey (Consumer Key), apiSecret (Consumer Secret), accessToken, accessTokenSecret
+ * Uses OAuth 1.0a user-context authentication for posting tweets
  */
 export async function publishToX(
-  bearerToken: string,
+  apiKey: string,
+  apiSecret: string,
+  accessToken: string,
+  accessTokenSecret: string,
   text: string,
   imageUrl?: string
 ): Promise<PublishResult> {
   try {
+    const oauth = createOAuth(apiKey, apiSecret);
+    const token: OAuth.Token = { key: accessToken, secret: accessTokenSecret };
+
     let mediaId: string | undefined;
 
     // Step 1: Upload media if image URL provided
     if (imageUrl) {
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        return {
-          success: false,
-          platform: "x",
-          error: "Failed to fetch image",
-        };
-      }
+      try {
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          console.warn("[X] Failed to fetch image, posting without media:", imageUrl);
+        } else {
+          const imageBuffer = await imageResponse.arrayBuffer();
+          const base64Data = Buffer.from(imageBuffer).toString("base64");
 
-      const imageBuffer = await imageResponse.arrayBuffer();
-      const buffer = Buffer.from(imageBuffer);
+          // Use v1.1 media upload with OAuth 1.0a and base64 media_data
+          const mediaUrl = "https://upload.twitter.com/1.1/media/upload.json";
+          const mediaRequestData = {
+            url: mediaUrl,
+            method: "POST",
+            data: { media_data: base64Data },
+          };
 
-      // Upload to X media endpoint
-      const mediaFormData = new FormData();
-      mediaFormData.append("media_data", new Blob([buffer]));
+          const mediaAuthHeader = oauth.toHeader(oauth.authorize(mediaRequestData, token));
 
-      const mediaUploadResponse = await fetch(
-        "https://upload.twitter.com/1.1/media/upload.json",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${bearerToken}`,
-          },
-          body: mediaFormData,
+          // Send as application/x-www-form-urlencoded
+          const mediaUploadResponse = await fetch(mediaUrl, {
+            method: "POST",
+            headers: {
+              ...mediaAuthHeader,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `media_data=${encodeURIComponent(base64Data)}`,
+          });
+
+          if (!mediaUploadResponse.ok) {
+            const errorText = await mediaUploadResponse.text();
+            console.warn("[X] Media upload failed, posting without image:", errorText);
+          } else {
+            const mediaData = (await mediaUploadResponse.json()) as any;
+            mediaId = mediaData.media_id_string;
+            console.log("[X] Media uploaded successfully, media_id:", mediaId);
+          }
         }
-      );
-
-      if (!mediaUploadResponse.ok) {
-        const error = await mediaUploadResponse.json();
-        return {
-          success: false,
-          platform: "x",
-          error: (error as any).errors?.[0]?.message || "Failed to upload media",
-        };
+      } catch (e) {
+        console.warn("[X] Media upload error, posting without image:", e);
       }
-
-      const mediaData = (await mediaUploadResponse.json()) as any;
-      mediaId = mediaData.media_id_string;
     }
 
-    // Step 2: Post tweet
-    const tweetBody: any = {
-      text: text,
-    };
+    // Step 2: Post tweet using v2 API with OAuth 1.0a
+    const tweetUrl = "https://api.twitter.com/2/tweets";
+    const tweetBody: any = { text };
 
     if (mediaId) {
-      tweetBody.media = {
-        media_ids: [mediaId],
-      };
+      tweetBody.media = { media_ids: [mediaId] };
     }
 
-    const tweetResponse = await fetch("https://api.twitter.com/2/tweets", {
+    // For v2 JSON body, we sign the request without body params
+    const tweetRequestData = {
+      url: tweetUrl,
+      method: "POST",
+    };
+
+    const tweetAuthHeader = oauth.toHeader(oauth.authorize(tweetRequestData, token));
+
+    console.log("[X] Posting tweet to v2 API...");
+    const tweetResponse = await fetch(tweetUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${bearerToken}`,
+        ...tweetAuthHeader,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(tweetBody),
     });
 
     if (!tweetResponse.ok) {
-      const error = await tweetResponse.json();
+      const errorBody = await tweetResponse.text();
+      let errorMsg: string;
+      try {
+        const errorJson = JSON.parse(errorBody);
+        errorMsg = errorJson.detail || errorJson.errors?.[0]?.message || errorJson.title || errorBody;
+      } catch {
+        errorMsg = errorBody;
+      }
+      console.error("[X] Tweet failed:", tweetResponse.status, errorMsg);
       return {
         success: false,
         platform: "x",
-        error: (error as any).errors?.[0]?.message || "Failed to post tweet",
+        error: `X API error (${tweetResponse.status}): ${errorMsg}`,
       };
     }
 
     const tweetData = (await tweetResponse.json()) as any;
+    const tweetId = tweetData.data?.id;
+    console.log("[X] Tweet posted successfully, ID:", tweetId);
     return {
       success: true,
-      postId: tweetData.data.id,
+      postId: tweetId,
+      postUrl: tweetId ? `https://x.com/i/status/${tweetId}` : undefined,
       platform: "x",
     };
   } catch (error) {
+    console.error("[X] Publish error:", error);
     return {
       success: false,
       platform: "x",

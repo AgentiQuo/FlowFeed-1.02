@@ -1,10 +1,10 @@
 import crypto from "crypto";
 import { getDb } from "../db";
-import { posts, contentAssets } from "../../drizzle/schema";
+import { posts, contentAssets, brandCredentials } from "../../drizzle/schema";
 import { eq, and, lte } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { postImageToInstagram } from "./instagram";
-import { postToX } from "./x-api";
+// postToX replaced by OAuth 1.0a publishToX from social-media-publishing
 
 /**
  * Verify webhook signature
@@ -140,18 +140,46 @@ async function publishToInstagram(draft: any, post: any) {
 
 /**
  * Publish draft to X
+ * Uses brand credentials from DB with OAuth 1.0a
  */
 async function publishToX(draft: any, post: any) {
-  const bearerToken = process.env.X_BEARER_TOKEN;
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
 
-  if (!bearerToken) {
-    throw new Error("X credentials not configured");
+  // Get brand credentials for X
+  const credResult = await db
+    .select()
+    .from(brandCredentials)
+    .where(
+      and(
+        eq(brandCredentials.brandId, post.brandId),
+        eq(brandCredentials.platform, "x")
+      )
+    )
+    .limit(1);
+
+  if (!credResult || credResult.length === 0) {
+    throw new Error("X credentials not configured for this brand");
   }
 
-  await postToX({
-    text: draft.content,
-    bearerToken,
-  });
+  const credData = JSON.parse(credResult[0].credentials);
+  if (!credData.apiKey || !credData.apiSecret || !credData.accessToken || !credData.accessTokenSecret) {
+    throw new Error("X credentials incomplete — need Consumer Key, Consumer Secret, Access Token, Access Token Secret");
+  }
+
+  const { publishToX: publishToXApi } = await import("./social-media-publishing");
+  const result = await publishToXApi(
+    credData.apiKey,
+    credData.apiSecret,
+    credData.accessToken,
+    credData.accessTokenSecret,
+    draft.content,
+    post.thumbnailUrl || undefined
+  );
+
+  if (!result.success) {
+    throw new Error(result.error || "Failed to post to X");
+  }
 }
 
 /**

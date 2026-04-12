@@ -372,11 +372,20 @@ export const queueRouter = router({
           break;
 
         case "x":
-          if (!credData.xBearerToken) {
-            throw new Error("X credentials incomplete");
+          if (!credData.apiKey || !credData.apiSecret || !credData.accessToken || !credData.accessTokenSecret) {
+            const missing = [
+              !credData.apiKey && "Consumer Key",
+              !credData.apiSecret && "Consumer Secret",
+              !credData.accessToken && "Access Token",
+              !credData.accessTokenSecret && "Access Token Secret",
+            ].filter(Boolean);
+            throw new Error(`X credentials incomplete — missing: ${missing.join(", ")}`);
           }
           result = await publishToX(
-            credData.xBearerToken,
+            credData.apiKey,
+            credData.apiSecret,
+            credData.accessToken,
+            credData.accessTokenSecret,
             post.content,
             (post.thumbnailUrl || undefined)
           );
