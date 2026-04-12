@@ -505,3 +505,6 @@
 - [x] Added real WordPress credential verification (GET /wp-json/wp/v2/users/me)
 - [x] Updated webhook.ts to use brand DB credentials instead of env vars for X
 - [ ] User needs to verify X tokens are valid/not expired (401 from X API)
+
+## Show X Credentials in Plain Text
+- [x] Change X credential input fields from type="password" to type="text" on Brand Settings page
