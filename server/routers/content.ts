@@ -2,7 +2,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
-import { drafts, contentAssets, feedbackLogs, posts } from "../../drizzle/schema";
+import { drafts, contentAssets, feedbackLogs, posts, brands } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { invokeLLM } from "../_core/llm";
@@ -435,10 +435,6 @@ export const contentRouter = router({
         input.feedback
       );
 
-      // Store feedback as a brand learning
-      const { appendBrandLearning } = await import("../_core/brandLearnings");
-      await appendBrandLearning(draftData.brandId, input.feedback);
-
       // Update draft with new content
       await db
         .update(drafts)
@@ -447,6 +443,14 @@ export const contentRouter = router({
           updatedAt: new Date(),
         })
         .where(eq(drafts.id, input.draftId));
+
+      // Store feedback as a brand learning for future reference
+      try {
+        const { appendBrandLearning } = await import("../_core/brandLearnings");
+        await appendBrandLearning(draftData.brandId, `User feedback: ${input.feedback}`);
+      } catch (err) {
+        console.warn("Failed to store brand learning:", err);
+      }
 
       return { success: true, content: newContent };
     }),

@@ -139,6 +139,19 @@ export default function DraftsPage() {
     },
   });
 
+  // Rewrite draft mutation
+  const rewriteDraftMutation = trpc.content.rewriteDraft.useMutation({
+    onSuccess: (data) => {
+      toast.success("Draft improved with feedback!");
+      setEditingDraftId(null);
+      setEditFeedback("");
+      refetchDrafts();
+    },
+    onError: (error) => {
+      toast.error(`Failed to improve draft: ${error.message}`);
+    },
+  });
+
   // Export draft mutation
   const exportDraftMutation = trpc.export.exportDraft.useMutation({
     onSuccess: (data) => {
@@ -594,13 +607,14 @@ export default function DraftsPage() {
                               onClick={() => {
                                 const feedback = prompt("What would you like to improve? (e.g., 'Make it shorter', 'Add more emojis', 'More professional tone')");
                                 if (feedback) {
-                                  setEditingDraftId(draft.id);
-                                  setEditContent(draft.content);
-                                  setEditFeedback(feedback);
-                                  toast.info(`Improving with feedback: ${feedback}`);
+                                  rewriteDraftMutation.mutate({ draftId: draft.id, feedback });
                                 }
                               }}
+                              disabled={rewriteDraftMutation.isPending}
                             >
+                              {rewriteDraftMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : null}
                               Improve
                             </Button>
                             <Button

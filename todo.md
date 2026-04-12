@@ -469,3 +469,15 @@
 
 ## Draft Deletion Feature (Complete)
 - [x] Wire up Draft Deletion - DELETE button on draft cards calls deleteDraft mutation with confirmation dialog, loading spinner, and success/error toasts; UI refetches drafts after deletion
+
+
+## Bug: Improve Button Not Rewriting Draft
+- [ ] Improve button opens feedback input but doesn't rewrite content - should call rewrite mutation with feedback and update draft content
+
+
+## Improve Button Feature (Complete)
+- [x] Wired up Improve button to call rewriteDraft mutation with user feedback
+- [x] Button shows loading spinner while rewriting
+- [x] Feedback is stored as brand learning for future copywriting
+- [x] Draft content is updated with AI-rewritten version based on feedback
+- [x] All 158 tests passing
