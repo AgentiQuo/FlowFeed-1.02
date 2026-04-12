@@ -660,7 +660,7 @@ export default function BrandSettingsPage() {
                             </Label>
                             <Input
                               id={`${platform.id}-apiKey`}
-                               type="text"
+                               type="password"
                                placeholder="Your Consumer Key"
                               value={credentials[platform.id]?.apiKey || ""}
                               onChange={(e) => handleInputChange(platform.id, "apiKey", e.target.value)}
@@ -672,7 +672,7 @@ export default function BrandSettingsPage() {
                             </Label>
                             <Input
                               id={`${platform.id}-apiSecret`}
-                               type="text"
+                               type="password"
                                placeholder="Your Consumer Secret"
                               value={credentials[platform.id]?.apiSecret || ""}
                               onChange={(e) => handleInputChange(platform.id, "apiSecret", e.target.value)}
@@ -684,7 +684,7 @@ export default function BrandSettingsPage() {
                             </Label>
                             <Input
                               id={`${platform.id}-accessToken`}
-                               type="text"
+                               type="password"
                                placeholder="Your Access Token"
                               value={credentials[platform.id]?.accessToken || ""}
                               onChange={(e) => handleInputChange(platform.id, "accessToken", e.target.value)}
@@ -696,7 +696,7 @@ export default function BrandSettingsPage() {
                             </Label>
                             <Input
                               id={`${platform.id}-accessTokenSecret`}
-                               type="text"
+                               type="password"
                                placeholder="Your Access Token Secret"
                               value={credentials[platform.id]?.accessTokenSecret || ""}
                               onChange={(e) => handleInputChange(platform.id, "accessTokenSecret", e.target.value)}

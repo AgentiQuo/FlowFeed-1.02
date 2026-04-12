@@ -508,3 +508,6 @@
 
 ## Show X Credentials in Plain Text
 - [x] Change X credential input fields from type="password" to type="text" on Brand Settings page
+
+## Re-mask X Credentials
+- [x] Change X credential input fields back from type="text" to type="password"
