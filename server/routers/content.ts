@@ -486,8 +486,19 @@ async function generateContentForPlatform(
   // Build property description from metadata
   const propertyDescription = buildPropertyDescription(metadata);
 
-  // Create platform-specific prompt
-  let prompt = getPlatformPrompt(platform, propertyDescription, tone);
+  // Analyze image for visual context
+  let visionAnalysis = "";
+  if (asset.imageUrl) {
+    try {
+      visionAnalysis = await analyzeImageForCopywriting(asset.imageUrl);
+    } catch (error) {
+      console.warn("[Vision Analysis] Failed to analyze image:", error);
+      // Continue without vision analysis if it fails
+    }
+  }
+
+  // Create platform-specific prompt with vision context
+  let prompt = getPlatformPrompt(platform, propertyDescription, tone, visionAnalysis);
   
   // If feedback provided, add it to the prompt for rewriting
   if (feedback) {
@@ -569,17 +580,20 @@ function buildPropertyDescription(metadata: any): string {
 function getPlatformPrompt(
   platform: string,
   contentDescription: string,
-  tone: string
+  tone: string,
+  visionAnalysis: string = ""
 ): string {
   switch (platform) {
     case "instagram":
       return `Write a ${tone} Instagram caption for this content: ${contentDescription}
 
+${visionAnalysis ? `Visual Analysis of the Image:\n${visionAnalysis}\n` : ""}
 Requirements:
 - Maximum 2,200 characters
 - Include 3-5 relevant hashtags
 - Use emojis appropriately
 - Focus on visual appeal and lifestyle
+- Reference specific visual elements from the image
 - Include call-to-action
 
 Provide ONLY the caption text, nothing else.`;
@@ -587,10 +601,12 @@ Provide ONLY the caption text, nothing else.`;
     case "linkedin":
       return `Write a ${tone} LinkedIn post for this content: ${contentDescription}
 
+${visionAnalysis ? `Visual Analysis of the Image:\n${visionAnalysis}\n` : ""}
 Requirements:
 - Professional tone
 - Maximum 1,300 characters
 - Highlight investment potential or market insights
+- Reference visual elements that support your message
 - Include relevant industry hashtags
 - Professional call-to-action
 
@@ -599,10 +615,12 @@ Provide ONLY the post text, nothing else.`;
     case "facebook":
       return `Write a ${tone} Facebook post for this content: ${contentDescription}
 
+${visionAnalysis ? `Visual Analysis of the Image:\n${visionAnalysis}\n` : ""}
 Requirements:
 - Conversational and engaging tone
 - Maximum 2,000 characters
 - Include key property features
+- Reference visual elements from the image
 - Add relevant hashtags
 - Include link or contact information
 
@@ -611,6 +629,7 @@ Provide ONLY the post text, nothing else.`;
     case "x":
       return `Write a ${tone} X/Twitter post for this content: ${contentDescription}
 
+${visionAnalysis ? `Visual Analysis of the Image:\n${visionAnalysis}\n` : ""}
 Requirements:
 - Maximum 280 characters (X/Twitter limit)
 - Concise and impactful
@@ -623,10 +642,11 @@ Provide ONLY the post text, nothing else.`;
     case "website":
       return `Write a ${tone} SEO-optimized description for this content: ${contentDescription}
 
+${visionAnalysis ? `Visual Analysis of the Image:\n${visionAnalysis}\n` : ""}
 Requirements:
 - SEO-optimized description
 - 150-300 words
-- Highlight unique features
+- Highlight unique features and visual elements
 - Professional and informative
 - Include call-to-action
 
@@ -634,5 +654,58 @@ Provide ONLY the description text, nothing else.`;
 
     default:
       return `Write a ${tone} post for this content: ${contentDescription}`;
+  }
+}
+
+
+/**
+ * Analyze image for visual context to enhance copywriting
+ * Uses vision API to extract visual elements, colors, mood, composition, etc.
+ */
+async function analyzeImageForCopywriting(imageUrl: string): Promise<string> {
+  try {
+    const response = await invokeLLM({
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analyze this image and provide a concise visual description for copywriting purposes. Include:
+- Overall mood and atmosphere
+- Color palette and lighting
+- Composition and focal points
+- Key visual elements and textures
+- Style (modern, classic, minimalist, luxurious, etc.)
+- Any text or signage visible in the image
+
+Keep the analysis to 2-3 sentences, focused on elements that would enhance social media copy.`,
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl,
+                detail: "high",
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const messageContent = response.choices[0]?.message?.content;
+    if (typeof messageContent === "string") {
+      return messageContent;
+    } else if (Array.isArray(messageContent)) {
+      const textBlock = messageContent.find((block: any) => block.type === "text") as any;
+      if (textBlock && textBlock.text) {
+        return textBlock.text;
+      }
+    }
+    
+    return "";
+  } catch (error) {
+    console.warn("[analyzeImageForCopywriting] Vision analysis failed:", error);
+    return "";
   }
 }

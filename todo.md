@@ -458,3 +458,10 @@
 ## Instagram Publishing Issues
 - [x] Instagram token invalid or expired - FIXED: Removed unused credential fields (Account ID, Account Name, Account Email, App Secret); form now shows only Access Token (required) and Business Account ID (optional)
 - [x] Cleaned up Instagram form to remove unnecessary fields not used by publishing API
+
+
+## Image Vision Analysis for Copywriting (Complete)
+- [x] Add image vision analysis helper (analyzeImageForCopywriting) to analyze visual content (colors, composition, mood, style, objects, text in image)
+- [x] Integrate vision analysis into generateContentForPlatform so all platforms (IG, X, LI, FB, MV) receive visual context
+- [x] Pass vision analysis results to LLM system prompt so Claude writes visually-aware copy
+- [x] All 158 tests passing
