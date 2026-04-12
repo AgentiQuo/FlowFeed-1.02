@@ -129,7 +129,7 @@ export async function getBrandAgents(brandId: string) {
 export async function getBrandAssets(brandId: string) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(contentAssets).where(eq(contentAssets.brandId, brandId));
+  return await db.select().from(contentAssets).where(eq(contentAssets.brandId, brandId)).orderBy(desc(contentAssets.createdAt));
 }
 
 export async function getAssetById(assetId: string) {

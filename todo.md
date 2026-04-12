@@ -518,3 +518,12 @@
 
 ## Mask Instagram Credentials
 - [x] Change Instagram Access Token input field to type="password" on Brand Settings page
+
+## Bug: Image Upload Fails in Brand Assets
+- [x] Root cause: Uint8Array sent via tRPC/superjson creates massive JSON payloads causing request abort
+- [x] Fixed: switched to base64 encoding in both AssetUpload.tsx and IngestionPage.tsx
+- [x] Updated server ingestion.ts to accept fileBase64 string and decode to Buffer
+
+## Sort Brand Assets Newest First
+- [x] Sort brand assets in carousel so latest uploads appear first (orderBy desc createdAt)
+- [x] Fix AssetUpload.tsx to use base64 encoding (same as IngestionPage fix)

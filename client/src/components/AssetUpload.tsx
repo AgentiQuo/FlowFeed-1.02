@@ -69,14 +69,25 @@ export default function AssetUpload({ brandId, onUploadSuccess }: AssetUploadPro
           });
         }, 200);
 
-        const buffer = await file.arrayBuffer();
+        // Read file as base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            const base64Data = result.split(",")[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
         await uploadMutation.mutateAsync({
           brandId,
           fileName: file.name,
-          fileBuffer: new Uint8Array(buffer),
+          fileBase64: base64,
           mimeType: file.type,
           categoryId: "default",
-        } as any);
+        });
 
         clearInterval(progressInterval);
         

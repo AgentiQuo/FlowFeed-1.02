@@ -115,9 +115,18 @@ function ImageUploadSection({
         const fileId = `${file.name}-${Date.now()}`;
         setUploadProgress((prev) => ({ ...prev, [fileId]: 10 }));
 
-        // Read file as buffer
-        const buffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(buffer);
+        // Read file as base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            // Strip the data URL prefix (e.g., "data:image/jpeg;base64,")
+            const base64Data = result.split(",")[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
 
         // Simulate progress
         const progressInterval = setInterval(() => {
@@ -136,7 +145,7 @@ function ImageUploadSection({
           brandId,
           categoryId: selectedCategory,
           fileName: file.name,
-          fileBuffer: uint8Array as any,
+          fileBase64: base64,
           mimeType: file.type,
         });
 

@@ -26,10 +26,7 @@ export const ingestionRouter = router({
         brandId: z.string(),
         categoryId: z.string(),
         fileName: z.string(),
-        fileBuffer: z.union([
-          z.instanceof(Buffer),
-          z.instanceof(Uint8Array),
-        ]),
+        fileBase64: z.string(),
         mimeType: z.string(),
       })
     )
@@ -38,10 +35,8 @@ export const ingestionRouter = router({
       if (!db) throw new Error("Database not available");
 
       try {
-        // Convert Uint8Array to Buffer if needed
-        const fileBuffer = Buffer.isBuffer(input.fileBuffer)
-          ? input.fileBuffer
-          : Buffer.from(input.fileBuffer);
+        // Decode base64 string to Buffer
+        const fileBuffer = Buffer.from(input.fileBase64, "base64");
 
         // Upload to S3
         const { url: s3Url, key: s3Key } = await uploadAsset(
@@ -63,7 +58,7 @@ export const ingestionRouter = router({
           s3Key,
           s3Url,
           mimeType: input.mimeType,
-          fileSize: input.fileBuffer.length,
+          fileSize: fileBuffer.length,
           status: "processing", // Start as processing for vision analysis
         };
 
