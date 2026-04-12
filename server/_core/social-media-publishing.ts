@@ -3,6 +3,7 @@
 export interface PublishResult {
   success: boolean;
   postId?: string;
+  postUrl?: string;
   error?: string;
   platform: string;
 }

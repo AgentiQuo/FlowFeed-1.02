@@ -439,6 +439,7 @@ export const queueRouter = router({
           success: true,
           postId: result.postId,
           message: `Published to ${post.platform}`,
+          postUrl: result.postUrl || null,
         };
       } else {
         await db

@@ -55,8 +55,24 @@ export default function QueuePage() {
   });
 
   const publishMutation = trpc.queue.publishPost.useMutation({
-    onSuccess: () => {
-      toast.success("Post published successfully");
+    onSuccess: (data) => {
+      if (data.postUrl) {
+        toast.success(
+          <div className="flex flex-col gap-2">
+            <div>Post published successfully!</div>
+            <a
+              href={data.postUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline text-sm break-all"
+            >
+              View post →
+            </a>
+          </div>
+        );
+      } else {
+        toast.success("Post published successfully");
+      }
       refetchQueue();
     },
     onError: (error) => {

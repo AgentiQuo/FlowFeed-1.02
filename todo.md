@@ -481,3 +481,11 @@
 - [x] Feedback is stored as brand learning for future copywriting
 - [x] Draft content is updated with AI-rewritten version based on feedback
 - [x] All 158 tests passing
+
+
+## Post URL Display in Success Toasts (Complete)
+- [x] Added postUrl field to PublishResult interface
+- [x] Updated publishPost mutation to return postUrl from each platform
+- [x] Updated QueuePage success toast to display clickable "View post" link
+- [x] Toast shows post URL with arrow icon, opens in new tab
+- [x] All 158 tests passing
