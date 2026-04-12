@@ -511,3 +511,10 @@
 
 ## Re-mask X Credentials
 - [x] Change X credential input fields back from type="text" to type="password"
+
+## Remove Unused X Credential Fields (Account ID, Name, Email)
+- [x] Remove Account ID, Name, Email fields from X credentials in BrandSettingsPage.tsx
+- [x] Not used in backend routers — no changes needed there
+
+## Mask Instagram Credentials
+- [x] Change Instagram Access Token input field to type="password" on Brand Settings page
