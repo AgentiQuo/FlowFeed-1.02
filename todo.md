@@ -527,3 +527,8 @@
 ## Sort Brand Assets Newest First
 - [x] Sort brand assets in carousel so latest uploads appear first (orderBy desc createdAt)
 - [x] Fix AssetUpload.tsx to use base64 encoding (same as IngestionPage fix)
+
+## Add Brand Filter Tabs to Queue Page
+- [x] Add brand filter tabs to Queue page matching Assets page layout
+- [x] Filter queue items by selected brand (via URL params)
+- [x] Persist selected brand filter in localStorage

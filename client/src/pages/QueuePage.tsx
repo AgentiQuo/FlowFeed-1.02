@@ -4,7 +4,8 @@ import { getPlatformAbbr } from "@/lib/platformNames";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from "react";
 import { Calendar, Clock, Trash2, Send, Home, Loader } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -16,13 +17,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 
 export default function QueuePage() {
   const { brandId } = useParams<{ brandId: string }>();
@@ -30,6 +25,23 @@ export default function QueuePage() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState<string | null>(null);
   const [assetImages, setAssetImages] = useState<Record<string, string>>({});
+
+  // Auto-select last used brand on first load
+  useEffect(() => {
+    if (!brandId) {
+      const lastBrandId = localStorage.getItem("lastSelectedQueueBrandId");
+      if (lastBrandId) {
+        setLocation(`/dashboard/queue/${lastBrandId}`);
+      }
+    }
+  }, [brandId, setLocation]);
+
+  // Save brand selection to localStorage
+  useEffect(() => {
+    if (brandId) {
+      localStorage.setItem("lastSelectedQueueBrandId", brandId);
+    }
+  }, [brandId]);
 
   // Fetch all brands for filter dropdown
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
@@ -162,35 +174,39 @@ export default function QueuePage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Queue</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Filter by Brand:</label>
-            <Select value={brandId || ""} onValueChange={handleBrandChange}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Select Brand" />
-              </SelectTrigger>
-              <SelectContent>
-                {allBrands.map((brand) => (
-                  <SelectItem key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setLocation(`/dashboard`)}
-            title="Go to Home"
-          >
-            <Home className="w-4 h-4" />
-          </Button>
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Queue</h1>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setLocation(`/dashboard`)}
+          title="Go to Home"
+        >
+          <Home className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Brand Filter Tabs */}
+      <div className="bg-background">
+        <Tabs
+          value={brandId || ""}
+          onValueChange={(value) => {
+            window.location.href = `/dashboard/queue/${value}`;
+          }}
+          className="w-full"
+        >
+          <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b border-border">
+            {allBrands?.map((brand: any) => (
+              <TabsTrigger
+                key={brand.id}
+                value={brand.id}
+                className="flex-shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+              >
+                {brand.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Queue List */}
