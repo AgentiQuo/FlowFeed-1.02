@@ -26,7 +26,7 @@ const PLATFORMS = [
   { id: "x" as const, name: "X (Twitter)", icon: "𝕏", color: "bg-gray-100 text-gray-800" },
   { id: "linkedin" as const, name: "LinkedIn", icon: "💼", color: "bg-blue-100 text-blue-800" },
   { id: "facebook" as const, name: "Facebook", icon: "f", color: "bg-blue-50 text-blue-700" },
-  { id: "website" as const, name: "MV Post", icon: "🌐", color: "bg-purple-100 text-purple-800" },
+  { id: "website" as const, name: "Website", icon: "🌐", color: "bg-purple-100 text-purple-800" },
 ];
 
 interface CredentialForm {

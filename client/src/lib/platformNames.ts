@@ -9,7 +9,7 @@ export const PLATFORM_ABBREVIATIONS: Record<Platform, string> = {
   facebook: "FB",
   linkedin: "LI",
   x: "X",
-  website: "MV",
+  website: "site",
 };
 
 export const PLATFORM_FULL_NAMES: Record<Platform, string> = {
@@ -17,7 +17,7 @@ export const PLATFORM_FULL_NAMES: Record<Platform, string> = {
   facebook: "Facebook",
   linkedin: "LinkedIn",
   x: "X",
-  website: "MV Post",
+  website: "Website",
 };
 
 /**

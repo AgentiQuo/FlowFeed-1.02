@@ -116,7 +116,7 @@ export default function Dashboard() {
     x: "X",
     linkedin: "LinkedIn",
     facebook: "Facebook",
-    website: "MV Post",
+    website: "Website",
   };
 
   // Persistent platform selection via localStorage

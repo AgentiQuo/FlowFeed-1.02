@@ -532,3 +532,7 @@
 - [x] Add brand filter tabs to Queue page matching Assets page layout
 - [x] Filter queue items by selected brand (via URL params)
 - [x] Persist selected brand filter in localStorage
+
+## Replace MV Label with Site
+- [x] Replaced "MV" with "site" in platform abbreviations (platformNames.ts)
+- [x] Replaced "MV Post" with "Website" in platform full names (Dashboard.tsx, BrandSettingsPage.tsx)
