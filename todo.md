@@ -539,3 +539,6 @@
 
 ## Update Queue Page Tabs Styling
 - [x] Changed Queue page tabs to match Brand Settings style (rounded buttons, white active, grey background)
+
+## Sort Queue by Medium Then Chronologically
+- [x] Updated getAllScheduledPosts query to sort by platform first, then by scheduledFor time

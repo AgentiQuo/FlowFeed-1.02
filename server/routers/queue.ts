@@ -77,7 +77,8 @@ export const queueRouter = router({
           );
       }
 
-      const queuedPosts = await query.orderBy(posts.scheduledFor);
+      // Sort by platform first, then by scheduled time
+      const queuedPosts = await query.orderBy(posts.platform, posts.scheduledFor);
       return queuedPosts.map((post) => ({
         ...post,
         scheduledFor: post.scheduledFor ? new Date(post.scheduledFor) : null,
