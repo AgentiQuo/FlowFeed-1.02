@@ -187,27 +187,25 @@ export default function QueuePage() {
       </div>
 
       {/* Brand Filter Tabs */}
-      <div className="bg-background">
-        <Tabs
-          value={brandId || ""}
-          onValueChange={(value) => {
-            window.location.href = `/dashboard/queue/${value}`;
-          }}
-          className="w-full"
-        >
-          <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b border-border">
-            {allBrands?.map((brand: any) => (
-              <TabsTrigger
-                key={brand.id}
-                value={brand.id}
-                className="flex-shrink-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
-              >
-                {brand.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
+      <Tabs
+        value={brandId || ""}
+        onValueChange={(value) => {
+          window.location.href = `/dashboard/queue/${value}`;
+        }}
+        className="w-full"
+      >
+        <TabsList className="bg-muted p-1 gap-1 w-auto">
+          {allBrands?.map((brand: any) => (
+            <TabsTrigger
+              key={brand.id}
+              value={brand.id}
+              className="rounded-md px-4 py-2 data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground"
+            >
+              {brand.name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {/* Queue List */}
       <Card>

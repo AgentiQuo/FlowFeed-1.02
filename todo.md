@@ -536,3 +536,6 @@
 ## Replace MV Label with Site
 - [x] Replaced "MV" with "site" in platform abbreviations (platformNames.ts)
 - [x] Replaced "MV Post" with "Website" in platform full names (Dashboard.tsx, BrandSettingsPage.tsx)
+
+## Update Queue Page Tabs Styling
+- [x] Changed Queue page tabs to match Brand Settings style (rounded buttons, white active, grey background)
