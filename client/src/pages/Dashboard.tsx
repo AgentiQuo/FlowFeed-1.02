@@ -372,8 +372,8 @@ export default function Dashboard() {
               </Button>
             </div>
 
-            {/* Platform Selection Toggles - Option C: pill toggles with full names */}
-            <div className="flex gap-2 flex-wrap justify-end">
+            {/* Platform Selection Toggles - Styled like brand tabs */}
+            <div className="bg-muted p-1 gap-1 inline-flex rounded-md">
               {ALL_PLATFORMS.map(platform => {
                 const isActive = selectedPlatforms.includes(platform);
                 return (
@@ -381,10 +381,10 @@ export default function Dashboard() {
                     key={platform}
                     onClick={() => togglePlatform(platform)}
                     className={[
-                      "px-3 py-1.5 rounded-md text-xs font-medium border transition-all select-none",
+                      "px-4 py-2 rounded-md text-sm font-medium transition-all select-none",
                       isActive
-                        ? "bg-muted text-foreground border-muted-foreground/30"
-                        : "bg-transparent text-muted-foreground border-border hover:border-muted-foreground/50 hover:text-foreground",
+                        ? "bg-white text-foreground"
+                        : "text-muted-foreground hover:text-foreground",
                     ].join(" ")}
                   >
                     {PLATFORM_LABELS[platform]}

@@ -542,3 +542,6 @@
 
 ## Sort Queue by Medium Then Chronologically
 - [x] Updated getAllScheduledPosts query to sort by platform first, then by scheduledFor time
+
+## Apply Brand Tab Styling to Media Buttons
+- [x] Updated media selection buttons on Dashboard to match brand tab styling (grey background, white active)
