@@ -1,32 +1,102 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, AlertCircle, CheckCircle, XCircle, Loader } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Loader,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { toast } from "sonner";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Alert,
-  AlertDescription,
-} from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { getPlatformAbbr } from "@/lib/platformNames";
 
+// Reusable password input with show/hide toggle
+const PasswordInputWithToggle = ({
+  id,
+  placeholder,
+  value,
+  onChange,
+}: {
+  id: string;
+  placeholder: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) => {
+  const [showPassword, setShowPassword] = useState(false);
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        type={showPassword ? "text" : "password"}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        tabIndex={-1}
+      >
+        {showPassword ? (
+          <EyeOff className="w-4 h-4" />
+        ) : (
+          <Eye className="w-4 h-4" />
+        )}
+      </button>
+    </div>
+  );
+};
+
 const PLATFORMS = [
-  { id: "instagram" as const, name: "Instagram", icon: "📷", color: "bg-pink-100 text-pink-800" },
-  { id: "x" as const, name: "X (Twitter)", icon: "𝕏", color: "bg-gray-100 text-gray-800" },
-  { id: "linkedin" as const, name: "LinkedIn", icon: "💼", color: "bg-blue-100 text-blue-800" },
-  { id: "facebook" as const, name: "Facebook", icon: "f", color: "bg-blue-50 text-blue-700" },
-  { id: "website" as const, name: "Website", icon: "🌐", color: "bg-purple-100 text-purple-800" },
+  {
+    id: "instagram" as const,
+    name: "Instagram",
+    icon: "📷",
+    color: "bg-pink-100 text-pink-800",
+  },
+  {
+    id: "x" as const,
+    name: "X (Twitter)",
+    icon: "𝕏",
+    color: "bg-gray-100 text-gray-800",
+  },
+  {
+    id: "linkedin" as const,
+    name: "LinkedIn",
+    icon: "💼",
+    color: "bg-blue-100 text-blue-800",
+  },
+  {
+    id: "facebook" as const,
+    name: "Facebook",
+    icon: "f",
+    color: "bg-blue-50 text-blue-700",
+  },
+  {
+    id: "website" as const,
+    name: "Website",
+    icon: "🌐",
+    color: "bg-purple-100 text-purple-800",
+  },
 ];
 
 interface CredentialForm {
@@ -103,13 +173,14 @@ function LearningsSection({ brandId }: { brandId: string }) {
       <CardHeader>
         <CardTitle>Brand Learnings</CardTitle>
         <CardDescription>
-          Document insights and learnings about your brand to improve future content generation
+          Document insights and learnings about your brand to improve future
+          content generation
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Textarea
           value={learnings}
-          onChange={(e) => setLearnings(e.target.value)}
+          onChange={e => setLearnings(e.target.value)}
           placeholder="e.g., Our audience responds well to casual tone, prefers video content, engages most with behind-the-scenes posts..."
           className="min-h-32"
         />
@@ -142,12 +213,21 @@ export default function BrandSettingsPage() {
   const [isVerifying, setIsVerifying] = useState<string | null>(null);
   const [isSavingGuides, setIsSavingGuides] = useState(false);
   const [isSavingName, setIsSavingName] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<Record<string, { verified: boolean; error?: string }>>({});
+  const [verificationStatus, setVerificationStatus] = useState<
+    Record<string, { verified: boolean; error?: string }>
+  >({});
   const [scopeStatus, setScopeStatus] = useState<Record<string, any>>({});
-  const [checkingScopesPlatform, setCheckingScopesPlatform] = useState<string | null>(null);
-  const [credentials, setCredentials] = useState<Record<string, CredentialForm>>({});
-  const [hasInitializedCredentials, setHasInitializedCredentials] = useState(false);
-  const [editedCredentialFields, setEditedCredentialFields] = useState<Record<string, Record<string, boolean>>>({});
+  const [checkingScopesPlatform, setCheckingScopesPlatform] = useState<
+    string | null
+  >(null);
+  const [credentials, setCredentials] = useState<
+    Record<string, CredentialForm>
+  >({});
+  const [hasInitializedCredentials, setHasInitializedCredentials] =
+    useState(false);
+  const [editedCredentialFields, setEditedCredentialFields] = useState<
+    Record<string, Record<string, boolean>>
+  >({});
   const [guides, setGuides] = useState<BrandGuides>({
     copywritingGuide: "",
     imageGenerationGuide: "",
@@ -174,20 +254,27 @@ export default function BrandSettingsPage() {
   // Check Instagram token scopes
   const checkInstagramScopes = async (platform: string) => {
     if (platform !== "instagram") return;
-    
+
     setCheckingScopesPlatform(platform);
     try {
-      const result = await (trpc.brandCredentials.checkInstagramScopes as any).query({
+      const result = await (
+        trpc.brandCredentials.checkInstagramScopes as any
+      ).query({
         brandId: brandId || "",
       });
       setScopeStatus(prev => ({
         ...prev,
-        [platform]: result
+        [platform]: result,
       }));
     } catch (error: any) {
       setScopeStatus(prev => ({
         ...prev,
-        [platform]: { hasRequiredScopes: false, scopes: [], missingScopes: [], error: error.message }
+        [platform]: {
+          hasRequiredScopes: false,
+          scopes: [],
+          missingScopes: [],
+          error: error.message,
+        },
       }));
     } finally {
       setCheckingScopesPlatform(null);
@@ -195,13 +282,16 @@ export default function BrandSettingsPage() {
   };
 
   // Fetch existing credentials
-  const { data: existingCredentials = [] } = trpc.brandCredentials.list.useQuery(
-    { brandId: brandId || "" }
-  );
+  const { data: existingCredentials = [] } =
+    trpc.brandCredentials.list.useQuery({ brandId: brandId || "" });
 
   // Initialize credentials from existing data - SIMPLIFIED (no masking)
   useEffect(() => {
-    if (!hasInitializedCredentials && existingCredentials && existingCredentials.length > 0) {
+    if (
+      !hasInitializedCredentials &&
+      existingCredentials &&
+      existingCredentials.length > 0
+    ) {
       const credentialsMap: Record<string, CredentialForm> = {};
 
       existingCredentials.forEach((cred: any) => {
@@ -220,8 +310,12 @@ export default function BrandSettingsPage() {
           apiSecret: credData.apiSecret || "",
           bearerToken: credData.bearerToken || "",
           businessAccountId: credData.businessAccountId || "",
-          wpUsername: credData.wpUsername ? "••••••••••••••••••••••••••••••••" : "",
-          wpAppPassword: credData.wpAppPassword ? "••••••••••••••••••••••••••••••••" : "",
+          wpUsername: credData.wpUsername
+            ? "••••••••••••••••••••••••••••••••"
+            : "",
+          wpAppPassword: credData.wpAppPassword
+            ? "••••••••••••••••••••••••••••••••"
+            : "",
         };
 
         // Mark fields with saved values as "masked" (not edited)
@@ -235,7 +329,7 @@ export default function BrandSettingsPage() {
             bearerToken: false,
             wpUsername: false,
             wpAppPassword: false,
-          }
+          },
         }));
       });
 
@@ -283,7 +377,7 @@ export default function BrandSettingsPage() {
     onSuccess: (result: any) => {
       const platform = isVerifying || result.platform; // Use the platform we're currently verifying
       setIsVerifying(null);
-      setVerificationStatus((prev) => ({
+      setVerificationStatus(prev => ({
         ...prev,
         [platform]: { verified: result.verified, error: result.error },
       }));
@@ -299,7 +393,9 @@ export default function BrandSettingsPage() {
     },
   });
 
-  const handleVerifyCredentials = async (platform: "instagram" | "x" | "linkedin" | "facebook" | "website") => {
+  const handleVerifyCredentials = async (
+    platform: "instagram" | "x" | "linkedin" | "facebook" | "website"
+  ) => {
     setIsVerifying(platform); // Store the platform being verified
     try {
       await verifyCredentialsMutation.mutateAsync({
@@ -312,10 +408,12 @@ export default function BrandSettingsPage() {
   };
 
   // SIMPLIFIED handleSaveCredentials - sends ALL non-empty fields
-  const handleSaveCredentials = async (platform: "instagram" | "x" | "linkedin" | "facebook" | "website") => {
+  const handleSaveCredentials = async (
+    platform: "instagram" | "x" | "linkedin" | "facebook" | "website"
+  ) => {
     setIsSaving(true);
     const cred = credentials[platform];
-    
+
     // Validate required fields based on platform
     const requiredFields: Record<string, string[]> = {
       instagram: ["accessToken"],
@@ -324,7 +422,7 @@ export default function BrandSettingsPage() {
       facebook: ["accessToken"],
       website: ["wpUsername", "wpAppPassword"],
     };
-    
+
     const required = requiredFields[platform] || [];
     const missing = required.filter(field => {
       const value = cred?.[field as keyof typeof cred];
@@ -338,7 +436,7 @@ export default function BrandSettingsPage() {
       // Otherwise, require the field to have a non-empty value
       return !value;
     });
-    
+
     if (!cred || missing.length > 0) {
       toast.error(`Please fill in all required fields: ${missing.join(", ")}`);
       setIsSaving(false);
@@ -358,11 +456,17 @@ export default function BrandSettingsPage() {
       // Send ALL credential fields with real (non-masked) values
       const credentialsToSend: any = {
         accessToken: realValue("accessToken", cred.accessToken),
-        accessTokenSecret: realValue("accessTokenSecret", cred.accessTokenSecret),
+        accessTokenSecret: realValue(
+          "accessTokenSecret",
+          cred.accessTokenSecret
+        ),
         apiKey: realValue("apiKey", cred.apiKey),
         apiSecret: realValue("apiSecret", cred.apiSecret),
         bearerToken: realValue("bearerToken", cred.bearerToken),
-        businessAccountId: realValue("businessAccountId", cred.businessAccountId),
+        businessAccountId: realValue(
+          "businessAccountId",
+          cred.businessAccountId
+        ),
         wpUsername: realValue("wpUsername", cred.wpUsername),
         wpAppPassword: realValue("wpAppPassword", cred.wpAppPassword),
       };
@@ -375,9 +479,18 @@ export default function BrandSettingsPage() {
       });
 
       // Only send optional fields if they have actual values (not placeholders)
-      const accountEmail = cred.accountEmail && cred.accountEmail !== "account@example.com" ? cred.accountEmail : undefined;
-      const accountId = cred.accountId && cred.accountId !== "e.g., 123456789" ? cred.accountId : undefined;
-      const accountName = cred.accountName && cred.accountName !== "e.g., @myaccount" ? cred.accountName : undefined;
+      const accountEmail =
+        cred.accountEmail && cred.accountEmail !== "account@example.com"
+          ? cred.accountEmail
+          : undefined;
+      const accountId =
+        cred.accountId && cred.accountId !== "e.g., 123456789"
+          ? cred.accountId
+          : undefined;
+      const accountName =
+        cred.accountName && cred.accountName !== "e.g., @myaccount"
+          ? cred.accountName
+          : undefined;
 
       await saveCredentialsMutation.mutateAsync({
         brandId: brandId || "",
@@ -423,8 +536,12 @@ export default function BrandSettingsPage() {
   };
 
   // SIMPLIFIED handleInputChange - no editedCredentialFields tracking
-  const handleInputChange = (platform: string, field: string, value: string) => {
-    setCredentials((prev) => {
+  const handleInputChange = (
+    platform: string,
+    field: string,
+    value: string
+  ) => {
+    setCredentials(prev => {
       // Ensure platform object exists with all required fields
       const platformCreds = prev[platform] || {
         platform,
@@ -451,14 +568,16 @@ export default function BrandSettingsPage() {
   };
 
   const handleGuideChange = (field: keyof BrandGuides, value: string) => {
-    setGuides((prev) => ({
+    setGuides(prev => ({
       ...prev,
       [field]: value,
     }));
   };
 
   const getCredentialStatus = (platform: string) => {
-    const existing = existingCredentials.find((c: any) => c.platform === platform);
+    const existing = existingCredentials.find(
+      (c: any) => c.platform === platform
+    );
     return existing?.verificationStatus || "pending";
   };
 
@@ -475,12 +594,14 @@ export default function BrandSettingsPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold tracking-tight">Brand Settings</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Brand Settings
+            </h1>
             <div className="flex items-center gap-2 mt-2">
               <div className="flex-1 max-w-xs">
                 <Input
                   value={brandName}
-                  onChange={(e) => setBrandName(e.target.value.slice(0, 20))}
+                  onChange={e => setBrandName(e.target.value.slice(0, 20))}
                   placeholder="Brand name"
                   maxLength={20}
                   className="text-sm"
@@ -512,7 +633,9 @@ export default function BrandSettingsPage() {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Configure your social media credentials and brand marketing guides. Credentials are encrypted and guides are used to personalize AI-generated content.
+            Configure your social media credentials and brand marketing guides.
+            Credentials are encrypted and guides are used to personalize
+            AI-generated content.
           </AlertDescription>
         </Alert>
 
@@ -536,19 +659,33 @@ export default function BrandSettingsPage() {
               <CardContent>
                 <Tabs defaultValue="instagram" className="w-full">
                   <TabsList className="grid w-full grid-cols-5">
-                    {PLATFORMS.map((platform) => (
+                    {PLATFORMS.map(platform => (
                       <TabsTrigger key={platform.id} value={platform.id}>
                         <span className="mr-1">{platform.icon}</span>
-                        <span className="hidden sm:inline">{getPlatformAbbr(platform.id)}</span>
+                        <span className="hidden sm:inline">
+                          {getPlatformAbbr(platform.id)}
+                        </span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
 
-                  {PLATFORMS.map((platform) => (
-                    <TabsContent key={platform.id} value={platform.id} className="space-y-4">
+                  {PLATFORMS.map(platform => (
+                    <TabsContent
+                      key={platform.id}
+                      value={platform.id}
+                      className="space-y-4"
+                    >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">{platform.name} Credentials</h3>
-                        <Badge variant={getCredentialStatus(platform.id) === "verified" ? "default" : "secondary"}>
+                        <h3 className="text-lg font-semibold">
+                          {platform.name} Credentials
+                        </h3>
+                        <Badge
+                          variant={
+                            getCredentialStatus(platform.id) === "verified"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
                           {getCredentialStatus(platform.id)}
                         </Badge>
                       </div>
@@ -581,7 +718,10 @@ export default function BrandSettingsPage() {
                               ) : (
                                 <div className="flex items-center gap-2 text-red-600">
                                   <XCircle className="h-4 w-4" />
-                                  Missing permissions: {scopeStatus[platform.id].missingScopes?.join(", ")}
+                                  Missing permissions:{" "}
+                                  {scopeStatus[platform.id].missingScopes?.join(
+                                    ", "
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -589,33 +729,52 @@ export default function BrandSettingsPage() {
                         </div>
                       )}
 
-
-
                       {/* Platform-specific credential fields */}
                       {platform.id === "instagram" && (
                         <div className="space-y-4 border-t pt-4">
                           <div>
                             <Label htmlFor={`${platform.id}-accessToken`}>
-                              Access Token <span className="text-red-500">*</span>
+                              Access Token{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`${platform.id}-accessToken`}
                               type="password"
                               placeholder="Your Instagram Access Token"
-                              value={credentials[platform.id]?.accessToken || ""}
-                              onChange={(e) => handleInputChange(platform.id, "accessToken", e.target.value)}
+                              value={
+                                credentials[platform.id]?.accessToken || ""
+                              }
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "accessToken",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                           <div>
-                            <Label htmlFor={`${platform.id}-businessAccountId`}>Business Account ID</Label>
+                            <Label htmlFor={`${platform.id}-businessAccountId`}>
+                              Business Account ID
+                            </Label>
                             <Input
                               id={`${platform.id}-businessAccountId`}
                               placeholder="e.g., 17841400963310000"
-                              value={credentials[platform.id]?.businessAccountId || ""}
-                              onChange={(e) => handleInputChange(platform.id, "businessAccountId", e.target.value)}
+                              value={
+                                credentials[platform.id]?.businessAccountId ||
+                                ""
+                              }
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "businessAccountId",
+                                  e.target.value
+                                )
+                              }
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                              Find this in Instagram Settings → Apps and Websites → Business Account
+                              Find this in Instagram Settings → Apps and
+                              Websites → Business Account
                             </p>
                           </div>
                         </div>
@@ -625,50 +784,79 @@ export default function BrandSettingsPage() {
                         <div className="space-y-4 border-t pt-4">
                           <div>
                             <Label htmlFor={`${platform.id}-apiKey`}>
-                              Consumer Key <span className="text-red-500">*</span>
+                              Consumer Key{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
-                            <Input
+                            <PasswordInputWithToggle
                               id={`${platform.id}-apiKey`}
-                               type="password"
-                               placeholder="Your Consumer Key"
+                              placeholder="Your Consumer Key"
                               value={credentials[platform.id]?.apiKey || ""}
-                              onChange={(e) => handleInputChange(platform.id, "apiKey", e.target.value)}
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "apiKey",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                           <div>
                             <Label htmlFor={`${platform.id}-apiSecret`}>
-                              Consumer Secret <span className="text-red-500">*</span>
+                              Consumer Secret{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
-                            <Input
+                            <PasswordInputWithToggle
                               id={`${platform.id}-apiSecret`}
-                               type="password"
-                               placeholder="Your Consumer Secret"
+                              placeholder="Your Consumer Secret"
                               value={credentials[platform.id]?.apiSecret || ""}
-                              onChange={(e) => handleInputChange(platform.id, "apiSecret", e.target.value)}
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "apiSecret",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                           <div>
                             <Label htmlFor={`${platform.id}-accessToken`}>
-                              Access Token <span className="text-red-500">*</span>
+                              Access Token{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
-                            <Input
+                            <PasswordInputWithToggle
                               id={`${platform.id}-accessToken`}
-                               type="password"
-                               placeholder="Your Access Token"
-                              value={credentials[platform.id]?.accessToken || ""}
-                              onChange={(e) => handleInputChange(platform.id, "accessToken", e.target.value)}
+                              placeholder="Your Access Token"
+                              value={
+                                credentials[platform.id]?.accessToken || ""
+                              }
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "accessToken",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                           <div>
                             <Label htmlFor={`${platform.id}-accessTokenSecret`}>
-                              Access Token Secret <span className="text-red-500">*</span>
+                              Access Token Secret{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
-                            <Input
+                            <PasswordInputWithToggle
                               id={`${platform.id}-accessTokenSecret`}
-                               type="password"
-                               placeholder="Your Access Token Secret"
-                              value={credentials[platform.id]?.accessTokenSecret || ""}
-                              onChange={(e) => handleInputChange(platform.id, "accessTokenSecret", e.target.value)}
+                              placeholder="Your Access Token Secret"
+                              value={
+                                credentials[platform.id]?.accessTokenSecret ||
+                                ""
+                              }
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "accessTokenSecret",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                         </div>
@@ -678,14 +866,23 @@ export default function BrandSettingsPage() {
                         <div className="space-y-4 border-t pt-4">
                           <div>
                             <Label htmlFor={`${platform.id}-accessToken`}>
-                              Access Token <span className="text-red-500">*</span>
+                              Access Token{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`${platform.id}-accessToken`}
                               type="password"
                               placeholder="Your LinkedIn Access Token"
-                              value={credentials[platform.id]?.accessToken || ""}
-                              onChange={(e) => handleInputChange(platform.id, "accessToken", e.target.value)}
+                              value={
+                                credentials[platform.id]?.accessToken || ""
+                              }
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "accessToken",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                         </div>
@@ -695,14 +892,23 @@ export default function BrandSettingsPage() {
                         <div className="space-y-4 border-t pt-4">
                           <div>
                             <Label htmlFor={`${platform.id}-accessToken`}>
-                              Access Token <span className="text-red-500">*</span>
+                              Access Token{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`${platform.id}-accessToken`}
                               type="password"
                               placeholder="Your Facebook Access Token"
-                              value={credentials[platform.id]?.accessToken || ""}
-                              onChange={(e) => handleInputChange(platform.id, "accessToken", e.target.value)}
+                              value={
+                                credentials[platform.id]?.accessToken || ""
+                              }
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "accessToken",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
                         </div>
@@ -719,25 +925,42 @@ export default function BrandSettingsPage() {
                               type="text"
                               placeholder="Your WordPress username"
                               value={credentials[platform.id]?.wpUsername || ""}
-                              onChange={(e) => handleInputChange(platform.id, "wpUsername", e.target.value)}
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "wpUsername",
+                                  e.target.value
+                                )
+                              }
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                              WordPress user with Editor role or higher (e.g., FlowFeed user)
+                              WordPress user with Editor role or higher (e.g.,
+                              FlowFeed user)
                             </p>
                           </div>
                           <div>
                             <Label htmlFor={`${platform.id}-wpAppPassword`}>
-                              Application Password <span className="text-red-500">*</span>
+                              Application Password{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               id={`${platform.id}-wpAppPassword`}
                               type="password"
                               placeholder="Your WordPress application password"
-                              value={credentials[platform.id]?.wpAppPassword || ""}
-                              onChange={(e) => handleInputChange(platform.id, "wpAppPassword", e.target.value)}
+                              value={
+                                credentials[platform.id]?.wpAppPassword || ""
+                              }
+                              onChange={e =>
+                                handleInputChange(
+                                  platform.id,
+                                  "wpAppPassword",
+                                  e.target.value
+                                )
+                              }
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                              Generate in WordPress: Users → Your Profile → Application Passwords
+                              Generate in WordPress: Users → Your Profile →
+                              Application Passwords
                             </p>
                           </div>
                         </div>
@@ -789,7 +1012,8 @@ export default function BrandSettingsPage() {
               <CardHeader>
                 <CardTitle>Brand Guides</CardTitle>
                 <CardDescription>
-                  Define your brand voice and content preferences to guide AI generation
+                  Define your brand voice and content preferences to guide AI
+                  generation
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -799,24 +1023,27 @@ export default function BrandSettingsPage() {
                     id="copywriting-guide"
                     placeholder="e.g., Use casual, friendly tone. Avoid corporate jargon. Include emojis. Keep sentences short and punchy..."
                     value={guides.copywritingGuide}
-                    onChange={(e) => handleGuideChange("copywritingGuide", e.target.value)}
+                    onChange={e =>
+                      handleGuideChange("copywritingGuide", e.target.value)
+                    }
                     className="min-h-32"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="image-generation-guide">Image Generation Guide</Label>
+                  <Label htmlFor="image-generation-guide">
+                    Image Generation Guide
+                  </Label>
                   <Textarea
                     id="image-generation-guide"
                     placeholder="e.g., Modern, minimalist aesthetic. Use brand colors (blue and white). Include people. Bright, natural lighting..."
                     value={guides.imageGenerationGuide}
-                    onChange={(e) => handleGuideChange("imageGenerationGuide", e.target.value)}
+                    onChange={e =>
+                      handleGuideChange("imageGenerationGuide", e.target.value)
+                    }
                     className="min-h-32"
                   />
                 </div>
-                <Button
-                  onClick={handleSaveGuides}
-                  disabled={isSavingGuides}
-                >
+                <Button onClick={handleSaveGuides} disabled={isSavingGuides}>
                   {isSavingGuides ? (
                     <>
                       <Loader className="h-4 w-4 mr-2 animate-spin" />

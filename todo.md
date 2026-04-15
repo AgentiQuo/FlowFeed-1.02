@@ -545,3 +545,7 @@
 
 ## Apply Brand Tab Styling to Media Buttons
 - [x] Updated media selection buttons on Dashboard to match brand tab styling (grey background, white active)
+
+## Add Show/Hide Toggle for X Credentials
+- [x] Added eye icon button next to each X credential field to toggle visibility
+- [x] Users can now temporarily view masked X credentials without permanently unmasking them
