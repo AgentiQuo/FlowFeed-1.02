@@ -549,3 +549,25 @@
 ## Add Show/Hide Toggle for X Credentials
 - [x] Added eye icon button next to each X credential field to toggle visibility
 - [x] Users can now temporarily view masked X credentials without permanently unmasking them
+
+
+## Archive Page for Published Posts
+- [ ] Understand current post data model (status field, published vs scheduled)
+- [ ] Create ArchivePage.tsx mirroring QueuePage layout
+- [ ] Add query to fetch published posts (status = "published")
+- [ ] Display published posts with publish date instead of scheduled date
+- [ ] Implement "Reuse" button to load archived post into editor
+- [ ] Add navigation button from QueuePage to ArchivePage
+- [ ] Test Reuse workflow end-to-end
+
+
+## Archive Page for Published Posts (In Progress)
+- [x] Created ArchivePage.tsx component mirroring QueuePage layout
+- [x] Added getPublishedPostsByBrand query to fetch archived posts
+- [x] Implemented createFromArchivedPost mutation in content router
+- [x] Added "Reuse" button functionality to load archived posts into editor
+- [x] Added "Archive (Published Posts)" navigation button to Queue page
+- [x] Added /dashboard/archive/:brandId route to App.tsx
+- [x] Archive page displays published posts sorted by publish date
+- [x] Reuse functionality creates new draft from archived post
+- [ ] Test Archive page and Reuse workflow end-to-end

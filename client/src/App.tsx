@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 import QueuePage from "./pages/QueuePage";
+import ArchivePage from "./pages/ArchivePage";
 import BrandSettingsPage from "./pages/BrandSettingsPage";
 import AllBrandsPage from "./pages/AllBrandsPage";
 
@@ -21,6 +22,9 @@ function Router() {
       </Route>
       <Route path={"/dashboard/queue/:brandId"}>
         {() => <QueuePage />}
+      </Route>
+      <Route path={"/dashboard/archive/:brandId"}>
+        {() => <ArchivePage />}
       </Route>
       <Route path={"/dashboard/brand/:brandId/settings"}>
         {() => <BrandSettingsPage />}

@@ -176,14 +176,23 @@ export default function QueuePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Queue</h1>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setLocation(`/dashboard`)}
-          title="Go to Home"
-        >
-          <Home className="w-4 h-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setLocation(`/dashboard/archive/${brandId}`)}
+            title="View Archive"
+          >
+            Archive (Published Posts)
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setLocation(`/dashboard`)}
+            title="Go to Home"
+          >
+            <Home className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Brand Filter Tabs */}

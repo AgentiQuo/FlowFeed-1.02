@@ -473,6 +473,54 @@ export const contentRouter = router({
 
       return { success: true };
     }),
+
+  createFromArchivedPost: protectedProcedure
+    .input(z.object({ postId: z.string() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
+
+      const publishedPost = await db
+        .select()
+        .from(posts)
+        .where(eq(posts.id, input.postId))
+        .limit(1);
+
+      if (!publishedPost || publishedPost.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Published post not found",
+        });
+      }
+
+      const post = publishedPost[0];
+      const newDraftId = nanoid();
+
+      await db.insert(drafts).values({
+        id: newDraftId,
+        brandId: post.brandId,
+        assetId: post.draftId || "",
+        categoryId: "",
+        platform: post.platform,
+        content: post.content,
+        title: post.title || "Reused Post",
+        status: "draft",
+        variations: null,
+        sourceReference: {
+          originalPostId: post.id,
+          originalPublishedAt: post.publishedAt,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      return { id: newDraftId };
+    }),
 });
 
 /**
