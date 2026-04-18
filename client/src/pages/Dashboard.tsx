@@ -245,7 +245,7 @@ export default function Dashboard() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => window.location.href = `/dashboard/queue/${selectedBrandId}`}
+                  onClick={() => setLocation(`/dashboard/queue/${selectedBrandId}`)}
                   title="Go to Queue"
                 >
                   <Calendar className="w-4 h-4" />
@@ -261,7 +261,7 @@ export default function Dashboard() {
                 if (value === "settings") {
                   setLocation("/dashboard/brands");
                 } else if (value !== "new") {
-                  window.location.href = `/dashboard/brand/${value}`;
+                  setLocation(`/dashboard/brand/${value}`);
                 }
               }} className="w-full">
                 <TabsList className="w-full justify-start overflow-x-auto">

@@ -102,7 +102,7 @@ export default function ArchivePage() {
       <Tabs
         value={brandId || ""}
         onValueChange={(value) => {
-          window.location.href = `/dashboard/archive/${value}`;
+          setLocation(`/dashboard/archive/${value}`);
         }}
         className="w-full"
       >

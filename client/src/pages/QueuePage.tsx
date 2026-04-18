@@ -199,7 +199,7 @@ export default function QueuePage() {
       <Tabs
         value={brandId || ""}
         onValueChange={(value) => {
-          window.location.href = `/dashboard/queue/${value}`;
+          setLocation(`/dashboard/queue/${value}`);
         }}
         className="w-full"
       >

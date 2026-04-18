@@ -499,13 +499,22 @@ export const contentRouter = router({
       }
 
       const post = publishedPost[0];
+      
+      // Fetch original draft to get assetId and categoryId
+      const originalDraft = await db
+        .select()
+        .from(drafts)
+        .where(eq(drafts.id, post.draftId))
+        .limit(1)
+        .then(rows => rows[0]);
+
       const newDraftId = nanoid();
 
       await db.insert(drafts).values({
         id: newDraftId,
         brandId: post.brandId,
-        assetId: post.draftId || "",
-        categoryId: "",
+        assetId: originalDraft?.assetId || "",
+        categoryId: originalDraft?.categoryId || "",
         platform: post.platform,
         content: post.content,
         title: post.title || "Reused Post",
