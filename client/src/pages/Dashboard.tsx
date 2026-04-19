@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, ChevronLeft, ChevronRight, Calendar, Settings, Trash2 } from "lucide-react";
 import { DraftPreview } from "@/components/DraftPreview";
 import AssetUpload from "@/components/AssetUpload";
+import UploadGenerateTabs from "@/components/UploadGenerateTabs";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useRef } from "react";
 import { toast } from "sonner";
@@ -41,6 +42,7 @@ export default function Dashboard() {
   const [selectedPlatform, setSelectedPlatform] = useState<string>("instagram");
   const [isLayoutVertical, setIsLayoutVertical] = useState(window.innerWidth < 1024);
   const [showUpload, setShowUpload] = useState(false);
+  const [generatePrompt, setGeneratePrompt] = useState("");
   const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState<string>("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
@@ -393,11 +395,12 @@ export default function Dashboard() {
               })}
             </div>
 
-            {/* Upload Section - BELOW BUTTONS */}
+            {/* Upload/Generate Tabs Section - BELOW BUTTONS */}
             {showUpload && selectedBrandId && (
-              <AssetUpload
+              <UploadGenerateTabs
                 brandId={selectedBrandId}
                 onUploadSuccess={() => setShowUpload(false)}
+                onGeneratePromptChange={setGeneratePrompt}
               />
             )}
 

@@ -571,3 +571,14 @@
 - [x] Archive page displays published posts sorted by publish date
 - [x] Reuse functionality creates new draft from archived post
 - [ ] Test Archive page and Reuse workflow end-to-end
+
+
+## Tabbed Upload/Generate Interface (Complete)
+- [x] Created UploadGenerateTabs component with Upload and Generate tabs
+- [x] Moved existing AssetUpload UI into Upload tab
+- [x] Created Generate tab with text prompt field (Textarea with placeholder and helper text)
+- [x] Integrated tabs into Dashboard.tsx
+- [x] Added generatePrompt state tracking
+- [ ] Update CREATE button behavior based on active tab
+- [ ] Add validation for both tabs
+- [ ] Test end-to-end workflow
