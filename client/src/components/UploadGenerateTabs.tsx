@@ -7,12 +7,14 @@ interface UploadGenerateTabsProps {
   brandId: string;
   onUploadSuccess?: () => void;
   onGeneratePromptChange?: (prompt: string) => void;
+  onActiveTabChange?: (tab: string) => void;
 }
 
 export default function UploadGenerateTabs({
   brandId,
   onUploadSuccess,
   onGeneratePromptChange,
+  onActiveTabChange,
 }: UploadGenerateTabsProps) {
   const [activeTab, setActiveTab] = useState("upload");
   const [generatePrompt, setGeneratePrompt] = useState("");
@@ -22,8 +24,13 @@ export default function UploadGenerateTabs({
     onGeneratePromptChange?.(value);
   };
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    onActiveTabChange?.(tab);
+  };
+
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="upload">Upload</TabsTrigger>
         <TabsTrigger value="generate">Generate</TabsTrigger>

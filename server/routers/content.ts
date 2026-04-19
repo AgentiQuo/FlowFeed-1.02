@@ -530,6 +530,132 @@ export const contentRouter = router({
 
       return { id: newDraftId };
     }),
+
+  generateFromPrompt: protectedProcedure
+    .input(
+      z.object({
+        brandId: z.string(),
+        prompt: z.string().min(1),
+        platforms: z.array(
+          z.enum(["instagram", "linkedin", "facebook", "x", "website"])
+        ),
+        tone: z.enum(["professional", "casual", "luxury"]).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
+
+      const { generateImage } = await import("../_core/imageGeneration");
+      const { url: imageUrl } = await generateImage({ prompt: input.prompt });
+
+      if (!imageUrl) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate image",
+        });
+      }
+
+      const assetId = nanoid();
+      await db.insert(contentAssets).values({
+        id: assetId,
+        brandId: input.brandId,
+        categoryId: nanoid(),
+        fileName: `generated-${Date.now()}.png`,
+        s3Key: `generated/${Date.now()}.png`,
+        s3Url: imageUrl,
+        mimeType: "image/png",
+        fileSize: 0,
+        status: "completed",
+      });
+
+      const { getBrandById } = await import("../db");
+      const brand = await getBrandById(input.brandId);
+
+      if (!brand) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Brand not found",
+        });
+      }
+
+      const assetResult = await db
+        .select()
+        .from(contentAssets)
+        .where(eq(contentAssets.id, assetId))
+        .limit(1);
+
+      if (!assetResult || assetResult.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Asset not found",
+        });
+      }
+
+      const assetData = assetResult[0];
+
+      // generateContentForPlatform is defined in this file
+      const generatedDrafts = await Promise.all(
+        input.platforms.map(async (platform) => {
+          const contentResult = await generateContentForPlatform(
+            assetData,
+            brand,
+            platform,
+            input.tone || "professional"
+          );
+          return {
+            platform,
+            content: contentResult,
+          };
+        })
+      );
+
+      const savedDrafts = await Promise.all(
+        generatedDrafts.map(async (draft) => {
+          const draftId = nanoid();
+
+          let draftTitle: string | null = null;
+          if (draft.platform === "website") {
+            const titleResponse = await invokeLLM({
+              messages: [
+                {
+                  role: "system",
+                  content: "Generate a concise, engaging title for a website post based on the content. Return only the title, no quotes.",
+                },
+                {
+                  role: "user",
+                  content: draft.content,
+                },
+              ],
+            });
+            const titleContent = titleResponse.choices[0]?.message.content;
+            draftTitle = typeof titleContent === "string" ? titleContent.trim() : null;
+          }
+
+          await db.insert(drafts).values({
+            id: draftId,
+            brandId: input.brandId,
+            assetId: assetId,
+            categoryId: nanoid(),
+            platform: draft.platform,
+            content: draft.content,
+            title: draftTitle,
+            status: "draft",
+            variations: null,
+            sourceReference: null,
+          });
+
+          return { id: draftId, platform: draft.platform };
+        })
+      );
+
+      return { assetId, drafts: savedDrafts };
+    }),
 });
 
 /**

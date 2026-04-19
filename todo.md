@@ -582,3 +582,18 @@
 - [ ] Update CREATE button behavior based on active tab
 - [ ] Add validation for both tabs
 - [ ] Test end-to-end workflow
+
+
+## Bug: Generate Tab Not Creating AI Images
+- [ ] CREATE button on Generate tab doesn't generate AI image
+- [ ] Need to implement AI image generation flow
+- [ ] Generated image should appear in Create Posts section
+- [ ] Currently only shows uploaded images
+
+
+## AI Image Generation Flow (In Progress)
+- [x] Created generateFromPrompt mutation in content router
+- [x] Wired generateFromPrompt to Dashboard Generate tab
+- [ ] Test AI image generation end-to-end
+- [ ] Write vitest tests for generateFromPrompt mutation
+- [ ] Verify generated images appear in Create Posts section

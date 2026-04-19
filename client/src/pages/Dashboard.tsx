@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [isLayoutVertical, setIsLayoutVertical] = useState(window.innerWidth < 1024);
   const [showUpload, setShowUpload] = useState(false);
   const [generatePrompt, setGeneratePrompt] = useState("");
+  const [activeUploadTab, setActiveUploadTab] = useState("upload");
   const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState<string>("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
@@ -71,6 +72,12 @@ export default function Dashboard() {
   const generateDrafts = trpc.content.generateDrafts.useMutation({
     onSuccess: () => {
       // Refetch drafts after generation
+      utils.content.getDrafts.invalidate();
+    },
+  });
+  const generateFromPrompt = trpc.content.generateFromPrompt.useMutation({
+    onSuccess: () => {
+      setGeneratePrompt("");
       utils.content.getDrafts.invalidate();
     },
   });
@@ -146,9 +153,29 @@ export default function Dashboard() {
   };
 
   const handleCreatePosts = async () => {
-    if (!currentAsset || !selectedBrandId) return;
+    if (!selectedBrandId) return;
     if (selectedPlatforms.length === 0) {
       toast.error("Select at least one platform");
+      return;
+    }
+
+    // Handle Generate tab
+    if (activeUploadTab === "generate") {
+      if (!generatePrompt.trim()) {
+        toast.error("Enter a prompt to generate an image");
+        return;
+      }
+      await generateFromPrompt.mutateAsync({
+        brandId: selectedBrandId,
+        prompt: generatePrompt,
+        platforms: selectedPlatforms as any,
+      });
+      return;
+    }
+
+    // Handle Upload tab
+    if (!currentAsset) {
+      toast.error("Select an image first");
       return;
     }
     await generateDrafts.mutateAsync({
@@ -401,6 +428,7 @@ export default function Dashboard() {
                 brandId={selectedBrandId}
                 onUploadSuccess={() => setShowUpload(false)}
                 onGeneratePromptChange={setGeneratePrompt}
+                onActiveTabChange={setActiveUploadTab}
               />
             )}
 
