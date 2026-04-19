@@ -76,9 +76,12 @@ export default function Dashboard() {
     },
   });
   const generateFromPrompt = trpc.content.generateFromPrompt.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       setGeneratePrompt("");
+      setShowUpload(false);
+      utils.ingestion.listAssets.invalidate();
       utils.content.getDrafts.invalidate();
+      setTimeout(() => setCurrentAssetIndex(0), 100);
     },
   });
   const approveDraft = trpc.content.approveDraft.useMutation({
