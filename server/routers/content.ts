@@ -552,7 +552,20 @@ export const contentRouter = router({
       }
 
       const { generateImage } = await import("../_core/imageGeneration");
-      const { url: imageUrl } = await generateImage({ prompt: input.prompt });
+      const { getBrandById } = await import("../db");
+      const brand = await getBrandById(input.brandId);
+
+      if (!brand) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Brand not found",
+        });
+      }
+
+      const { url: imageUrl } = await generateImage({
+        prompt: input.prompt,
+        model: brand.imageGenerationModel || "default",
+      });
 
       if (!imageUrl) {
         throw new TRPCError({
@@ -574,15 +587,7 @@ export const contentRouter = router({
         status: "completed",
       });
 
-      const { getBrandById } = await import("../db");
-      const brand = await getBrandById(input.brandId);
-
-      if (!brand) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Brand not found",
-        });
-      }
+      // brand is already fetched above
 
       const assetResult = await db
         .select()

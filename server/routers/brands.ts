@@ -53,6 +53,7 @@ export const brandsRouter = router({
         voiceBibleUrl: z.string().optional(),
         copywritingGuide: z.string().optional(),
         imageGenerationGuide: z.string().optional(),
+        imageGenerationModel: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -67,6 +68,7 @@ export const brandsRouter = router({
       if (input.voiceBibleUrl !== undefined) updateData.voiceBibleUrl = input.voiceBibleUrl;
       if (input.copywritingGuide !== undefined) updateData.copywritingGuide = input.copywritingGuide;
       if (input.imageGenerationGuide !== undefined) updateData.imageGenerationGuide = input.imageGenerationGuide;
+      if (input.imageGenerationModel !== undefined) updateData.imageGenerationModel = input.imageGenerationModel;
       await db.update(brands).set(updateData).where(eq(brands.id, brandId));
       return await getBrandById(brandId);
     }),

@@ -24,6 +24,13 @@ import {
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { getPlatformAbbr } from "@/lib/platformNames";
@@ -117,6 +124,7 @@ interface CredentialForm {
 interface BrandGuides {
   copywritingGuide: string;
   imageGenerationGuide: string;
+  imageGenerationModel: string;
 }
 
 function LearningsSection({ brandId }: { brandId: string }) {
@@ -231,6 +239,7 @@ export default function BrandSettingsPage() {
   const [guides, setGuides] = useState<BrandGuides>({
     copywritingGuide: "",
     imageGenerationGuide: "",
+    imageGenerationModel: "default",
   });
   const [brandName, setBrandName] = useState("");
 
@@ -244,6 +253,7 @@ export default function BrandSettingsPage() {
       setGuides({
         copywritingGuide: brand.copywritingGuide || "",
         imageGenerationGuide: brand.imageGenerationGuide || "",
+        imageGenerationModel: brand.imageGenerationModel || "default",
       });
       setBrandName(brand.name || "");
       // Reset credentials initialization flag when brand changes
@@ -509,6 +519,7 @@ export default function BrandSettingsPage() {
         id: brandId || "",
         copywritingGuide: guides.copywritingGuide,
         imageGenerationGuide: guides.imageGenerationGuide,
+        imageGenerationModel: guides.imageGenerationModel,
       });
     } catch (error) {
       console.error("Error saving guides:", error);
@@ -1042,6 +1053,25 @@ export default function BrandSettingsPage() {
                     }
                     className="min-h-32"
                   />
+                </div>
+                <div>
+                  <Label htmlFor="image-generation-model">
+                    Image Generation Model
+                  </Label>
+                  <Select
+                    value={guides.imageGenerationModel}
+                    onValueChange={value =>
+                      handleGuideChange("imageGenerationModel", value)
+                    }
+                  >
+                    <SelectTrigger id="image-generation-model">
+                      <SelectValue placeholder="Select a model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default Model</SelectItem>
+                      <SelectItem value="nano-banana">Nano Banana</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button onClick={handleSaveGuides} disabled={isSavingGuides}>
                   {isSavingGuides ? (

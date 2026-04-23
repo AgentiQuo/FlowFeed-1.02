@@ -20,6 +20,7 @@ import { ENV } from "./env";
 
 export type GenerateImageOptions = {
   prompt: string;
+  model?: string;
   originalImages?: Array<{
     url?: string;
     b64Json?: string;
@@ -60,6 +61,7 @@ export async function generateImage(
     },
     body: JSON.stringify({
       prompt: options.prompt,
+      model: options.model || "default",
       original_images: options.originalImages || [],
     }),
   });

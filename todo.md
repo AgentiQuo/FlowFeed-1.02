@@ -597,3 +597,12 @@
 - [ ] Test AI image generation end-to-end
 - [ ] Write vitest tests for generateFromPrompt mutation
 - [ ] Verify generated images appear in Create Posts section
+
+
+## Add Nano Banana Image Generation Model Support
+- [x] Add imageGenerationModel column to brands table schema
+- [x] Generate database migrations (0012 and 0013)
+- [x] Schema already has imageGenerationModel and feedback/tone columns in place
+- [x] Update Brand Settings page to show model selection (Nano Banana, default, etc.)
+- [x] Update generateFromPrompt to pass brand's imageGenerationModel to image generation API
+- [ ] Test image generation with Nano Banana model selected

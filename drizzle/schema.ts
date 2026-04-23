@@ -38,6 +38,7 @@ export const brands = mysqlTable("brands", {
   description: text("description"),
   copywritingGuide: longtext("copywritingGuide"),
   imageGenerationGuide: longtext("imageGenerationGuide"),
+  imageGenerationModel: varchar("imageGenerationModel", { length: 50 }).default("default"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -125,6 +126,8 @@ export const drafts = mysqlTable("drafts", {
   title: varchar("title", { length: 500 }),
   variations: json("variations"),
   sourceReference: json("sourceReference"),
+  feedback: longtext("feedback"),
+  tone: varchar("tone", { length: 50 }),
   status: mysqlEnum("status", ["draft", "reviewed", "scheduled", "published"]).default("draft"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
