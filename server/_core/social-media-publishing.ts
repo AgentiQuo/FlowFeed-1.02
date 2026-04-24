@@ -142,6 +142,7 @@ export async function publishToInstagram(
     return {
       success: true,
       postId: publishData.id,
+      postUrl: `https://instagram.com/p/${publishData.id}/`,
       platform: "instagram",
     };
   } catch (error) {
@@ -360,6 +361,7 @@ export async function publishToLinkedIn(
     return {
       success: true,
       postId: data.id,
+      postUrl: data.id ? `https://www.linkedin.com/feed/update/${data.id}` : undefined,
       platform: "linkedin",
     };
   } catch (error) {
@@ -416,6 +418,7 @@ export async function publishToFacebook(
     return {
       success: true,
       postId: data.id,
+      postUrl: data.id ? `https://facebook.com/${data.id}` : undefined,
       platform: "facebook",
     };
   } catch (error) {
@@ -565,6 +568,7 @@ export async function publishToWordPress(
     return {
       success: true,
       postId: data.id.toString(),
+      postUrl: data.link || undefined,
       platform: "website",
     };
   } catch (error) {

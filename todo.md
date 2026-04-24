@@ -606,3 +606,13 @@
 - [x] Update Brand Settings page to show model selection (Nano Banana, default, etc.)
 - [x] Update generateFromPrompt to pass brand's imageGenerationModel to image generation API
 - [ ] Test image generation with Nano Banana model selected
+
+
+## Add Post Links to Success Toast
+- [x] Add postUrl to Instagram publishing function (returns https://instagram.com/p/{postId}/)
+- [x] Add postUrl to LinkedIn publishing function (returns https://www.linkedin.com/feed/update/{postId})
+- [x] Add postUrl to Facebook publishing function (returns https://facebook.com/{postId})
+- [x] Add postUrl to WordPress publishing function (returns data.link from API response)
+- [x] Verify X/Twitter already returns postUrl
+- [x] Queue page success toast already displays link when postUrl is available
+- [ ] Test post success toast with link for each platform
