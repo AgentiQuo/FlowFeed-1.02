@@ -62,10 +62,16 @@ export default function PublishedPostsPage() {
   const totalPosts = postsData?.total || 0;
   const totalPages = Math.ceil(totalPosts / pageSize);
 
-  const filteredPosts = posts.filter((post) =>
-    post.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.title?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredPosts = posts
+    .filter((post) =>
+      post.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+      return dateB - dateA; // Descending order (newest first)
+    });
 
   const getPlatformColor = (platform: string) => {
     switch (platform) {
