@@ -37,12 +37,15 @@ export default function PublishedPostsPage() {
   // Fetch all brands for filter dropdown
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
 
+  // Get tRPC utils for invalidation
+  const utils = trpc.useUtils();
+
   // Sync Instagram analytics mutation
   const syncAnalyticsMutation = trpc.queue.syncInstagramAnalytics.useMutation({
     onSuccess: () => {
       // Refetch analytics after sync
-      trpc.useUtils().queue.getPublishedPostsAnalytics.invalidate();
-      trpc.useUtils().queue.getPublishedPosts.invalidate();
+      utils.queue.getPublishedPostsAnalytics.invalidate();
+      utils.queue.getPublishedPosts.invalidate();
     },
   });
 
