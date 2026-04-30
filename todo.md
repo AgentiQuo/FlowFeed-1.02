@@ -616,3 +616,31 @@
 - [x] Verify X/Twitter already returns postUrl
 - [x] Queue page success toast already displays link when postUrl is available
 - [ ] Test post success toast with link for each platform
+
+
+## Develop Published Posts Dashboard
+- [ ] Update posts table schema to track performance metrics (views, likes, comments, shares)
+- [ ] Create database migration for new performance tracking columns
+- [ ] Build tRPC procedure to fetch published posts with analytics
+- [ ] Create PublishedPostsPage component with filtering and sorting
+- [ ] Build PostCard component to display individual post details
+- [ ] Add analytics visualization (charts for engagement metrics)
+- [ ] Implement platform-specific analytics integration (Instagram Insights, Twitter Analytics, etc.)
+- [ ] Add export functionality for performance reports
+- [ ] Test dashboard with multiple platforms and performance data
+
+
+## Develop Published Posts Dashboard
+- [x] Add postId and postUrl fields to posts table schema
+- [x] Create database migration for new columns
+- [x] Build backend tRPC procedures (getPublishedPosts, getPublishedPostsAnalytics, updatePostAnalytics)
+- [x] Create PublishedPostsPage component with filtering and sorting
+- [x] Add platform-specific tabs (IG, FB, LI, X, Web)
+- [x] Display analytics summary (impressions, engagement rate, conversion rate)
+- [x] Show individual post cards with metrics (likes, comments, shares, impressions)
+- [x] Add pagination for post list
+- [x] Add search functionality for posts
+- [x] Integrate Published Posts link in Dashboard navigation
+- [ ] Test Published Posts dashboard with real data
+- [ ] Add export analytics to CSV feature
+- [ ] Add date range filter for analytics

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb, getPostingSchedule, getLastScheduledPost } from "../db";
 import { posts, drafts, contentAssets } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { processScheduledPosts } from "../_core/webhook";
 
 /**
@@ -554,6 +554,149 @@ export const queueRouter = router({
         ...post,
         scheduledFor: post.scheduledFor ? new Date(post.scheduledFor) : null,
       }));
+    }),
+
+  /**
+   * Get all published posts for a brand with analytics
+   */
+  getPublishedPosts: protectedProcedure
+    .input(
+      z.object({
+        brandId: z.string(),
+        platform: z.enum(["instagram", "linkedin", "facebook", "x", "website"]).optional(),
+        limit: z.number().default(50),
+        offset: z.number().default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get paginated published posts sorted by published date (newest first)
+      const publishedPosts = await db
+        .select()
+        .from(posts)
+        .where(
+          and(
+            eq(posts.brandId, input.brandId),
+            eq(posts.status, "published" as any),
+            input.platform ? eq(posts.platform, input.platform as any) : undefined
+          )
+        )
+        .orderBy(desc(posts.publishedAt))
+        .limit(input.limit)
+        .offset(input.offset);
+
+      // Get total count
+      const countResult = await db
+        .select()
+        .from(posts)
+        .where(
+          and(
+            eq(posts.brandId, input.brandId),
+            eq(posts.status, "published" as any),
+            input.platform ? eq(posts.platform, input.platform as any) : undefined
+          )
+        );
+
+      return {
+        posts: publishedPosts,
+        total: countResult.length,
+        limit: input.limit,
+        offset: input.offset,
+      };
+    }),
+
+  /**
+   * Get analytics summary for published posts
+   */
+  getPublishedPostsAnalytics: protectedProcedure
+    .input(
+      z.object({
+        brandId: z.string(),
+        platform: z.enum(["instagram", "linkedin", "facebook", "x", "website"]).optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get all published posts for this brand
+      const publishedPosts = await db
+        .select()
+        .from(posts)
+        .where(
+          and(
+            eq(posts.brandId, input.brandId),
+            eq(posts.status, "published" as any),
+            input.platform ? eq(posts.platform, input.platform as any) : undefined
+          )
+        );
+
+      // Calculate aggregated analytics
+      const totalImpressions = publishedPosts.reduce((sum, p) => sum + (p.impressions || 0), 0);
+      const totalEngagements = publishedPosts.reduce((sum, p) => sum + (p.engagements || 0), 0);
+      const totalClicks = publishedPosts.reduce((sum, p) => sum + (p.clicks || 0), 0);
+      const totalConversions = publishedPosts.reduce((sum, p) => sum + (p.conversions || 0), 0);
+      const totalLikes = publishedPosts.reduce((sum, p) => sum + (p.likes || 0), 0);
+      const totalComments = publishedPosts.reduce((sum, p) => sum + (p.comments || 0), 0);
+      const totalShares = publishedPosts.reduce((sum, p) => sum + (p.shares || 0), 0);
+
+      // Calculate engagement rate
+      const engagementRate = totalImpressions > 0 ? (totalEngagements / totalImpressions) * 100 : 0;
+      const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
+
+      return {
+        totalPosts: publishedPosts.length,
+        totalImpressions,
+        totalEngagements,
+        totalClicks,
+        totalConversions,
+        totalLikes,
+        totalComments,
+        totalShares,
+        engagementRate: engagementRate.toFixed(2),
+        conversionRate: conversionRate.toFixed(2),
+        averageImpressions: publishedPosts.length > 0 ? (totalImpressions / publishedPosts.length).toFixed(0) : 0,
+        averageEngagements: publishedPosts.length > 0 ? (totalEngagements / publishedPosts.length).toFixed(0) : 0,
+      };
+    }),
+
+  /**
+   * Update post analytics
+   */
+  updatePostAnalytics: protectedProcedure
+    .input(
+      z.object({
+        postId: z.string(),
+        impressions: z.number().optional(),
+        engagements: z.number().optional(),
+        clicks: z.number().optional(),
+        conversions: z.number().optional(),
+        likes: z.number().optional(),
+        comments: z.number().optional(),
+        shares: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const updateData: any = {};
+      if (input.impressions !== undefined) updateData.impressions = input.impressions;
+      if (input.engagements !== undefined) updateData.engagements = input.engagements;
+      if (input.clicks !== undefined) updateData.clicks = input.clicks;
+      if (input.conversions !== undefined) updateData.conversions = input.conversions;
+      if (input.likes !== undefined) updateData.likes = input.likes;
+      if (input.comments !== undefined) updateData.comments = input.comments;
+      if (input.shares !== undefined) updateData.shares = input.shares;
+
+      await db
+        .update(posts)
+        .set(updateData)
+        .where(eq(posts.id, input.postId));
+
+      return { success: true };
     }),
 });
 

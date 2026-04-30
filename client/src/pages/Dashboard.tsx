@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ChevronLeft, ChevronRight, Calendar, Settings, Trash2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Calendar, Settings, Trash2, TrendingUp } from "lucide-react";
 import { DraftPreview } from "@/components/DraftPreview";
 import AssetUpload from "@/components/AssetUpload";
 import UploadGenerateTabs from "@/components/UploadGenerateTabs";
@@ -274,14 +274,24 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-3xl font-bold tracking-tight">Assets</h1>
               {selectedBrandId && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setLocation(`/dashboard/queue/${selectedBrandId}`)}
-                  title="Go to Queue"
-                >
-                  <Calendar className="w-4 h-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setLocation(`/dashboard/published/${selectedBrandId}`)}
+                    title="View Published Posts"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setLocation(`/dashboard/queue/${selectedBrandId}`)}
+                    title="Go to Queue"
+                  >
+                    <Calendar className="w-4 h-4" />
+                  </Button>
+                </div>
               )}
             </div>
             {/* Brand Tabs */}

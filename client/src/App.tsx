@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 import QueuePage from "./pages/QueuePage";
 import ArchivePage from "./pages/ArchivePage";
+import PublishedPostsPage from "./pages/PublishedPostsPage";
 import BrandSettingsPage from "./pages/BrandSettingsPage";
 import AllBrandsPage from "./pages/AllBrandsPage";
 
@@ -22,6 +23,9 @@ function Router() {
       </Route>
       <Route path={"/dashboard/queue/:brandId"}>
         {() => <QueuePage />}
+      </Route>
+      <Route path={"/dashboard/published/:brandId"}>
+        {() => <PublishedPostsPage />}
       </Route>
       <Route path={"/dashboard/archive/:brandId"}>
         {() => <ArchivePage />}
