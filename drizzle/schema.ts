@@ -39,6 +39,7 @@ export const brands = mysqlTable("brands", {
   copywritingGuide: longtext("copywritingGuide"),
   imageGenerationGuide: longtext("imageGenerationGuide"),
   imageGenerationModel: varchar("imageGenerationModel", { length: 50 }).default("default"),
+  instagramAccessToken: varchar("instagramAccessToken", { length: 500 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

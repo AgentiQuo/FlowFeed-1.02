@@ -37,6 +37,15 @@ export default function PublishedPostsPage() {
   // Fetch all brands for filter dropdown
   const { data: allBrands = [] } = trpc.brands.list.useQuery();
 
+  // Sync Instagram analytics mutation
+  const syncAnalyticsMutation = trpc.queue.syncInstagramAnalytics.useMutation({
+    onSuccess: () => {
+      // Refetch analytics after sync
+      trpc.useUtils().queue.getPublishedPostsAnalytics.invalidate();
+      trpc.useUtils().queue.getPublishedPosts.invalidate();
+    },
+  });
+
   // Fetch published posts
   const { data: postsData, isLoading: isLoadingPosts } = trpc.queue.getPublishedPosts.useQuery(
     {
@@ -94,9 +103,20 @@ export default function PublishedPostsPage() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Published Posts</h1>
-          <p className="text-muted-foreground">View and track all your published content across platforms</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Published Posts</h1>
+            <p className="text-muted-foreground">View and track all your published content across platforms</p>
+          </div>
+          {brandId && (
+            <Button
+              onClick={() => syncAnalyticsMutation.mutate({ brandId })}
+              disabled={syncAnalyticsMutation.isPending}
+              variant="outline"
+            >
+              {syncAnalyticsMutation.isPending ? "Syncing..." : "Sync Analytics"}
+            </Button>
+          )}
         </div>
 
         {/* Brand Selector */}

@@ -644,3 +644,13 @@
 - [x] Test Published Posts dashboard with real data (verified with 5 published posts, analytics calculating correctly)
 - [ ] Add export analytics to CSV feature
 - [ ] Add date range filter for analytics
+
+
+## Integrate Instagram Insights API for Real Engagement Metrics
+- [x] Research Instagram Insights API endpoints and available metrics
+- [x] Create backend service to fetch Instagram insights (likes, comments, impressions, etc.)
+- [x] Build tRPC procedure to sync Instagram analytics for published posts
+- [x] Add "Sync Analytics" button to Published Posts dashboard
+- [ ] Implement periodic automatic sync of Instagram metrics
+- [ ] Test Instagram analytics sync and verify metrics display correctly
+- [ ] Add sync status indicator to show when analytics were last updated

@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb, getPostingSchedule, getLastScheduledPost } from "../db";
-import { posts, drafts, contentAssets } from "../../drizzle/schema";
+import { posts, drafts, contentAssets, brands } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { processScheduledPosts } from "../_core/webhook";
+import { fetchInstagramMediaInsights } from "../_core/instagramInsights";
+import { notifyOwner } from "../_core/notification";
 
 /**
  * Smart scheduling queue management
@@ -697,6 +699,102 @@ export const queueRouter = router({
         .where(eq(posts.id, input.postId));
 
       return { success: true };
+    }),
+  syncInstagramAnalytics: protectedProcedure
+    .input(
+      z.object({
+        brandId: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return { success: false, error: "Database unavailable" };
+
+      try {
+        const brand = await db
+          .select()
+          .from(brands)
+          .where(eq(brands.id, input.brandId))
+          .limit(1);
+
+        if (!brand || brand.length === 0) {
+          return { success: false, error: "Brand not found" };
+        }
+
+        const brandData = brand[0];
+        const accessToken = brandData.instagramAccessToken;
+
+        if (!accessToken) {
+          return {
+            success: false,
+            error: "Instagram access token not configured",
+          };
+        }
+
+        const publishedPosts = await db
+          .select()
+          .from(posts)
+          .where(
+            and(
+              eq(posts.brandId, input.brandId),
+              eq(posts.platform, "instagram"),
+              eq(posts.status, "published")
+            )
+          );
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const post of publishedPosts) {
+          if (!post.postId) {
+            errorCount++;
+            continue;
+          }
+
+          try {
+            const insights = await fetchInstagramMediaInsights(
+              post.postId,
+              accessToken
+            );
+
+            await db
+              .update(posts)
+              .set({
+                likes: insights.likes || 0,
+                comments: insights.comments || 0,
+                impressions: insights.impressions || 0,
+                engagements: insights.engagement || 0,
+                updatedAt: new Date(),
+              })
+              .where(eq(posts.id, post.id));
+
+            successCount++;
+          } catch (error) {
+            console.error(
+              `Failed to sync Instagram analytics for post ${post.id}:`,
+              error
+            );
+            errorCount++;
+          }
+        }
+
+        await notifyOwner({
+          title: "Instagram Analytics Synced",
+          content: `Successfully synced ${successCount} posts. ${errorCount} posts had errors.`,
+        });
+
+        return {
+          success: true,
+          synced: successCount,
+          errors: errorCount,
+        };
+      } catch (error) {
+        console.error("Error syncing Instagram analytics:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
     }),
 });
 
