@@ -125,6 +125,7 @@ interface BrandGuides {
   copywritingGuide: string;
   imageGenerationGuide: string;
   imageGenerationModel: string;
+  instagramAccessToken: string;
 }
 
 function LearningsSection({ brandId }: { brandId: string }) {
@@ -240,6 +241,7 @@ export default function BrandSettingsPage() {
     copywritingGuide: "",
     imageGenerationGuide: "",
     imageGenerationModel: "default",
+    instagramAccessToken: "",
   });
   const [brandName, setBrandName] = useState("");
 
@@ -254,6 +256,7 @@ export default function BrandSettingsPage() {
         copywritingGuide: brand.copywritingGuide || "",
         imageGenerationGuide: brand.imageGenerationGuide || "",
         imageGenerationModel: brand.imageGenerationModel || "default",
+        instagramAccessToken: brand.instagramAccessToken || "",
       });
       setBrandName(brand.name || "");
       // Reset credentials initialization flag when brand changes
@@ -520,6 +523,7 @@ export default function BrandSettingsPage() {
         copywritingGuide: guides.copywritingGuide,
         imageGenerationGuide: guides.imageGenerationGuide,
         imageGenerationModel: guides.imageGenerationModel,
+        instagramAccessToken: guides.instagramAccessToken,
       });
     } catch (error) {
       console.error("Error saving guides:", error);
@@ -1072,6 +1076,23 @@ export default function BrandSettingsPage() {
                       <SelectItem value="nano-banana">Nano Banana</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label htmlFor="instagram-token">
+                    Instagram Access Token
+                  </Label>
+                  <Input
+                    id="instagram-token"
+                    type="password"
+                    placeholder="Enter your Instagram Access Token for analytics sync"
+                    value={guides.instagramAccessToken}
+                    onChange={e =>
+                      handleGuideChange("instagramAccessToken", e.target.value)
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Your token is used to fetch real engagement metrics (likes, comments, impressions) from Instagram.
+                  </p>
                 </div>
                 <Button onClick={handleSaveGuides} disabled={isSavingGuides}>
                   {isSavingGuides ? (
